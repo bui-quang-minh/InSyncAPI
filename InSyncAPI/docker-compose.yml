@@ -1,0 +1,8 @@
+version: '3.4'
+
+services:
+  insyncapi:
+    image: ${DOCKER_REGISTRY-}insyncapi
+    build:
+      context: .
+      dockerfile: InSyncAPI/Dockerfile
