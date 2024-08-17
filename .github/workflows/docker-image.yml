@@ -13,4 +13,4 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Set up docker for CI
-      run: docker build -f InSyncAPI/InSyncAPI/Dockerfile --tag quangminhh/insyncapi:$(date +%s) .
+      run: docker build -f InSyncAPI/InSyncAPI/Dockerfile --tag quangminhh/insyncapi:latest .
