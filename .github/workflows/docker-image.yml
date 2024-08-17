@@ -15,4 +15,6 @@ jobs:
     - name: Set up docker for CI
       run: docker build -f InSyncAPI/InSyncAPI/Dockerfile --tag quangminhh/insyncapi:latest .
     - name: Push docker for CI
-      run: docker push quangminhh/insyncapi:latest
+      run: 
+        docker login -u quangminhh -p ${{secrets.DOCKER_HUB_TOKEN}}
+        docker push quangminhh/insyncapi:latest
