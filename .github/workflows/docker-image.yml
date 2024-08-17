@@ -13,4 +13,4 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Set up docker for CI
-      run: docker build . --file Dockerfile --tag thesis/insyncapi:$(date +%s)
+      run: docker build . --file InSyncAPI/Dockerfile --tag thesis/insyncapi:$(date +%s)
