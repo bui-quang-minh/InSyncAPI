@@ -10,7 +10,7 @@ WORKDIR /src
 COPY ["InSyncAPI/InSyncAPI/InSyncAPI.csproj", "InSyncAPI/"]
 RUN dotnet restore "./InSyncAPI/./InSyncAPI.csproj"
 COPY . .
-WORKDIR "/src/InSyncAPI"
+WORKDIR "/src/InSyncAPI/InSyncAPI"
 RUN dotnet build "./InSyncAPI.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
