@@ -1,3 +1,9 @@
+using DataAccess;
+using InSync_Api.DependencyInjectService;
+using InSync_Api.MapperProfile;
+using Microsoft.EntityFrameworkCore;
+using WebNewsAPIs.Extentions;
+
 namespace InSyncAPI
 {
     public class Program
@@ -12,7 +18,25 @@ namespace InSyncAPI
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
-            builder.Services.AddCors(options => options.AddDefaultPolicy(policy => policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
+            builder.Services.AddControllers();
+            //inject dbContext into system
+            builder.Services.AddDbContext<InSyncContext>(options =>
+            {
+                var connectString = builder.Configuration.GetConnectionString("InSyncConnectionString");
+                options.UseSqlServer(connectString);
+            });
+            // inject service in system
+            builder.Services.InjectService();
+            // add profile of auto mapper
+            builder.Services.AddAutoMapper(typeof(InSyncMapperProfile));
+            builder.Services.ConfigOdata();
+            // config cors 
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("CORSPolicy", builder =>
+                builder.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin().SetIsOriginAllowed((host) => true));
+            });
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -23,7 +47,9 @@ namespace InSyncAPI
             }
 
             app.UseAuthorization();
-            app.UseCors(builder => builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+            app.UseCors("CORSPolicy");
+
+
             var summaries = new[]
             {
                 "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
@@ -44,7 +70,7 @@ namespace InSyncAPI
                 return Results.Json(forecast);
             })
             .WithName("GetWeatherForecast");
-
+            app.MapControllers();
 
 
             app.Run();
