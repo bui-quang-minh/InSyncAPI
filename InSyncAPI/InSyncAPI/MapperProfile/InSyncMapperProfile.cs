@@ -19,16 +19,19 @@ namespace InSync_Api.MapperProfile
             CreateMap<PrivacyPolicy, ViewPrivacyPolicyDto>().ReverseMap();
             //Term Dto 
             CreateMap<AddTermsDto, Term>().ReverseMap();
-            CreateMap<UdpateTermsDto, Term>().ReverseMap();
+            CreateMap<UpdateTermsDto, Term>().ReverseMap();
             CreateMap<Term, ViewTermDto>().ReverseMap();
             //Tutorial Dto 
             CreateMap<AddTutorialDto, Tutorial>().ReverseMap();
             CreateMap<UpdateTutorialDto, Tutorial>().ReverseMap();
             CreateMap<Tutorial, ViewTutorialDto>().ReverseMap();
             // Subscription Plan
+            CreateMap<AddSubscriptionPlanDto, SubscriptionPlan>().ReverseMap();          
+            CreateMap<UpdateSubscriptionPlanDto, SubscriptionPlan>().ReverseMap();
             CreateMap<SubscriptionPlan, ViewSubscriptionPlanDto>()
                 .ForMember(c => c.UserName, a => a.MapFrom(r => r.User.UserName))
                 .ReverseMap();
+
 
         }
 

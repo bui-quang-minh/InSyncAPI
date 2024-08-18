@@ -18,7 +18,7 @@ namespace InSyncAPI.Dtos
         [Required]
         public string Answer { get; set; } = null!;  
     }
-    public class UdpateTermsDto
+    public class UpdateTermsDto
     {
         public Guid Id { get; set; }
         [Required]

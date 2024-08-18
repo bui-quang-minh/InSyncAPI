@@ -52,7 +52,7 @@ namespace InSyncAPI.Controllers
 
 
         [HttpGet("get-tutorial/{id}")]
-        public async Task<IActionResult> GetPrivacyPolicyById(Guid id)
+        public async Task<IActionResult> GetTutorialById(Guid id)
         {
             if (_tutorialRepo == null || _mapper == null)
             {

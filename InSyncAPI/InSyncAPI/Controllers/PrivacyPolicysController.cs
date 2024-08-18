@@ -91,10 +91,10 @@ namespace InSyncAPI.Controllers
             if (response == null)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError,
-                    value: "Error occurred while adding the customer review.");
+                    value: "Error occurred while adding the private policy.");
             }
 
-            return Ok(new { message = "Customer review added successfully.", Id = response.Id });
+            return Ok(new { message = "Private policy added successfully.", Id = response.Id });
         }
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdatePrivacyPolicy(Guid id, UpdatePrivacyPolicyDto updatePrivacy)

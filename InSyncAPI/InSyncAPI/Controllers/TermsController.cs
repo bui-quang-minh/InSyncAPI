@@ -70,7 +70,7 @@ namespace InSyncAPI.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddPrivacyPolicy(AddTermsDto newTerm)
+        public async Task<IActionResult> AddTerm(AddTermsDto newTerm)
         {
             if (_termRepo == null || _mapper == null)
             {
@@ -91,13 +91,13 @@ namespace InSyncAPI.Controllers
             if (response == null)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError,
-                    value: "Error occurred while adding the customer review.");
+                    value: "Error occurred while adding the term.");
             }
 
-            return Ok(new { message = "Customer review added successfully.", Id = response.Id });
+            return Ok(new { message = "Term added successfully.", Id = response.Id });
         }
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdatePrivacyPolicy(Guid id, UpdatePrivacyPolicyDto updatePrivacy)
+        public async Task<IActionResult> UpdateTerm(Guid id, UpdateTermsDto updateTerm)
         {
             if (_termRepo == null || _mapper == null)
             {
@@ -110,7 +110,7 @@ namespace InSyncAPI.Controllers
                 return BadRequest(ModelState);
             }
 
-            if (id != updatePrivacy.Id)
+            if (id != updateTerm.Id)
             {
                 return BadRequest("Term ID information does not match");
             }
@@ -123,7 +123,7 @@ namespace InSyncAPI.Controllers
             }
             existingTerm.DateUpdated = DateTime.Now;
             // Map the updated fields
-            _mapper.Map(updatePrivacy, existingTerm);
+            _mapper.Map(updateTerm, existingTerm);
 
             try
             {
