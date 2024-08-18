@@ -45,8 +45,8 @@ namespace InSyncAPI.Controllers
             index = index.Value < 0 ? INDEX_DEFAULT : index;
             size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
 
-            var listPrivacyPolicy = _termRepo.GetMultiPaging(c => true, out int total, index.Value, size.Value, null);
-            var response = _mapper.Map<IEnumerable<ViewPrivacyPolicyDto>>(listPrivacyPolicy);
+            var listTerms = _termRepo.GetMultiPaging(c => true, out int total, index.Value, size.Value, null);
+            var response = _mapper.Map<IEnumerable<ViewTermDto>>(listTerms);
             return Ok(response);
         }
 
@@ -65,7 +65,7 @@ namespace InSyncAPI.Controllers
             {
                 return NotFound("No term has an ID : " + id.ToString());
             }
-            var response = _mapper.Map<ViewPrivacyPolicyDto>(term);
+            var response = _mapper.Map<ViewTermDto>(term);
             return Ok(response);
         }
 

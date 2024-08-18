@@ -121,7 +121,7 @@ namespace InSyncAPI.Controllers
             }
 
             if (!ModelState.IsValid)
-            {
+            { 
                 return BadRequest(ModelState);
             }
 
@@ -171,5 +171,6 @@ namespace InSyncAPI.Controllers
            await  _customerReviewRepo.DeleteMulti(c => c.Id.Equals(id));
             return Ok(new { message = "Customer review deleted successfully.", Id = id });
         }
+
     }
 }

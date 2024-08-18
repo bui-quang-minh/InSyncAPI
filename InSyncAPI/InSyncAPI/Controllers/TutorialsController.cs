@@ -45,8 +45,8 @@ namespace InSyncAPI.Controllers
             index = index.Value < 0 ? INDEX_DEFAULT : index;
             size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
 
-            var listPrivacyPolicy = _tutorialRepo.GetMultiPaging(c => true, out int total, index.Value, size.Value, null);
-            var response = _mapper.Map<IEnumerable<ViewPrivacyPolicyDto>>(listPrivacyPolicy);
+            var listTutorial = _tutorialRepo.GetMultiPaging(c => true, out int total, index.Value, size.Value, null);
+            var response = _mapper.Map<IEnumerable<ViewTutorialDto>>(listTutorial);
             return Ok(response);
         }
 
