@@ -45,15 +45,8 @@ namespace InSyncAPI
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
-
             app.UseAuthorization();
             app.UseCors("CORSPolicy");
-
-
-            var summaries = new[]
-            {
-                "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-            };
 
             app.MapGet("/weatherforecast", (HttpContext httpContext) =>
             {
