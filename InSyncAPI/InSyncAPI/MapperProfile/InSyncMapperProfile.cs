@@ -31,6 +31,14 @@ namespace InSync_Api.MapperProfile
             CreateMap<SubscriptionPlan, ViewSubscriptionPlanDto>()
                 .ForMember(c => c.UserName, a => a.MapFrom(r => r.User.UserName))
                 .ReverseMap();
+            // Scenario Dto
+            // Subscription Plan
+            CreateMap<AddScenarioDto, Scenario>().ReverseMap();
+            CreateMap<UpdateScenarioDto, Scenario>().ReverseMap();
+            CreateMap<Scenario, ViewScenarioDto>()
+                .ForMember(c => c.ProjectName, a => a.MapFrom(r => r.Project.ProjectName))
+                .ForMember(c => c.UserName, a => a.MapFrom(r => r.CreatedByNavigation.UserName))
+                .ReverseMap();
 
 
         }
