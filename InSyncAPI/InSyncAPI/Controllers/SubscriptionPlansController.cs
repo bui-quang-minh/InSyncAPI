@@ -1,10 +1,10 @@
 ﻿using AutoMapper;
 using BusinessObjects.Models;
 using InSyncAPI.Dtos;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Query;
 using Repositorys;
+using System.Linq.Expressions;
 
 namespace InSyncAPI.Controllers
 {
@@ -31,6 +31,7 @@ namespace InSyncAPI.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     value: "Application service has not been created");
             }
+
             var response = _subscriptionPlanRepo.GetAll().AsQueryable();
             return Ok(response);
         }

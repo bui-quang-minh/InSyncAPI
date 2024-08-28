@@ -25,7 +25,7 @@ namespace BusinessObjects.Models
         public long? StorageLimit { get; set; }
         public string? SupportLevel { get; set; }
         public string? CustomFeaturesDescription { get; set; }
-        public long DataRetentionPeriod { get; set; }
+        public long? DataRetentionPeriod { get; set; }
         public bool? PrioritySupport { get; set; }
         public bool? MonthlyReporting { get; set; }
 

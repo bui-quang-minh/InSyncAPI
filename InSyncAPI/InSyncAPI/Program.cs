@@ -47,8 +47,7 @@ namespace InSyncAPI
             }
 
             app.UseAuthorization();
-            app.UseCors("CORSPolicy");
-
+            app.UseCors("CORSPolicy"); 
 
             var summaries = new[]
             {

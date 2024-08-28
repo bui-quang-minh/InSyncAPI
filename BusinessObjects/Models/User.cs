@@ -8,6 +8,7 @@ namespace BusinessObjects.Models
         public User()
         {
             Projects = new HashSet<Project>();
+            Scenarios = new HashSet<Scenario>();
             SubscriptionPlans = new HashSet<SubscriptionPlan>();
             UserSubscriptions = new HashSet<UserSubscription>();
         }
@@ -29,6 +30,7 @@ namespace BusinessObjects.Models
         public int StatusUser { get; set; }
 
         public virtual ICollection<Project> Projects { get; set; }
+        public virtual ICollection<Scenario> Scenarios { get; set; }
         public virtual ICollection<SubscriptionPlan> SubscriptionPlans { get; set; }
         public virtual ICollection<UserSubscription> UserSubscriptions { get; set; }
     }

@@ -20,7 +20,7 @@ namespace DataAccess
 
         public virtual DbSet<Asset> Assets { get; set; } = null!;
         public virtual DbSet<CustomerReview> CustomerReviews { get; set; } = null!;
-        public virtual DbSet<PrivacyPolicy> PrivacyPolicies { get; set; } = null!;
+        public virtual DbSet<PrivacyPolicy> PrivacyPolicys { get; set; } = null!;
         public virtual DbSet<Project> Projects { get; set; } = null!;
         public virtual DbSet<Scenario> Scenarios { get; set; } = null!;
         public virtual DbSet<SubscriptionPlan> SubscriptionPlans { get; set; } = null!;
@@ -34,8 +34,8 @@ namespace DataAccess
             if (!optionsBuilder.IsConfigured)
             {
                 var builder = new ConfigurationBuilder()
-                              .SetBasePath(Directory.GetCurrentDirectory())
-                              .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+                             .SetBasePath(Directory.GetCurrentDirectory())
+                             .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
                 IConfigurationRoot configuration = builder.Build();
                 optionsBuilder.UseSqlServer(configuration.GetConnectionString("InSyncConnectionString"));
             }
@@ -80,7 +80,7 @@ namespace DataAccess
 
             modelBuilder.Entity<CustomerReview>(entity =>
             {
-                entity.ToTable("Customer_Review");
+                entity.ToTable("Customer_Reviews");
 
                 entity.Property(e => e.Id)
                     .HasColumnName("id")
@@ -111,7 +111,7 @@ namespace DataAccess
 
             modelBuilder.Entity<PrivacyPolicy>(entity =>
             {
-                entity.ToTable("Privacy_Policy");
+                entity.ToTable("Privacy_Policys");
 
                 entity.Property(e => e.Id)
                     .HasColumnName("id")
@@ -169,6 +169,8 @@ namespace DataAccess
                     .HasColumnName("id")
                     .HasDefaultValueSql("(newid())");
 
+                entity.Property(e => e.CreatedBy).HasColumnName("created_by");
+
                 entity.Property(e => e.DateCreated)
                     .HasColumnType("datetime")
                     .HasColumnName("date_created");
@@ -180,6 +182,14 @@ namespace DataAccess
                 entity.Property(e => e.Description)
                     .HasColumnType("text")
                     .HasColumnName("description");
+
+                entity.Property(e => e.ImageUrl)
+                    .HasColumnType("text")
+                    .HasColumnName("image_url");
+
+                entity.Property(e => e.IsFavorites)
+                    .HasColumnName("is_favorites")
+                    .HasDefaultValueSql("((0))");
 
                 entity.Property(e => e.ProjectId).HasColumnName("project_id");
 
@@ -194,6 +204,11 @@ namespace DataAccess
                 entity.Property(e => e.StepsWeb)
                     .HasColumnType("text")
                     .HasColumnName("steps_web");
+
+                entity.HasOne(d => d.CreatedByNavigation)
+                    .WithMany(p => p.Scenarios)
+                    .HasForeignKey(d => d.CreatedBy)
+                    .HasConstraintName("scenario_user_id_foreign");
 
                 entity.HasOne(d => d.Project)
                     .WithMany(p => p.Scenarios)

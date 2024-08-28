@@ -13,7 +13,11 @@ namespace BusinessObjects.Models
         public DateTime? DateUpdated { get; set; }
         public string? StepsWeb { get; set; }
         public string? StepsAndroid { get; set; }
+        public bool? IsFavorites { get; set; }
+        public string? ImageUrl { get; set; }
+        public Guid? CreatedBy { get; set; }
 
+        public virtual User? CreatedByNavigation { get; set; }
         public virtual Project Project { get; set; } = null!;
     }
 }
