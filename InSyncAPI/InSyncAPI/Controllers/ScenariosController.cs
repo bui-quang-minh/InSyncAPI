@@ -84,6 +84,29 @@ namespace InSyncAPI.Controllers
             var response = _mapper.Map<ViewScenarioDto>(scenario);
             return Ok(response);
         }
+        [HttpGet("get-scenarios-project/{projectId}")]
+        public async Task<IActionResult> GetScenarioOfProject(Guid projectId, Guid createdBy)
+        {
+            if (_scenarioRepo == null || _userRepo == null || _mapper == null)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    value: "Application service has not been created");
+            }
+
+            string[] include = new string[]
+          {
+                nameof(Scenario.Project),
+                nameof(Scenario.CreatedByNavigation)
+          };
+
+            var scenario =  _scenarioRepo.GetMulti(c => c.ProjectId.Equals(projectId) && c.CreatedBy.Equals(createdBy), include);
+            if (!scenario.Any())
+            {
+                return NotFound("No scenario in project by id : " + projectId.ToString());
+            }
+            var response = _mapper.Map<IEnumerable<ViewScenarioDto>>(scenario);
+            return Ok(response);
+        }
 
         [HttpPost]
         public async Task<IActionResult> AddScenario(AddScenarioDto newScenario)

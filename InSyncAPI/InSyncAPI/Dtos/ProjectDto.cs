@@ -1,0 +1,29 @@
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace InSyncAPI.Dtos
+{
+    public class ViewProjectDto
+    {
+        public Guid Id { get; set; }
+        public string ProjectName { get; set; } = null!;
+        public Guid UserId { get; set; }
+        public string UserName { get; set; }
+        public DateTime DateCreated { get; set; }
+        public DateTime? DateUpdated { get; set; }
+        public bool IsPublish { get; set; }
+    }
+    public class AddProjectDto
+    {
+        [Required]
+        [StringLength(255, MinimumLength = 5)]
+        public string ProjectName { get; set; } = null!;
+        public Guid UserId { get; set; }
+        public bool IsPublish { get; set; }
+    }
+    public class UpdateProjectDto
+    {
+        public Guid Id { get; set; }
+        public string ProjectName { get; set; } = null!;
+        public bool IsPublish { get; set; }
+    }
+}

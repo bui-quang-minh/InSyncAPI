@@ -67,7 +67,7 @@ namespace InSyncAPI.Controllers
         }
 
         [HttpGet("get-customer-review/{id}")]
-        public async Task<IActionResult> GetAllCustomerReviewIsPublish(Guid id)
+        public async Task<IActionResult> GetCustomerReview(Guid id)
         {
             if (_customerReviewRepo == null || _mapper == null)
             {
@@ -109,7 +109,7 @@ namespace InSyncAPI.Controllers
                     value: "Error occurred while adding the customer review.");
             }
 
-            return Ok(new { message = "Customer review added successfully.", Id = customerReview.Id });
+            return Ok(new { message = "Customer review added successfully.", Id = response.Id });
         }
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateCustomerReview(Guid id, UpdateCustomerReviewDto updateReview)
