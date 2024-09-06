@@ -21,7 +21,7 @@ namespace InSyncAPI.Controllers
             _mapper = mapper;
         }
         [HttpPost("clerk-web-hook")]
-        public async Task<IActionResult> Post([FromBody] CreateUserDto userDto)
+        public async Task<IActionResult> CreateUser([FromBody] CreateUserDto userDto)
         {
             if (_userRepo == null || _mapper == null)
             {
