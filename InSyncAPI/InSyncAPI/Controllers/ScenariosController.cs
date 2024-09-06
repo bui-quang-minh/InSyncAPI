@@ -39,7 +39,7 @@ namespace InSyncAPI.Controllers
             var response = _scenarioRepo.GetAll().AsQueryable();
             return Ok(response);
         }
-        [HttpGet("get-all-scenario")]
+        [HttpGet("get-all-scenarios")]
         public async Task<IActionResult> GetAllScenarios(int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
         {
             if (_scenarioRepo == null || _userRepo == null || _mapper == null)
@@ -246,7 +246,7 @@ namespace InSyncAPI.Controllers
             catch (Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError,
-                    $"Error updating tutorial: {ex.Message}");
+                    $"Error updating scenario: {ex.Message}");
             }
         }
         [HttpPut("update-android-json/{id}")]
@@ -275,7 +275,7 @@ namespace InSyncAPI.Controllers
             catch (Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError,
-                    $"Error updating tutorial: {ex.Message}");
+                    $"Error updating scenario: {ex.Message}");
             }
         }
         [HttpPut("rename-scenario/{id}")]
@@ -307,7 +307,7 @@ namespace InSyncAPI.Controllers
             catch (Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError,
-                    $"Error updating tutorial: {ex.Message}");
+                    $"Error updating scenario: {ex.Message}");
             }
         }
 
@@ -326,7 +326,7 @@ namespace InSyncAPI.Controllers
                 return NotFound($"Dont exist scenario with id {id.ToString()} to delete");
             }
             await _scenarioRepo.DeleteMulti(c => c.Id.Equals(id));
-            return Ok(new { message = "Tutorial deleted successfully.", Id = id });
+            return Ok(new { message = "Scenario deleted successfully.", Id = id });
         }
     }
 }

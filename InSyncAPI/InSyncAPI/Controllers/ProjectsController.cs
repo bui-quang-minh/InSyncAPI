@@ -74,8 +74,8 @@ namespace InSyncAPI.Controllers
             return Ok(response);
         }
 
-        [HttpGet("get-project-is-publish")]
-        public async Task<IActionResult> GetAllCustomerReviewIsPublish(bool isPublish, int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
+        [HttpGet("get-project-user-is-publish")]
+        public async Task<IActionResult> GetAllProjectIsPublishOfUser(Guid userId, bool? isPublish, int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
         {
             if (_projectRepo == null || _mapper == null)
             {
@@ -86,7 +86,7 @@ namespace InSyncAPI.Controllers
             index = index.Value < 0 ? INDEX_DEFAULT : index;
             size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
 
-            var listProject = _projectRepo.GetMultiPaging(c => c.IsPublish == isPublish, out int total, index.Value, size.Value, includes);
+            var listProject = _projectRepo.GetMultiPaging(c => c.UserId.Equals(userId) && (isPublish == null || c.IsPublish == isPublish), out int total, index.Value, size.Value, includes);
             var response = _mapper.Map<IEnumerable<ViewProjectDto>>(listProject);
             return Ok(response);
         }
