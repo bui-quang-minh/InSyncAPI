@@ -15,7 +15,7 @@ namespace BusinessObjects.Models
 
         public Guid Id { get; set; }
         public string UserName { get; set; } = null!;
-        public string PasswordHash { get; set; } = null!;
+        public string? PasswordHash { get; set; } = null!;
         public string Email { get; set; } = null!;
         public string? NormalizedUserName { get; set; }
         public bool? EmailConfirmed { get; set; }
