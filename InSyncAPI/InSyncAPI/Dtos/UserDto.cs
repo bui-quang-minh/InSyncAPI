@@ -8,7 +8,7 @@ namespace InSyncAPI.Dtos
         public string? Birthday { get; set; }
         public long Created_At { get; set; }
         public EmailAddresses[]? Email_Addresses { get; set; }
-        public string[]? External_Accounts { get; set; }
+        //public string[]? External_Accounts { get; set; }
         public string? First_Name { get; set; } = "";
         public string? Gender { get; set; }
         public string? Id { get; set; }
