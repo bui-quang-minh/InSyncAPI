@@ -58,14 +58,20 @@ namespace InSyncAPI.Controllers
             {
                 return NotFound("User not found.");
             }
-
-
             // Map the updated fields
-            _mapper.Map(user, existingUser);
+            existingUser.UserName = user.UserName;
+            existingUser.NormalizedUserName = user.NormalizedUserName;
+            existingUser.Email = user.Email;
+            existingUser.ImageUrl = user.ImageUrl;
+            existingUser.PhoneNumber = user.PhoneNumber;
+            existingUser.DateCreated = user.DateCreated;
+            existingUser.DateUpdated = user.DateUpdated;
+            existingUser.StatusUser = user.StatusUser;
+            existingUser.PhoneNumber = user.PhoneNumber;
             try
             {
                 await _userRepo.Update(existingUser);
-                return Ok(new { message = "User updated successfully.", Id = existingUser.Email });
+                return Ok(new { message = "User updated successfully.", Id = existingUser.NormalizedUserName });
             }
             catch (Exception ex)
             {
