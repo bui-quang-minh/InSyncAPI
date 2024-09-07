@@ -20,7 +20,7 @@ namespace InSyncAPI.Controllers
             _userRepo = userRepo;
             _mapper = mapper;
         }
-        [HttpPost("clerk-web-hook")]
+        [HttpPost("clerk-web-hook-create")]
         public async Task<IActionResult> CreateUser([FromBody] CreateUserDto userDto)
         {
             if (_userRepo == null || _mapper == null)
@@ -36,6 +36,42 @@ namespace InSyncAPI.Controllers
                     value: "Error occurred while adding the project.");
             }
             return Ok(user);
+        }
+
+        [HttpPost("clerk-web-hook-update")]
+        public async Task<IActionResult> UpdateUser([FromBody] UpdateUserDto userDto)
+        {
+            if (_userRepo == null || _mapper == null)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Application service has not been created");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            var user = _mapper.Map<User>(userDto);
+            // Fetch the existing customer review to ensure it exists
+            var existingUser = await _userRepo.GetSingleByCondition(c => c.Email.Equals(user.Email));
+            if (existingUser == null)
+            {
+                return NotFound("User not found.");
+            }
+
+
+            // Map the updated fields
+            _mapper.Map(user, existingUser);
+            try
+            {
+                await _userRepo.Update(existingUser);
+                return Ok(new { message = "User updated successfully.", Id = existingUser.Email });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    $"Error updating user: {ex.Message}");
+            }
         }
     }
 }
