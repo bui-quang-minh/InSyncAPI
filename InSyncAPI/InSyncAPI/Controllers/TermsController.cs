@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using BusinessObjects.Models;
 using InSyncAPI.Dtos;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Query;
@@ -22,9 +23,11 @@ namespace InSyncAPI.Controllers
             _termRepo = termRepo;
             _mapper = mapper;
         }
+
         [HttpGet]
         [EnableQuery]
-        public async Task<IActionResult> Get()
+        [ProducesResponseType(200, Type = typeof(IQueryable<Term>))]
+        public async Task<IActionResult> GetTerms()
         {
             if (_termRepo == null || _mapper == null)
             {

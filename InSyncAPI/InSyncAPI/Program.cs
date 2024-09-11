@@ -1,6 +1,7 @@
 using DataAccess;
 using InSync_Api.DependencyInjectService;
 using InSync_Api.MapperProfile;
+using InSyncAPI.Extentions;
 using Microsoft.EntityFrameworkCore;
 using WebNewsAPIs.Extentions;
 
@@ -14,6 +15,7 @@ namespace InSyncAPI
 
             // Add services to the container.
             builder.Services.AddAuthorization();
+            builder.ConfigAuthenAuthor();
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
@@ -46,6 +48,7 @@ namespace InSyncAPI
                 app.UseSwaggerUI();
             }
             app.UseAuthorization();
+            app.UseAuthentication();
             app.UseCors("CORSPolicy");
             app.MapControllers();
 
