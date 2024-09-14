@@ -2,18 +2,16 @@
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
-using BusinessObjects.Models;
-using Microsoft.Extensions.Configuration;
 
-namespace DataAccess
+namespace BusinessObjects.Models
 {
-    public partial class InSyncContext : DbContext
+    public partial class InSyncContext1 : DbContext
     {
-        public InSyncContext()
+        public InSyncContext1()
         {
         }
 
-        public InSyncContext(DbContextOptions<InSyncContext> options)
+        public InSyncContext1(DbContextOptions<InSyncContext1> options)
             : base(options)
         {
         }
@@ -33,11 +31,7 @@ namespace DataAccess
         {
             if (!optionsBuilder.IsConfigured)
             {
-                var builder = new ConfigurationBuilder()
-                             .SetBasePath(Directory.GetCurrentDirectory())
-                             .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
-                IConfigurationRoot configuration = builder.Build();
-                optionsBuilder.UseSqlServer(configuration.GetConnectionString("InSyncConnectionString"));
+                optionsBuilder.UseSqlServer("server =103.9.77.22; database = InSync;uid=sa;pwd=InSync123!;MultipleActiveResultSets=True;Connection Timeout=30;Application Name=InSyncApi;");
             }
         }
 

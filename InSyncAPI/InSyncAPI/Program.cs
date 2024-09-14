@@ -1,9 +1,12 @@
 using DataAccess;
 using InSync_Api.DependencyInjectService;
 using InSync_Api.MapperProfile;
+using InSyncAPI.Authentication;
 using InSyncAPI.Extentions;
 using Microsoft.EntityFrameworkCore;
 using WebNewsAPIs.Extentions;
+using Microsoft.OpenApi;
+using Microsoft.OpenApi.Models;
 
 namespace InSyncAPI
 {
@@ -20,6 +23,34 @@ namespace InSyncAPI
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
+            //builder.Services.AddSwaggerGen(x =>
+            //{
+            //    x.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme()
+            //    {
+            //        Description = "Api Key to secure the Api",
+            //        Type = SecuritySchemeType.ApiKey,
+            //        Name = AuthConfig.ApiKey,
+            //        In = ParameterLocation.Header,
+            //        Scheme = "ApiKeyScheme"
+            //    });
+            //    var scheme = new OpenApiSecurityScheme()
+            //    {
+            //        Reference = new OpenApiReference()
+            //        {
+            //            Type = ReferenceType.SecurityScheme,
+            //            Id = "ApiKey"
+            //        },
+            //        In = ParameterLocation.Header
+            //    };
+            //    var requirement = new OpenApiSecurityRequirement()
+            //    {
+            //        {scheme, new List<string>{}}
+            //    };
+            //    x.AddSecurityRequirement(requirement);
+
+            //});
+
+
             builder.Services.AddControllers();
             //inject dbContext into system
             builder.Services.AddDbContext<InSyncContext>(options =>
@@ -47,6 +78,7 @@ namespace InSyncAPI
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
+           // app.UseMiddleware<ApiKeyMiddleware>();
             app.UseAuthorization();
             app.UseAuthentication();
             app.UseCors("CORSPolicy");

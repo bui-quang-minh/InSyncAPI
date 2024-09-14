@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using BusinessObjects.Models;
+using InSyncAPI.Authentication;
 using InSyncAPI.Dtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -24,6 +25,7 @@ namespace InSyncAPI.Controllers
             _mapper = mapper;
         }
 
+       
         [HttpGet]
         [EnableQuery]
         [ProducesResponseType(200, Type = typeof(IQueryable<Term>))]

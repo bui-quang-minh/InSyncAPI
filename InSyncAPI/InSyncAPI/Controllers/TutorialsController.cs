@@ -24,7 +24,7 @@ namespace InSyncAPI.Controllers
         }
         [HttpGet]
         [EnableQuery]
-        public async Task<IActionResult> Get()
+        public async Task<IActionResult> GetTutorials()
         {
             if (_tutorialRepo == null || _mapper == null)
             {

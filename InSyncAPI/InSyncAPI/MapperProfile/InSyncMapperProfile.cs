@@ -48,7 +48,7 @@ namespace InSync_Api.MapperProfile
             //Clerk Mapper
             CreateMap<CreateUserDto, User>()
                 .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.Data.Email_Addresses.FirstOrDefault().Email_Address))
-                .ForMember(dest => dest.NormalizedUserName, opt => opt.MapFrom(src => src.Data.First_Name + " " + src.Data.Last_Name))
+                .ForMember(dest => dest.DisplayName, opt => opt.MapFrom(src => src.Data.First_Name + " " + src.Data.Last_Name))
                 .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Data.Email_Addresses.FirstOrDefault().Email_Address))
                 .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.Data.Profile_Image_Url))
                 .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.Data.Phone_Numbers.FirstOrDefault()))
@@ -58,7 +58,7 @@ namespace InSync_Api.MapperProfile
                 .ReverseMap();
             CreateMap<UpdateUserDto, User>()
                 .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.Data.Email_Addresses.FirstOrDefault().Email_Address))
-                .ForMember(dest => dest.NormalizedUserName, opt => opt.MapFrom(src => src.Data.First_Name + " " + src.Data.Last_Name))
+                .ForMember(dest => dest.DisplayName, opt => opt.MapFrom(src => src.Data.First_Name + " " + src.Data.Last_Name))
                 .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Data.Email_Addresses.FirstOrDefault().Email_Address))
                 .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.Data.Profile_Image_Url))
                 .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.Data.Phone_Numbers.FirstOrDefault()))

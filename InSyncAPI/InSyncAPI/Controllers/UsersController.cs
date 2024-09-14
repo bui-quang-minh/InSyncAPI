@@ -60,7 +60,7 @@ namespace InSyncAPI.Controllers
             }
             // Map the updated fields
             existingUser.UserName = user.UserName;
-            existingUser.NormalizedUserName = user.NormalizedUserName;
+            existingUser.DisplayName = user.DisplayName;
             existingUser.Email = user.Email;
             existingUser.ImageUrl = user.ImageUrl;
             existingUser.PhoneNumber = user.PhoneNumber;
@@ -71,7 +71,7 @@ namespace InSyncAPI.Controllers
             try
             {
                 await _userRepo.Update(existingUser);
-                return Ok(new { message = "User updated successfully.", Id = existingUser.NormalizedUserName });
+                return Ok(new { message = "User updated successfully.", Id = existingUser.DisplayName });
             }
             catch (Exception ex)
             {

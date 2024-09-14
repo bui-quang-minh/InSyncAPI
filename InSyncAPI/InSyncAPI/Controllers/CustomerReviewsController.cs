@@ -24,7 +24,7 @@ namespace InSyncAPI.Controllers
         }
         [HttpGet]
         [EnableQuery]
-        public async Task<IActionResult> Get()
+        public async Task<IActionResult> GetCustomerReviews()
         {
             if (_customerReviewRepo == null)
             {
@@ -67,7 +67,7 @@ namespace InSyncAPI.Controllers
         }
 
         [HttpGet("get-customer-review/{id}")]
-        public async Task<IActionResult> GetCustomerReview(Guid id)
+        public async Task<IActionResult> GetCustomerReviewById(Guid id)
         {
             if (_customerReviewRepo == null || _mapper == null)
             {
