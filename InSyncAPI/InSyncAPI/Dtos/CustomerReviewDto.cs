@@ -16,14 +16,14 @@ namespace InSyncAPI.Dtos
     public class AddCustomerReviewDto
     {
         [Required]
-        [StringLength(100, MinimumLength =2)]
+        [StringLength(100)]
         public string Name { get; set; } = null!;
         public string? ImageUrl { get; set; }
         [Required]
-        [StringLength(150, MinimumLength = 2)]
+        [StringLength(150)]
         public string JobTitle { get; set; } = null!;
         [Required]
-        [StringLength(200, MinimumLength = 2)]
+        [StringLength(200)]
         public string Review { get; set; } = null!;
     }
 
@@ -41,5 +41,10 @@ namespace InSyncAPI.Dtos
         [StringLength(200, MinimumLength = 2)]
         public string Review { get; set; } = null!;
         public bool IsShow { get; set; }
+    }
+    public class ActionCustomerReviewResponse
+    {
+        public string Message { get; set; }
+        public Guid Id { get; set; }
     }
 }

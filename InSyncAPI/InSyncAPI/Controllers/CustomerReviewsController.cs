@@ -24,9 +24,11 @@ namespace InSyncAPI.Controllers
         }
         [HttpGet]
         [EnableQuery]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<CustomerReview>))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         public async Task<IActionResult> GetCustomerReviews()
         {
-            if (_customerReviewRepo == null)
+            if (_customerReviewRepo == null || _mapper == null)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     value: "Application service has not been created");
@@ -35,6 +37,8 @@ namespace InSyncAPI.Controllers
             return Ok(response);
         }
         [HttpGet("get-all-customer-review")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<ViewCustomerReviewDto>))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         public async Task<IActionResult> GetAllCustomerReview(int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
         {
             if (_customerReviewRepo == null || _mapper == null)
@@ -49,7 +53,8 @@ namespace InSyncAPI.Controllers
             var response = _mapper.Map<IEnumerable<ViewCustomerReviewDto>>(listCustomerReview);
             return Ok(response);
         }
-
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<ViewCustomerReviewDto>))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         [HttpGet("get-customer-review-is-publish")]
         public async Task<IActionResult> GetAllCustomerReviewIsPublish(bool isPublish, int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
         {
@@ -67,6 +72,10 @@ namespace InSyncAPI.Controllers
         }
 
         [HttpGet("get-customer-review/{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ViewCustomerReviewDto))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
         public async Task<IActionResult> GetCustomerReviewById(Guid id)
         {
             if (_customerReviewRepo == null || _mapper == null)
@@ -74,16 +83,23 @@ namespace InSyncAPI.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     value: "Application service has not been created");
             }
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new ValidationProblemDetails(ModelState));
+            }
             var customerReview = await _customerReviewRepo.GetSingleByCondition(c => c.Id.Equals(id));
-            if(customerReview == null)
+            if (customerReview == null)
             {
                 return NotFound("No review has an ID : " + id.ToString());
             }
             var response = _mapper.Map<ViewCustomerReviewDto>(customerReview);
-                                                return Ok(response);
-                                            }
+            return Ok(response);
+        }
 
         [HttpPost]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionCustomerReviewResponse))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         public async Task<IActionResult> AddCustomerReview(AddCustomerReviewDto newReview)
         {
             if (_customerReviewRepo == null || _mapper == null)
@@ -94,24 +110,38 @@ namespace InSyncAPI.Controllers
 
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return BadRequest(new ValidationProblemDetails(ModelState));
             }
 
             CustomerReview customerReview = _mapper.Map<CustomerReview>(newReview);
             customerReview.DateCreated = DateTime.Now;
             customerReview.IsShow = false;
 
-            var response = await _customerReviewRepo.Add(customerReview);
+            try
+            {
+                var response = await _customerReviewRepo.Add(customerReview);
 
-            if (response == null)
+                if (response == null)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError,
+                        value: "Error occurred while adding the customer review.");
+                }
+                return Ok(new ActionCustomerReviewResponse { Message = "Customer review added successfully.", Id = response.Id });
+            }
+            catch(Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError,
-                    value: "Error occurred while adding the customer review.");
+                        value: "An error occurred while adding Customer Review into Database");
             }
+           
 
-            return Ok(new { message = "Customer review added successfully.", Id = response.Id });
+            
         }
         [HttpPut("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionCustomerReviewResponse))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
         public async Task<IActionResult> UpdateCustomerReview(Guid id, UpdateCustomerReviewDto updateReview)
         {
             if (_customerReviewRepo == null || _mapper == null)
@@ -121,8 +151,8 @@ namespace InSyncAPI.Controllers
             }
 
             if (!ModelState.IsValid)
-            { 
-                return BadRequest(ModelState);
+            {
+                return BadRequest(new ValidationProblemDetails(ModelState));
             }
 
             if (id != updateReview.Id)
@@ -136,15 +166,15 @@ namespace InSyncAPI.Controllers
             {
                 return NotFound("Customer review not found.");
             }
-           
+
 
             // Map the updated fields
             _mapper.Map(updateReview, existingReview);
 
             try
             {
-              await  _customerReviewRepo.Update(existingReview);
-                return Ok(new { message = "Customer review updated successfully.", Id = existingReview.Id });
+                await _customerReviewRepo.Update(existingReview);
+                return Ok(new ActionCustomerReviewResponse { Message = "Customer review updated successfully.", Id = existingReview.Id });
             }
             catch (Exception ex)
             {
@@ -155,6 +185,10 @@ namespace InSyncAPI.Controllers
 
 
         [HttpDelete("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionCustomerReviewResponse))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
         public async Task<IActionResult> DeleteCustomerReview(Guid id)
         {
             if (_customerReviewRepo == null || _mapper == null)
@@ -162,14 +196,25 @@ namespace InSyncAPI.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     value: "Application service has not been created");
             }
-
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new ValidationProblemDetails(ModelState));
+            }
             var checkReviewExist = await _customerReviewRepo.CheckContainsAsync(c => c.Id.Equals(id));
             if (!checkReviewExist)
             {
                 return NotFound($"Dont exist review with id {id.ToString()} to delete");
             }
-           await  _customerReviewRepo.DeleteMulti(c => c.Id.Equals(id));
-            return Ok(new { message = "Customer review deleted successfully.", Id = id });
+            try
+            {
+                await _customerReviewRepo.DeleteMulti(c => c.Id.Equals(id));
+                return Ok(new ActionCustomerReviewResponse { Message = "Customer review deleted successfully.", Id = id });
+            }catch(Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    $"Error delete Customer Review: {ex.Message}");
+            }
+           
         }
 
     }

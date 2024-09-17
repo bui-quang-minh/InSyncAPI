@@ -1,4 +1,4 @@
-﻿namespace InSyncAPI.Authentication
+﻿namespace InSyncAPI.Authentications
 {
     public class ApiKeyMiddleware
     {
@@ -9,16 +9,16 @@
             _next = next;
             _configuration = configuration;
         }
-       public async Task InvokeAsync(HttpContext context)
+        public async Task InvokeAsync(HttpContext context)
         {
             var provideApiKey = context.Request.Headers[AuthConfig.ApiKey].FirstOrDefault();
             var isValid = IsValidApiKey(provideApiKey);
-            if(!isValid)
+            if (!isValid)
             {
                 await GenerateResponse(context, 401, "Invalid Authentication");
                 return;
             }
-            
+
             await _next(context);
         }
 
@@ -30,7 +30,7 @@
 
         private bool IsValidApiKey(string provideApiKey)
         {
-            if(string.IsNullOrEmpty(provideApiKey)) return false;
+            if (string.IsNullOrEmpty(provideApiKey)) return false;
             var validApiKey = _configuration.GetValue<string>(AuthConfig.AuthSection);
             return string.Equals(validApiKey, provideApiKey, StringComparison.Ordinal);
         }

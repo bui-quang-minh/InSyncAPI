@@ -1,11 +1,12 @@
 ﻿using AutoMapper;
 using BusinessObjects.Models;
-using InSyncAPI.Authentication;
+using InSyncAPI.Authentications;
 using InSyncAPI.Dtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Query;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Repositorys;
 
 namespace InSyncAPI.Controllers
@@ -25,10 +26,11 @@ namespace InSyncAPI.Controllers
             _mapper = mapper;
         }
 
-       
+
         [HttpGet]
         [EnableQuery]
-        [ProducesResponseType(200, Type = typeof(IQueryable<Term>))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Term>))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         public async Task<IActionResult> GetTerms()
         {
             if (_termRepo == null || _mapper == null)
@@ -36,10 +38,13 @@ namespace InSyncAPI.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     value: "Application service has not been created");
             }
-            var response = _termRepo.GetAll().AsQueryable();
+            string[] includes = new string[] { };
+            var response = _termRepo.GetAll(includes).AsQueryable();
             return Ok(response);
         }
         [HttpGet("get-all-terms")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<ViewTermDto>))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         public async Task<IActionResult> GetAllTerms(int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
         {
             if (_termRepo == null || _mapper == null)
@@ -49,20 +54,28 @@ namespace InSyncAPI.Controllers
             }
             index = index.Value < 0 ? INDEX_DEFAULT : index;
             size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
-
-            var listTerms = _termRepo.GetMultiPaging(c => true, out int total, index.Value, size.Value, null);
+            string[] includes = new string[] { };
+            var listTerms = _termRepo.GetMultiPaging(c => true, out int total, index.Value, size.Value, includes);
             var response = _mapper.Map<IEnumerable<ViewTermDto>>(listTerms);
             return Ok(response);
         }
 
 
         [HttpGet("get-term/{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ViewTermDto))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
         public async Task<IActionResult> GetTermById(Guid id)
         {
             if (_termRepo == null || _mapper == null)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     value: "Application service has not been created");
+            }
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new ValidationProblemDetails(ModelState));
             }
 
             var term = await _termRepo.GetSingleByCondition(c => c.Id.Equals(id));
@@ -75,6 +88,9 @@ namespace InSyncAPI.Controllers
         }
 
         [HttpPost]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionTermResponse))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         public async Task<IActionResult> AddTerm(AddTermsDto newTerm)
         {
             if (_termRepo == null || _mapper == null)
@@ -85,7 +101,7 @@ namespace InSyncAPI.Controllers
 
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return BadRequest(new ValidationProblemDetails(ModelState));
             }
 
             Term term = _mapper.Map<Term>(newTerm);
@@ -99,9 +115,13 @@ namespace InSyncAPI.Controllers
                     value: "Error occurred while adding the term.");
             }
 
-            return Ok(new { message = "Term added successfully.", Id = response.Id });
+            return Ok(new ActionTermResponse { Message = "Term added successfully.", Id = response.Id });
         }
         [HttpPut("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionTermResponse))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
         public async Task<IActionResult> UpdateTerm(Guid id, UpdateTermsDto updateTerm)
         {
             if (_termRepo == null || _mapper == null)
@@ -112,7 +132,7 @@ namespace InSyncAPI.Controllers
 
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return BadRequest(new ValidationProblemDetails(ModelState));
             }
 
             if (id != updateTerm.Id)
@@ -133,7 +153,7 @@ namespace InSyncAPI.Controllers
             try
             {
                 await _termRepo.Update(existingTerm);
-                return Ok(new { message = "Term updated successfully.", Id = existingTerm.Id });
+                return Ok(new ActionTermResponse { Message = "Term updated successfully.", Id = existingTerm.Id });
             }
             catch (Exception ex)
             {
@@ -144,6 +164,10 @@ namespace InSyncAPI.Controllers
 
 
         [HttpDelete("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionTermResponse))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
         public async Task<IActionResult> DeleteTerm(Guid id)
         {
             if (_termRepo == null || _mapper == null)
@@ -152,13 +176,26 @@ namespace InSyncAPI.Controllers
                     value: "Application service has not been created");
             }
 
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new ValidationProblemDetails(ModelState));
+            }
             var checkTermExist = await _termRepo.CheckContainsAsync(c => c.Id.Equals(id));
             if (!checkTermExist)
             {
                 return NotFound($"Dont exist term with id {id.ToString()} to delete");
             }
-            await _termRepo.DeleteMulti(c => c.Id.Equals(id));
-            return Ok(new { message = "Term deleted successfully.", Id = id });
+            try
+            {
+                await _termRepo.DeleteMulti(c => c.Id.Equals(id));
+                return Ok(new ActionTermResponse { Message = "Term deleted successfully.", Id = id });
+            }
+            catch(Exception ex)
+            {
+                 return StatusCode(StatusCodes.Status500InternalServerError,
+                    $"Error delete term: {ex.Message}");
+            }
+            
         }
     }
 

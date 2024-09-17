@@ -1,5 +1,5 @@
 ﻿using BusinessObjects.Models;
-using DataAccess;
+using DataAccess.ContextAccesss;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -91,6 +91,8 @@ namespace Repositorys
 
         public IEnumerable<T> GetMultiPaging(Expression<Func<T, bool>> filter, out int total, int index = 0, int size = 20, string[] includes = null)
         {
+            index = index < 0 ? 0 : index;
+            size = size < 0 ? 20 : size;
             int skipCount = index * size;
             IQueryable<T> _resetSet;
 

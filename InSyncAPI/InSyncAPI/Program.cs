@@ -1,12 +1,12 @@
-using DataAccess;
 using InSync_Api.DependencyInjectService;
 using InSync_Api.MapperProfile;
-using InSyncAPI.Authentication;
+using InSyncAPI.Authentications;
 using InSyncAPI.Extentions;
 using Microsoft.EntityFrameworkCore;
 using WebNewsAPIs.Extentions;
 using Microsoft.OpenApi;
 using Microsoft.OpenApi.Models;
+using DataAccess.ContextAccesss;
 
 namespace InSyncAPI
 {

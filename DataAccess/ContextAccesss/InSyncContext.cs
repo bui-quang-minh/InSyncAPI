@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using BusinessObjects.Models;
 using Microsoft.Extensions.Configuration;
 
-namespace DataAccess
+namespace DataAccess.ContextAccesss
 {
     public partial class InSyncContext : DbContext
     {

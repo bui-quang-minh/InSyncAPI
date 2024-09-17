@@ -13,7 +13,6 @@ namespace InSyncAPI.Dtos
     public class AddTermsDto
     {
         [Required]
-        [MaxLength(200)]
         public string Question { get; set; } = null!;
         [Required]
         public string Answer { get; set; } = null!;  
@@ -22,10 +21,14 @@ namespace InSyncAPI.Dtos
     {
         public Guid Id { get; set; }
         [Required]
-        [MaxLength(200)]
         public string Question { get; set; } = null!;
         [Required]
         public string Answer { get; set; } = null!;
        
+    }
+    public class ActionTermResponse
+    {
+        public string Message { get; set; }
+        public Guid Id { get; set; }
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace InSyncAPI.Authentication
+﻿namespace InSyncAPI.Authentications
 {
     public class AuthConfig
     {
