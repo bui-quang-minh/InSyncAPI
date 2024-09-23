@@ -22,7 +22,7 @@ namespace InSyncAPI.Controllers
             _customerReviewRepo = customerReviewRepo;
             _mapper = mapper;
         }
-        [HttpGet("odata")]
+        [HttpGet()]
         [EnableQuery]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IQueryable<CustomerReview>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
@@ -36,7 +36,7 @@ namespace InSyncAPI.Controllers
             var response = _customerReviewRepo.GetAll().AsQueryable();
             return Ok(response);
         }
-        [HttpGet()]
+        [HttpGet("pagination")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewCustomerReviewDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         public async Task<IActionResult> GetAllCustomerReview(int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
@@ -59,7 +59,7 @@ namespace InSyncAPI.Controllers
             return Ok(responsePaging);
 
         }
-        [HttpGet("is-publish")]
+        [HttpGet("pagination/is-publish")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewCustomerReviewDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         

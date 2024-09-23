@@ -22,7 +22,7 @@ namespace InSyncAPI.Controllers
             _tutorialRepo = tutorialRepo;
             _mapper = mapper;
         }
-        [HttpGet("odata")]
+        [HttpGet("pagination")]
         [EnableQuery]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IQueryable<Tutorial>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
@@ -38,7 +38,7 @@ namespace InSyncAPI.Controllers
             return Ok(response);
         }
         [HttpGet()]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IQueryable<ViewTutorialDto>>))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewTutorialDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         public async Task<IActionResult> GetAllTutorials(int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
         {

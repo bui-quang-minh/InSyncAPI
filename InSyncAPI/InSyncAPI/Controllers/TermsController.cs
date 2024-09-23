@@ -27,7 +27,7 @@ namespace InSyncAPI.Controllers
         }
 
 
-        [HttpGet("odata")]
+        [HttpGet()]
         [EnableQuery]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Term>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
@@ -42,7 +42,7 @@ namespace InSyncAPI.Controllers
             var response = _termRepo.GetAll(includes).AsQueryable();
             return Ok(response);
         }
-        [HttpGet()]
+        [HttpGet("pagination")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<ViewTermDto>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         public async Task<IActionResult> GetAllTerms(int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)

@@ -16,6 +16,15 @@ namespace InSyncAPI
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            // config url api InSensitive Route
+            builder.Services.AddRouting(options =>
+            {
+                options.LowercaseUrls = true;
+                options.AppendTrailingSlash = false;
+               
+            });
+
+
             // Add services to the container.
             builder.Services.AddAuthorization();
             builder.ConfigAuthenAuthor();

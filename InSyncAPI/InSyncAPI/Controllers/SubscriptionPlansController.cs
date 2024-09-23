@@ -31,7 +31,7 @@ namespace InSyncAPI.Controllers
             _userRepository = userRepository;
             _mapper = mapper;
         }
-        [HttpGet("odata")]
+        [HttpGet()]
         [EnableQuery]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IQueryable<SubscriptionPlan>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
@@ -47,7 +47,7 @@ namespace InSyncAPI.Controllers
             var response = _subscriptionPlanRepo.GetAll().AsQueryable();
             return Ok(response);
         }
-        [HttpGet()]
+        [HttpGet("pagination")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewSubscriptionPlanDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
 

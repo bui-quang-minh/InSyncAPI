@@ -31,11 +31,11 @@ namespace InSyncAPI.Controllers
         }
 
 
-        [HttpGet("odata")]
+        [HttpGet()]
         [EnableQuery]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Asset>))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IQueryable<Asset>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
-        public async Task<IActionResult> GetAssest()
+        public async Task<IActionResult> Get()
         {
             if (_assestRepo == null || _mapper == null)
             {
@@ -45,7 +45,7 @@ namespace InSyncAPI.Controllers
             var response = _assestRepo.GetAll().AsQueryable();
             return Ok(response);
         }
-        [HttpGet()]
+        [HttpGet("pagination")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewAssetDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         public async Task<IActionResult> GetAllAssetOfProject(int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)

@@ -22,7 +22,7 @@ namespace InSyncAPI.Controllers
             _privacyPolicyRepo = privacyPolicyRepo;
             _mapper = mapper;
         }
-        [HttpGet("odata")]
+        [HttpGet()]
         [EnableQuery]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IQueryable<ViewPrivacyPolicyDto>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
@@ -36,7 +36,7 @@ namespace InSyncAPI.Controllers
             var response = _privacyPolicyRepo.GetAll().AsQueryable();
             return Ok(response);
         }
-        [HttpGet()]
+        [HttpGet("pagination")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewPrivacyPolicyDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
 

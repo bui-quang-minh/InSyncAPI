@@ -20,18 +20,16 @@ namespace WebNewsAPIs.Extentions
         public static IEdmModel getEdmModel()
         {
             ODataConventionModelBuilder conventionModelBuilder = new ODataConventionModelBuilder();
-            conventionModelBuilder.EntitySet<Asset>("Assets");
-                
+            conventionModelBuilder.EntitySet<Asset>("Assets");    
             conventionModelBuilder.EntitySet<CustomerReview>("CustomerReviews");
-            conventionModelBuilder.EntitySet<PrivacyPolicy>("PrivacyPolicys");
-                
+            conventionModelBuilder.EntitySet<PrivacyPolicy>("PrivacyPolicys");    
             conventionModelBuilder.EntitySet<Project>("Projects");
             conventionModelBuilder.EntitySet<Scenario>("Scenarios");
             conventionModelBuilder.EntitySet<SubscriptionPlan>("SubscriptionPlans");
             conventionModelBuilder.EntitySet<Term>("Terms");
             conventionModelBuilder.EntitySet<Tutorial>("Tutorials");
             conventionModelBuilder.EntitySet<User>("Users");
-            conventionModelBuilder.EntitySet<UserSubscription>("UserSubscription");
+            conventionModelBuilder.EntitySet<UserSubscription>("UserSubscriptions");
 
 
             return conventionModelBuilder.GetEdmModel();

@@ -28,7 +28,7 @@ namespace InSyncAPI.Controllers
             _userRepo = userRepo;
             _mapper = mapper;
         }
-        [HttpGet("odata")]
+        [HttpGet()]
         [EnableQuery]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Project>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
@@ -42,7 +42,7 @@ namespace InSyncAPI.Controllers
             var response = _projectRepo.GetAll().AsQueryable();
             return Ok(response);
         }
-        [HttpGet()]
+        [HttpGet("pagination")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewProjectDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
 
