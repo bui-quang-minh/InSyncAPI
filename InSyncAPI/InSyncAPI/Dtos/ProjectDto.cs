@@ -26,4 +26,9 @@ namespace InSyncAPI.Dtos
         public string ProjectName { get; set; } = null!;
         public bool IsPublish { get; set; }
     }
+    public class ActionProjectResponse
+    {
+        public string Message { get; set; }
+        public Guid Id { get; set; }
+    }
 }

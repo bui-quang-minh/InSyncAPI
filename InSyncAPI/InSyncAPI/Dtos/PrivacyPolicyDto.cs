@@ -25,5 +25,9 @@ namespace InSyncAPI.Dtos
         [MaxLength(300)]
         public string Title { get; set; } = null!;
     }
-
+    public class ActionPrivacyPolicyResponse
+    {
+        public string Message { get; set; }
+        public Guid Id { get; set; }
+    }
 }

@@ -54,5 +54,9 @@ namespace InSyncAPI.Dtos
         [StringLength(255, MinimumLength = 5)]
         public string ScenarioName { get; set; } = null!;
     }
-
+    public class ActionScenarioResponse
+    {
+        public string Message { get; set; }
+        public Guid Id { get; set; }
+    }
 }

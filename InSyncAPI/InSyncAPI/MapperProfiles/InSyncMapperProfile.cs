@@ -45,6 +45,19 @@ namespace InSync_Api.MapperProfile
             CreateMap<Project, ViewProjectDto>()
                 .ForMember(c => c.UserName, a => a.MapFrom(r => r.User.UserName))
                 .ReverseMap();
+            // Asset Dto
+            CreateMap<AddAssetDto, Asset>().ReverseMap();
+            CreateMap<UpdateAssetDto, Asset>().ReverseMap();
+            CreateMap<Asset, ViewAssetDto>()
+                .ForMember(c => c.ProjectName, a => a.MapFrom(r => r.Project.ProjectName))
+                .ReverseMap();
+            // User Subsciption Dto
+            CreateMap<AddUserSubsciptionDto, UserSubscription>().ReverseMap();
+            CreateMap<UpdateUserSubsciptionDto, UserSubscription>().ReverseMap();
+            CreateMap<UserSubscription, ViewUserSubsciptionDto>()
+                .ForMember(c => c.UserName, a => a.MapFrom(r => r.User.UserName))
+                .ForMember(c => c.SubscriptionPlanName, a => a.MapFrom(r => r.SubscriptionPlan.SubscriptionsName))
+                .ReverseMap();
             //Clerk Mapper
             CreateMap<CreateUserDto, User>()
                 .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.Data.Email_Addresses.FirstOrDefault().Email_Address))

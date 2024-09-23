@@ -22,8 +22,11 @@ namespace InSyncAPI.Controllers
             _tutorialRepo = tutorialRepo;
             _mapper = mapper;
         }
-        [HttpGet]
+        [HttpGet("odata")]
         [EnableQuery]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IQueryable<Tutorial>))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
+
         public async Task<IActionResult> GetTutorials()
         {
             if (_tutorialRepo == null || _mapper == null)
@@ -34,7 +37,9 @@ namespace InSyncAPI.Controllers
             var response = _tutorialRepo.GetAll().AsQueryable();
             return Ok(response);
         }
-        [HttpGet("get-all-tutorials")]
+        [HttpGet()]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IQueryable<ViewTutorialDto>>))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         public async Task<IActionResult> GetAllTutorials(int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
         {
             if (_tutorialRepo == null || _mapper == null)
@@ -47,11 +52,20 @@ namespace InSyncAPI.Controllers
 
             var listTutorial = _tutorialRepo.GetMultiPaging(c => true, out int total, index.Value, size.Value, null);
             var response = _mapper.Map<IEnumerable<ViewTutorialDto>>(listTutorial);
-            return Ok(response);
+            var responsePaging = new ResponsePaging<IEnumerable<ViewTutorialDto>>
+            {
+                data = response,
+                totalOfData = total
+            };
+            return Ok(responsePaging);
         }
 
 
-        [HttpGet("get-tutorial/{id}")]
+        [HttpGet("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ViewCustomerReviewDto))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
         public async Task<IActionResult> GetTutorialById(Guid id)
         {
             if (_tutorialRepo == null || _mapper == null)
@@ -59,7 +73,10 @@ namespace InSyncAPI.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     value: "Application service has not been created");
             }
-
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new ValidationProblemDetails(ModelState));
+            }
             var tutorial = await _tutorialRepo.GetSingleByCondition(c => c.Id.Equals(id));
             if (tutorial == null)
             {
@@ -70,6 +87,10 @@ namespace InSyncAPI.Controllers
         }
 
         [HttpPost]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionTutorialResponse))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
+
         public async Task<IActionResult> AddTutorial(AddTutorialDto newTutorial)
         {
             if (_tutorialRepo == null || _mapper == null)
@@ -86,17 +107,29 @@ namespace InSyncAPI.Controllers
             Tutorial tutorial = _mapper.Map<Tutorial>(newTutorial);
             tutorial.DateCreated = DateTime.Now;
 
-            var response = await _tutorialRepo.Add(tutorial);
-
-            if (response == null)
+            try
+            {
+                var response = await _tutorialRepo.Add(tutorial);
+                if (response == null)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError,
+                        value: "Error occurred while adding the tutorial.");
+                }
+                return Ok(new ActionTutorialResponse { Message = "Tutorial added successfully.", Id = response.Id });
+            }
+            catch (Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError,
-                    value: "Error occurred while adding the tutorial.");
+                        value: "An error occurred while adding Tutorial into Database " + ex.Message);
             }
 
-            return Ok(new { message = "Tutorial added successfully.", Id = response.Id });
         }
         [HttpPut("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionTutorialResponse))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
+
         public async Task<IActionResult> UpdateTutorial(Guid id, UpdateTutorialDto updateTutorial)
         {
             if (_tutorialRepo == null || _mapper == null)
@@ -115,7 +148,7 @@ namespace InSyncAPI.Controllers
                 return BadRequest("Tutorial ID information does not match");
             }
 
-            
+
             var existingTutorial = await _tutorialRepo.GetSingleByCondition(c => c.Id.Equals(id));
 
             if (existingTutorial == null)
@@ -128,7 +161,7 @@ namespace InSyncAPI.Controllers
             try
             {
                 await _tutorialRepo.Update(existingTutorial);
-                return Ok(new { message = "Tutorial updated successfully.", Id = existingTutorial.Id });
+                return Ok(new ActionTutorialResponse { Message = "Tutorial updated successfully.", Id = existingTutorial.Id });
             }
             catch (Exception ex)
             {
@@ -139,6 +172,10 @@ namespace InSyncAPI.Controllers
 
 
         [HttpDelete("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionTutorialResponse))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
         public async Task<IActionResult> DeleteTutorial(Guid id)
         {
             if (_tutorialRepo == null || _mapper == null)
@@ -152,8 +189,18 @@ namespace InSyncAPI.Controllers
             {
                 return NotFound($"Dont exist tutorial with id {id.ToString()} to delete");
             }
-            await _tutorialRepo.DeleteMulti(c => c.Id.Equals(id));
-            return Ok(new { message = "Tutorial deleted successfully.", Id = id });
+
+            try
+            {
+                await _tutorialRepo.DeleteMulti(c => c.Id.Equals(id));
+                return Ok(new ActionTutorialResponse { Message = "Tutorial deleted successfully.", Id = id });
+
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                   $"Error delete tutorial: {ex.Message}");
+            }
         }
     }
 

@@ -22,8 +22,10 @@ namespace InSyncAPI.Controllers
             _privacyPolicyRepo = privacyPolicyRepo;
             _mapper = mapper;
         }
-        [HttpGet]
+        [HttpGet("odata")]
         [EnableQuery]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IQueryable<ViewPrivacyPolicyDto>))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         public async Task<IActionResult> Get()
         {
             if (_privacyPolicyRepo == null)
@@ -34,7 +36,10 @@ namespace InSyncAPI.Controllers
             var response = _privacyPolicyRepo.GetAll().AsQueryable();
             return Ok(response);
         }
-        [HttpGet("get-all-privacy_policy")]
+        [HttpGet()]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewPrivacyPolicyDto>>))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
+
         public async Task<IActionResult> GetAllPrivacyPolicy(int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
         {
             if (_privacyPolicyRepo == null || _mapper == null)
@@ -47,11 +52,21 @@ namespace InSyncAPI.Controllers
 
             var listPrivacyPolicy = _privacyPolicyRepo.GetMultiPaging(c => true, out int total, index.Value, size.Value, null);
             var response = _mapper.Map<IEnumerable<ViewPrivacyPolicyDto>>(listPrivacyPolicy);
-            return Ok(response);
+            var responsePaging = new ResponsePaging<IEnumerable<ViewPrivacyPolicyDto>>
+            {
+                data = response,
+                totalOfData = total
+            };
+            return Ok(responsePaging);
         }
 
 
-        [HttpGet("get-privacy-policy/{id}")]
+        [HttpGet("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ViewPrivacyPolicyDto))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
+
         public async Task<IActionResult> GetPrivacyPolicyById(Guid id)
         {
             if (_privacyPolicyRepo == null || _mapper == null)
@@ -59,7 +74,10 @@ namespace InSyncAPI.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     value: "Application service has not been created");
             }
-           
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new ValidationProblemDetails(ModelState));
+            }
             var privacyPolicy = await _privacyPolicyRepo.GetSingleByCondition(c => c.Id.Equals(id));
             if (privacyPolicy == null)
             {
@@ -70,6 +88,10 @@ namespace InSyncAPI.Controllers
         }
 
         [HttpPost]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionPrivacyPolicyResponse))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
+
         public async Task<IActionResult> AddPrivacyPolicy(AddPrivacyPolicyDto newPrivacy)
         {
             if (_privacyPolicyRepo == null || _mapper == null)
@@ -86,17 +108,30 @@ namespace InSyncAPI.Controllers
             PrivacyPolicy privacyPolicy = _mapper.Map<PrivacyPolicy>(newPrivacy);
             privacyPolicy.DateCreated = DateTime.Now;
 
-            var response = await _privacyPolicyRepo.Add(privacyPolicy);
+            try
+            {
+                var response = await _privacyPolicyRepo.Add(privacyPolicy);
+                if (response == null)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError,
+                        value: "Error occurred while adding the private policy.");
+                }
 
-            if (response == null)
+                return Ok(new ActionPrivacyPolicyResponse { Message = "Private policy added successfully.", Id = response.Id });
+            }
+            catch (Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError,
-                    value: "Error occurred while adding the private policy.");
+                        value: "An error occurred while adding privacy policy into Database " + ex.Message);
             }
 
-            return Ok(new { message = "Private policy added successfully.", Id = response.Id });
         }
         [HttpPut("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionPrivacyPolicyResponse))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
+
         public async Task<IActionResult> UpdatePrivacyPolicy(Guid id, UpdatePrivacyPolicyDto updatePrivacy)
         {
             if (_privacyPolicyRepo == null || _mapper == null)
@@ -117,7 +152,7 @@ namespace InSyncAPI.Controllers
 
             // Fetch the existing customer review to ensure it exists
             var existingPrivacy = await _privacyPolicyRepo.GetSingleByCondition(c => c.Id.Equals(id));
-            
+
             if (existingPrivacy == null)
             {
                 return NotFound("Privacy policy not found.");
@@ -129,7 +164,7 @@ namespace InSyncAPI.Controllers
             try
             {
                 await _privacyPolicyRepo.Update(existingPrivacy);
-                return Ok(new { message = "Privacy policy updated successfully.", Id = existingPrivacy.Id });
+                return Ok(new ActionPrivacyPolicyResponse { Message = "Privacy policy updated successfully.", Id = existingPrivacy.Id });
             }
             catch (Exception ex)
             {
@@ -140,6 +175,11 @@ namespace InSyncAPI.Controllers
 
 
         [HttpDelete("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionPrivacyPolicyResponse))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
+
         public async Task<IActionResult> DeletePrivacyPolicy(Guid id)
         {
             if (_privacyPolicyRepo == null || _mapper == null)
@@ -153,8 +193,17 @@ namespace InSyncAPI.Controllers
             {
                 return NotFound($"Dont exist privacy policy with id {id.ToString()} to delete");
             }
-           await _privacyPolicyRepo.DeleteMulti(c => c.Id.Equals(id));
-            return Ok(new { message = "Privacy policy deleted successfully.", Id = id });
+            try
+            {
+                await _privacyPolicyRepo.DeleteMulti(c => c.Id.Equals(id));
+                return Ok(new ActionPrivacyPolicyResponse { Message = "Privacy policy deleted successfully.", Id = id });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                   $"Error delete term: {ex.Message}");
+            }
+
         }
     }
 }

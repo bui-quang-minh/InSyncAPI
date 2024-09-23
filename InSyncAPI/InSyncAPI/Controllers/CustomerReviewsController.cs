@@ -22,9 +22,9 @@ namespace InSyncAPI.Controllers
             _customerReviewRepo = customerReviewRepo;
             _mapper = mapper;
         }
-        [HttpGet]
+        [HttpGet("odata")]
         [EnableQuery]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<CustomerReview>))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IQueryable<CustomerReview>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         public async Task<IActionResult> GetCustomerReviews()
         {
@@ -36,8 +36,8 @@ namespace InSyncAPI.Controllers
             var response = _customerReviewRepo.GetAll().AsQueryable();
             return Ok(response);
         }
-        [HttpGet("get-all-customer-review")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<ViewCustomerReviewDto>))]
+        [HttpGet()]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewCustomerReviewDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         public async Task<IActionResult> GetAllCustomerReview(int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
         {
@@ -51,11 +51,18 @@ namespace InSyncAPI.Controllers
 
             var listCustomerReview = _customerReviewRepo.GetMultiPaging(c => true, out int total, index.Value, size.Value, null);
             var response = _mapper.Map<IEnumerable<ViewCustomerReviewDto>>(listCustomerReview);
-            return Ok(response);
+            var responsePaging = new ResponsePaging<IEnumerable<ViewCustomerReviewDto>>
+            {
+                data = response,
+                totalOfData = total
+            };
+            return Ok(responsePaging);
+
         }
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<ViewCustomerReviewDto>))]
+        [HttpGet("is-publish")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewCustomerReviewDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
-        [HttpGet("get-customer-review-is-publish")]
+        
         public async Task<IActionResult> GetAllCustomerReviewIsPublish(bool isPublish, int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
         {
             if (_customerReviewRepo == null || _mapper == null)
@@ -63,15 +70,22 @@ namespace InSyncAPI.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     value: "Application service has not been created");
             }
+            
             index = index.Value < 0 ? INDEX_DEFAULT : index;
             size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
 
             var listCustomerReview = _customerReviewRepo.GetMultiPaging(c => c.IsShow == isPublish, out int total, index.Value, size.Value, null);
             var response = _mapper.Map<IEnumerable<ViewCustomerReviewDto>>(listCustomerReview);
-            return Ok(response);
+            var responsePaging = new ResponsePaging<IEnumerable<ViewCustomerReviewDto>>
+            {
+                data = response,
+                totalOfData = total
+            };
+            return Ok(responsePaging);
+
         }
 
-        [HttpGet("get-customer-review/{id}")]
+        [HttpGet("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ViewCustomerReviewDto))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
@@ -128,14 +142,14 @@ namespace InSyncAPI.Controllers
                 }
                 return Ok(new ActionCustomerReviewResponse { Message = "Customer review added successfully.", Id = response.Id });
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError,
                         value: "An error occurred while adding Customer Review into Database");
             }
-           
 
-            
+
+
         }
         [HttpPut("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionCustomerReviewResponse))]
@@ -209,12 +223,13 @@ namespace InSyncAPI.Controllers
             {
                 await _customerReviewRepo.DeleteMulti(c => c.Id.Equals(id));
                 return Ok(new ActionCustomerReviewResponse { Message = "Customer review deleted successfully.", Id = id });
-            }catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     $"Error delete Customer Review: {ex.Message}");
             }
-           
+
         }
 
     }

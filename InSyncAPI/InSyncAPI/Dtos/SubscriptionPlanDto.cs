@@ -62,4 +62,9 @@
         public bool? PrioritySupport { get; set; }
         public bool? MonthlyReporting { get; set; }
     }
+    public class ActionSubsciptionPlanResponse
+    {
+        public string Message { get; set; }
+        public Guid Id { get; set; }
+    }
 }

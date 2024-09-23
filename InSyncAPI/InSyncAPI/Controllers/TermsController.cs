@@ -27,7 +27,7 @@ namespace InSyncAPI.Controllers
         }
 
 
-        [HttpGet]
+        [HttpGet("odata")]
         [EnableQuery]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Term>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
@@ -42,7 +42,7 @@ namespace InSyncAPI.Controllers
             var response = _termRepo.GetAll(includes).AsQueryable();
             return Ok(response);
         }
-        [HttpGet("get-all-terms")]
+        [HttpGet()]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<ViewTermDto>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         public async Task<IActionResult> GetAllTerms(int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
@@ -61,7 +61,7 @@ namespace InSyncAPI.Controllers
         }
 
 
-        [HttpGet("get-term/{id}")]
+        [HttpGet("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ViewTermDto))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
@@ -107,15 +107,24 @@ namespace InSyncAPI.Controllers
             Term term = _mapper.Map<Term>(newTerm);
             term.DateCreated = DateTime.Now;
 
-            var response = await _termRepo.Add(term);
+            try
+            {
+                var response = await _termRepo.Add(term);
 
-            if (response == null)
+                if (response == null)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError,
+                        value: "Error occurred while adding the term.");
+                }
+
+                return Ok(new ActionTermResponse { Message = "Term added successfully.", Id = response.Id });
+            }
+            catch (Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError,
-                    value: "Error occurred while adding the term.");
+                        value: "An error occurred while adding Term into Database " + ex.Message);
             }
-
-            return Ok(new ActionTermResponse { Message = "Term added successfully.", Id = response.Id });
+            
         }
         [HttpPut("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionTermResponse))]
@@ -162,7 +171,7 @@ namespace InSyncAPI.Controllers
             }
         }
 
-
+       
         [HttpDelete("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionTermResponse))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]

@@ -23,32 +23,6 @@ namespace InSyncAPI
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
-            //builder.Services.AddSwaggerGen(x =>
-            //{
-            //    x.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme()
-            //    {
-            //        Description = "Api Key to secure the Api",
-            //        Type = SecuritySchemeType.ApiKey,
-            //        Name = AuthConfig.ApiKey,
-            //        In = ParameterLocation.Header,
-            //        Scheme = "ApiKeyScheme"
-            //    });
-            //    var scheme = new OpenApiSecurityScheme()
-            //    {
-            //        Reference = new OpenApiReference()
-            //        {
-            //            Type = ReferenceType.SecurityScheme,
-            //            Id = "ApiKey"
-            //        },
-            //        In = ParameterLocation.Header
-            //    };
-            //    var requirement = new OpenApiSecurityRequirement()
-            //    {
-            //        {scheme, new List<string>{}}
-            //    };
-            //    x.AddSecurityRequirement(requirement);
-
-            //});
 
 
             builder.Services.AddControllers();

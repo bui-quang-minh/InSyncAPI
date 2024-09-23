@@ -32,4 +32,9 @@ namespace InSyncAPI.Dtos
         public bool IsShow { get; set; }
         public long Order { get; set; }
     }
+    public class ActionTutorialResponse
+    {
+        public string Message { get; set; }
+        public Guid Id { get; set; }
+    }
 }
