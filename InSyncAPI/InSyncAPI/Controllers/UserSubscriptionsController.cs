@@ -111,7 +111,7 @@ namespace InSyncAPI.Controllers
                 return BadRequest(new ValidationProblemDetails(ModelState));
             }
             var now = DateTime.Now;
-            var listUserSubsciption = _userSubRepo.GetMulti(c => c.UserId.Equals(userId) && c.StripeCurrentPeriodEnd <= now);
+            var listUserSubsciption = _userSubRepo.GetMulti(c => c.UserId.Equals(userId) && c.StripeCurrentPeriodEnd >= now);
             var response = _mapper.Map<IEnumerable<ViewUserSubsciptionDto>>(listUserSubsciption);
            
             return Ok(response);
