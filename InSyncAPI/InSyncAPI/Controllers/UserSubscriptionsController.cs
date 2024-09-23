@@ -96,7 +96,7 @@ namespace InSyncAPI.Controllers
             };
             return Ok(responsePaging);
         }
-        [HttpGet("get-of-user/{userId}")]
+        [HttpGet("subsciption-user-no-expired/{userId}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<ViewUserSubsciptionDto>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         public async Task<IActionResult> GetSubPlaneOfUserNoExpired(Guid userId)
