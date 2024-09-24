@@ -32,7 +32,7 @@ namespace InSyncAPI.Controllers
         [EnableQuery]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Project>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
-        public async Task<IActionResult> Get()
+        public async Task<IActionResult> GetProjects()
         {
             if (_projectRepo == null || _mapper == null)
             {
@@ -68,38 +68,10 @@ namespace InSyncAPI.Controllers
 
         }
 
-        [HttpGet("projects-user/{userId}")]
+
+        [HttpGet("project-user-is-publish/{userId}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewProjectDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
-
-        public async Task<IActionResult> GetAllProjectOfUser(Guid userId, int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
-        {
-            if (_projectRepo == null || _mapper == null)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    value: "Application service has not been created");
-            }
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(new ValidationProblemDetails(ModelState));
-            }
-            index = index.Value < 0 ? INDEX_DEFAULT : index;
-            size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
-
-            var listProject = _projectRepo.GetMultiPaging(c => c.UserId.Equals(userId), out int total, index.Value, size.Value, includes);
-            var response = _mapper.Map<IEnumerable<ViewProjectDto>>(listProject);
-            var responsePaging = new ResponsePaging<IEnumerable<ViewProjectDto>>
-            {
-                data = response,
-                totalOfData = total
-            };
-            return Ok(responsePaging);
-        }
-
-        [HttpGet("project-user-is-publish")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewProjectDto>>))]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
-
         public async Task<IActionResult> GetAllProjectIsPublishOfUser(Guid userId, bool? isPublish, int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
         {
             if (_projectRepo == null || _mapper == null)
@@ -114,7 +86,9 @@ namespace InSyncAPI.Controllers
             index = index.Value < 0 ? INDEX_DEFAULT : index;
             size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
 
-            var listProject = _projectRepo.GetMultiPaging(c => c.UserId.Equals(userId) && (isPublish == null || c.IsPublish == isPublish), out int total, index.Value, size.Value, includes);
+            var listProject = _projectRepo.GetMultiPaging(c => c.UserId.Equals(userId) 
+            && (isPublish == null || c.IsPublish == isPublish), out int total, index.Value, size.Value, includes);
+
             var response = _mapper.Map<IEnumerable<ViewProjectDto>>(listProject);
             var responsePaging = new ResponsePaging<IEnumerable<ViewProjectDto>>
             {

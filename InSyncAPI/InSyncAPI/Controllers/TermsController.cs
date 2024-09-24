@@ -43,7 +43,7 @@ namespace InSyncAPI.Controllers
             return Ok(response);
         }
         [HttpGet("pagination")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<ViewTermDto>))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewTermDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         public async Task<IActionResult> GetAllTerms(int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
         {
@@ -57,7 +57,13 @@ namespace InSyncAPI.Controllers
             string[] includes = new string[] { };
             var listTerms = _termRepo.GetMultiPaging(c => true, out int total, index.Value, size.Value, includes);
             var response = _mapper.Map<IEnumerable<ViewTermDto>>(listTerms);
-            return Ok(response);
+
+            var responsePaging = new ResponsePaging<IEnumerable<ViewTermDto>>
+            {
+                data = response,
+                totalOfData = total
+            };
+            return Ok(responsePaging);
         }
 
 
@@ -124,7 +130,7 @@ namespace InSyncAPI.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError,
                         value: "An error occurred while adding Term into Database " + ex.Message);
             }
-            
+
         }
         [HttpPut("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionTermResponse))]
@@ -171,7 +177,7 @@ namespace InSyncAPI.Controllers
             }
         }
 
-       
+
         [HttpDelete("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionTermResponse))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
@@ -199,12 +205,12 @@ namespace InSyncAPI.Controllers
                 await _termRepo.DeleteMulti(c => c.Id.Equals(id));
                 return Ok(new ActionTermResponse { Message = "Term deleted successfully.", Id = id });
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                 return StatusCode(StatusCodes.Status500InternalServerError,
-                    $"Error delete term: {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                   $"Error delete term: {ex.Message}");
             }
-            
+
         }
     }
 

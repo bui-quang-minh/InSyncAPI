@@ -26,7 +26,7 @@ namespace InSyncAPI.Controllers
         [EnableQuery]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IQueryable<ViewPrivacyPolicyDto>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
-        public async Task<IActionResult> Get()
+        public async Task<IActionResult> GetPrivacyPolicys()
         {
             if (_privacyPolicyRepo == null)
             {

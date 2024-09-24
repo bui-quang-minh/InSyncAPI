@@ -35,7 +35,7 @@ namespace InSyncAPI.Controllers
         [EnableQuery]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IQueryable<Asset>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
-        public async Task<IActionResult> Get()
+        public async Task<IActionResult> GetAssets()
         {
             if (_assestRepo == null || _mapper == null)
             {
@@ -48,7 +48,7 @@ namespace InSyncAPI.Controllers
         [HttpGet("pagination")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewAssetDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
-        public async Task<IActionResult> GetAllAssetOfProject(int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
+        public async Task<IActionResult> GetAllAsset(int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
         {
             if (_assestRepo == null || _mapper == null)
             {
@@ -67,14 +67,34 @@ namespace InSyncAPI.Controllers
             };
             return Ok(responsePaging);
         }
+        [HttpGet("asset-project/{idProject}")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewAssetDto>>))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
+        public async Task<IActionResult> GetAllAssetOfProject(Guid idProject, int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
+        {
+            if (_assestRepo == null || _mapper == null)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    value: "Application service has not been created");
+            }
+            index = index.Value < 0 ? INDEX_DEFAULT : index;
+            size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
 
-
+            var listAssets = _assestRepo.GetMultiPaging(c => c.ProjectId.Equals(idProject), out int total, index.Value, size.Value, includes);
+            var response = _mapper.Map<IEnumerable<ViewAssetDto>>(listAssets);
+            var responsePaging = new ResponsePaging<IEnumerable<ViewAssetDto>>()
+            {
+                data = response,
+                totalOfData = total
+            };
+            return Ok(responsePaging);
+        }
         [HttpGet("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ViewAssetDto))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
-        public async Task<IActionResult> GetTermById(Guid id)
+        public async Task<IActionResult> GetAssetById(Guid id)
         {
             if (_assestRepo == null || _mapper == null)
             {
@@ -210,7 +230,7 @@ namespace InSyncAPI.Controllers
             catch (Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError,
-                   $"Error delete term: {ex.Message}");
+                   $"Error delete asset: {ex.Message}");
             }
 
         }

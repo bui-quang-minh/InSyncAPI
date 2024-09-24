@@ -145,7 +145,7 @@ namespace InSyncAPI.Controllers
             catch (Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError,
-                        value: "An error occurred while adding Customer Review into Database");
+                        value: "An error occurred while adding Customer Review into Database" + ex.Message);
             }
 
 

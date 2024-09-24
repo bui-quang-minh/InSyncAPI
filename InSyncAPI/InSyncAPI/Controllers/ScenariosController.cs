@@ -36,7 +36,7 @@ namespace InSyncAPI.Controllers
         [EnableQuery]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IQueryable<Scenario>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
-        public async Task<IActionResult> Get()
+        public async Task<IActionResult> GetScenarios()
         {
             if (_scenarioRepo == null || _userRepo == null || _mapper == null)
             {

@@ -71,7 +71,7 @@ namespace InSyncAPI.Controllers
             };
             return Ok(responsePaging);
         }
-        [HttpGet("get-of-user/{userId}")]
+        [HttpGet("user/{userId}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewUserSubsciptionDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         public async Task<IActionResult> GetAllOfUser(Guid userId, int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
@@ -96,7 +96,7 @@ namespace InSyncAPI.Controllers
             };
             return Ok(responsePaging);
         }
-        [HttpGet("subsciption-user-no-expired/{userId}")]
+        [HttpGet("user-no-expired/{userId}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<ViewUserSubsciptionDto>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         public async Task<IActionResult> GetSubPlaneOfUserNoExpired(Guid userId)
@@ -118,7 +118,7 @@ namespace InSyncAPI.Controllers
         }
 
 
-        [HttpGet("get-of_subsciption/{subId}")]
+        [HttpGet("subsciption/{subId}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewUserSubsciptionDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         public async Task<IActionResult> GetAllOfSubsciption(Guid subId, int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
@@ -149,7 +149,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
-        public async Task<IActionResult> GetTermById(Guid id)
+        public async Task<IActionResult> GetUserSubsciptionById(Guid id)
         {
             if (_userRepo == null || _userSubRepo == null || _subRepo == null || _mapper == null)
             {
@@ -197,7 +197,7 @@ namespace InSyncAPI.Controllers
                     return StatusCode(StatusCodes.Status500InternalServerError,
                         value: "Error occurred while adding the user subsciption.");
                 }
-                return Ok(new ActionTermResponse { Message = "Term added successfully.", Id = response.Id });
+                return Ok(new ActionUserSubsciptionResponse { Message = "User Subsciption added successfully.", Id = response.Id });
             }
             catch (Exception ex)
             {
@@ -211,7 +211,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
-        public async Task<IActionResult> UpdateTerm(Guid id, UpdateUserSubsciptionDto updateUserSub)
+        public async Task<IActionResult> UpdateUserSubsciption(Guid id, UpdateUserSubsciptionDto updateUserSub)
         {
             if (_userRepo == null || _userSubRepo == null || _subRepo == null || _mapper == null)
             {
@@ -242,7 +242,7 @@ namespace InSyncAPI.Controllers
             try
             {
                 await _userSubRepo.Update(existingUserSub);
-                return Ok(new ActionTermResponse { Message = "User Subsciption updated successfully.", Id = existingUserSub.Id });
+                return Ok(new ActionUserSubsciptionResponse { Message = "User Subsciption updated successfully.", Id = existingUserSub.Id });
             }
             catch (Exception ex)
             {
@@ -257,7 +257,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
-        public async Task<IActionResult> DeleteTerm(Guid id)
+        public async Task<IActionResult> DeleteUserSubsciption(Guid id)
         {
             if (_userRepo == null || _userSubRepo == null || _subRepo == null || _mapper == null)
             {
@@ -269,15 +269,15 @@ namespace InSyncAPI.Controllers
             {
                 return BadRequest(new ValidationProblemDetails(ModelState));
             }
-            var checkTermExist = await _userSubRepo.CheckContainsAsync(c => c.Id.Equals(id));
-            if (!checkTermExist)
+            var checkUserSubExist = await _userSubRepo.CheckContainsAsync(c => c.Id.Equals(id));
+            if (!checkUserSubExist)
             {
                 return NotFound($"Dont exist user subsciption with id {id.ToString()} to delete");
             }
             try
             {
                 await _userSubRepo.DeleteMulti(c => c.Id.Equals(id));
-                return Ok(new ActionTermResponse { Message = "User subsciption deleted successfully.", Id = id });
+                return Ok(new ActionUserSubsciptionResponse { Message = "User subsciption deleted successfully.", Id = id });
             }
             catch (Exception ex)
             {
