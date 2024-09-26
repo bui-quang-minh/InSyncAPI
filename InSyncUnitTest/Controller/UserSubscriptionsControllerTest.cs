@@ -70,6 +70,7 @@ namespace InSyncUnitTest.Controller
         }
 
         #endregion
+
         #region GetAllUserSubscription
         [Fact]
         public async Task GetAllUserSubscription_WhenDependencyAreNull_ShouldReturnInternalServerError()
@@ -782,6 +783,404 @@ namespace InSyncUnitTest.Controller
 
 
 
+        #endregion
+
+        #region UpdateUserSubsciption
+        [Fact]
+        public async Task UpdateUserSubsciption_WhenDependenciesAreNull_ShouldReturnsInternalServerError()
+        {
+            // Arrange
+            var controller = new UserSubscriptionsController(null, null, null, null);
+            var updateUserSub = new UpdateUserSubsciptionDto();
+
+            // Act
+            var result = await controller.UpdateUserSubsciption(Guid.NewGuid(), updateUserSub);
+
+            // Assert
+            var statusCodeResult = result as ObjectResult;
+            statusCodeResult.Should().NotBeNull();
+            statusCodeResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+            statusCodeResult.Value.Should().Be("Application service has not been created");
+        }
+
+        [Fact]
+        public async Task UpdateUserSubsciption_WhenUserSubscriptionPropertySubscriptionPlanIdNull_ShouldReturnsBadRequest()
+        {
+            // Arrange
+            var controller = new UserSubscriptionsController(_userSubRepo, _userRepo, _subRepo, _mapper);
+            var updateUserSub = new UpdateUserSubsciptionDto { };
+            var userSubId = Guid.NewGuid();
+            string key = "SubscriptionPlanId";
+            string message = $"The {key} field is required.";
+            controller.ModelState.AddModelError(key, message);
+
+            // Act
+            var result = await controller.UpdateUserSubsciption(userSubId, updateUserSub);
+
+            // Assert
+            var badRequestResult = result as BadRequestObjectResult;
+            badRequestResult.Should().NotBeNull();
+            badRequestResult.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
+            var errorResponse = badRequestResult.Value as ValidationProblemDetails;
+            errorResponse.Should().NotBeNull();
+            errorResponse.Title.Should().Be("One or more validation errors occurred.");
+            errorResponse.Errors.Should().ContainKey(key);
+            errorResponse.Errors[key].Should().Contain(message);
+        }
+        [Fact]
+        public async Task UpdateUserSubsciption_WhenUserSubscriptionPropertySubscriptionPlanIdInvalidFormatGuid_ShouldReturnsBadRequest()
+        {
+            // Arrange
+            var controller = new UserSubscriptionsController(_userSubRepo, _userRepo, _subRepo, _mapper);
+            var updateUserSub = new UpdateUserSubsciptionDto { };
+            var userSubId = Guid.NewGuid();
+            string key = "SubscriptionPlanId";
+            var invalidGuid = "e4d34798-4c18-4ca4-9014-191492e3b90"; // GUID sai định dạng
+            string messageError = $"The value '{invalidGuid}' is not valid.";
+            controller.ModelState.AddModelError(key, messageError);
+
+            // Act
+            var result = await controller.UpdateUserSubsciption(userSubId, updateUserSub);
+
+            // Assert
+            var badRequestResult = result as BadRequestObjectResult;
+            badRequestResult.Should().NotBeNull();
+            badRequestResult.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
+            var errorResponse = badRequestResult.Value as ValidationProblemDetails;
+            errorResponse.Should().NotBeNull();
+            errorResponse.Title.Should().Be("One or more validation errors occurred.");
+            errorResponse.Errors.Should().ContainKey(key);
+            errorResponse.Errors[key].Should().Contain(messageError);
+        }
+       
+       
+        [Fact]
+        public async Task UpdateUserSubsciption_WhenUserSubscriptionPropertyStripeCurrentPeriodEndNull_ShouldReturnsBadRequest()
+        {
+            // Arrange
+            var controller = new UserSubscriptionsController(_userSubRepo, _userRepo, _subRepo, _mapper);
+            var updateUserSub = new UpdateUserSubsciptionDto { };
+            var userSubId = Guid.NewGuid();
+            string key = "StripeCurrentPeriodEnd";
+            string message = $"The {key} field is required.";
+            controller.ModelState.AddModelError(key, message);
+
+            // Act
+            var result = await controller.UpdateUserSubsciption(userSubId, updateUserSub);
+
+            // Assert
+            var badRequestResult = result as BadRequestObjectResult;
+            badRequestResult.Should().NotBeNull();
+            badRequestResult.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
+            var errorResponse = badRequestResult.Value as ValidationProblemDetails;
+            errorResponse.Should().NotBeNull();
+            errorResponse.Title.Should().Be("One or more validation errors occurred.");
+            errorResponse.Errors.Should().ContainKey(key);
+            errorResponse.Errors[key].Should().Contain(message);
+        }
+        [Fact]
+        public async Task UpdateUserSubsciption_WhenUserSubscriptionPropertyStripeCurrentPeriodEndnvalidFormatGuid_ShouldReturnsBadRequest()
+        {
+            // Arrange
+            var controller = new UserSubscriptionsController(_userSubRepo, _userRepo, _subRepo, _mapper);
+            var updateUserSub = new UpdateUserSubsciptionDto { };
+            var userSubId = Guid.NewGuid();
+            string key = "StripeCurrentPeriodEnd";
+            string messageError = $"The JSON value could not be converted to System.DateTime.";
+            controller.ModelState.AddModelError(key, messageError);
+
+            // Act
+            var result = await controller.UpdateUserSubsciption(userSubId, updateUserSub);
+
+            // Assert
+            var badRequestResult = result as BadRequestObjectResult;
+            badRequestResult.Should().NotBeNull();
+            badRequestResult.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
+            var errorResponse = badRequestResult.Value as ValidationProblemDetails;
+            errorResponse.Should().NotBeNull();
+            errorResponse.Title.Should().Be("One or more validation errors occurred.");
+            errorResponse.Errors.Should().ContainKey(key);
+            errorResponse.Errors[key].Should().Contain(messageError);
+        }
+        [Fact]
+        public async Task UpdateUserSubsciption_WhenUserSubscriptionPropertyStripeCustomerIdNull_ShouldReturnsBadRequest()
+        {
+            // Arrange
+            var controller = new UserSubscriptionsController(_userSubRepo, _userRepo, _subRepo, _mapper);
+            var updateUserSub = new UpdateUserSubsciptionDto { };
+            var userSubId = Guid.NewGuid();
+            string key = "StripeCustomerId";
+            string message = $"The {key} field is required.";
+            controller.ModelState.AddModelError(key, message);
+
+            // Act
+            var result = await controller.UpdateUserSubsciption(userSubId, updateUserSub);
+
+            // Assert
+            var badRequestResult = result as BadRequestObjectResult;
+            badRequestResult.Should().NotBeNull();
+            badRequestResult.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
+            var errorResponse = badRequestResult.Value as ValidationProblemDetails;
+            errorResponse.Should().NotBeNull();
+            errorResponse.Title.Should().Be("One or more validation errors occurred.");
+            errorResponse.Errors.Should().ContainKey(key);
+            errorResponse.Errors[key].Should().Contain(message);
+        }
+        [Fact]
+        public async Task UpdateUserSubsciption_WhenUserSubscriptionPropertyStripeSubscriptionIdNull_ShouldReturnsBadRequest()
+        {
+            // Arrange
+            var controller = new UserSubscriptionsController(_userSubRepo, _userRepo, _subRepo, _mapper);
+            var updateUserSub = new UpdateUserSubsciptionDto { };
+            var userSubId = Guid.NewGuid();
+            string key = "StripeSubscriptionId";
+            string message = $"The {key} field is required.";
+            controller.ModelState.AddModelError(key, message);
+
+            // Act
+            var result = await controller.UpdateUserSubsciption(userSubId, updateUserSub);
+
+            // Assert
+            var badRequestResult = result as BadRequestObjectResult;
+            badRequestResult.Should().NotBeNull();
+            badRequestResult.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
+            var errorResponse = badRequestResult.Value as ValidationProblemDetails;
+            errorResponse.Should().NotBeNull();
+            errorResponse.Title.Should().Be("One or more validation errors occurred.");
+            errorResponse.Errors.Should().ContainKey(key);
+            errorResponse.Errors[key].Should().Contain(message);
+        }
+
+        [Fact]
+        public async Task UpdateUserSubsciption_WhenUserSubscriptionPropertyStripePriceIdNull_ShouldReturnsBadRequest()
+        {
+            // Arrange
+            var controller = new UserSubscriptionsController(_userSubRepo, _userRepo, _subRepo, _mapper);
+            var updateUserSub = new UpdateUserSubsciptionDto { };
+            var userSubId = Guid.NewGuid();
+            string key = "StripePriceId";
+            string message = $"The {key} field is required.";
+            controller.ModelState.AddModelError(key, message);
+
+            // Act
+            var result = await controller.UpdateUserSubsciption(userSubId, updateUserSub);
+
+            // Assert
+            var badRequestResult = result as BadRequestObjectResult;
+            badRequestResult.Should().NotBeNull();
+            badRequestResult.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
+            var errorResponse = badRequestResult.Value as ValidationProblemDetails;
+            errorResponse.Should().NotBeNull();
+            errorResponse.Title.Should().Be("One or more validation errors occurred.");
+            errorResponse.Errors.Should().ContainKey(key);
+            errorResponse.Errors[key].Should().Contain(message);
+        }
+
+
+
+        
+        [Fact]
+        public async Task UpdateUserSubsciption_WhenCustomerReviewPropertyIdInvalidFomat_ShouldReturnsBadRequest()
+        {
+            // Arrange
+            var controller = new UserSubscriptionsController(_userSubRepo, _userRepo, _subRepo, _mapper);
+            var updateUserSub = new UpdateUserSubsciptionDto { };
+            var userSubId = Guid.NewGuid();
+            string key = "id";
+            string messageError = "The value 'e4d34798-4c18-4ca4-9014-191492e3b90' is not valid.";
+            controller.ModelState.AddModelError(key, messageError);
+
+            // Act
+            var result = await controller.UpdateUserSubsciption(userSubId, updateUserSub);
+
+            // Assert
+            var badRequestResult = result as BadRequestObjectResult;
+            badRequestResult.Should().NotBeNull();
+            badRequestResult.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
+            var errorResponse = badRequestResult.Value as ValidationProblemDetails;
+            errorResponse.Should().NotBeNull();
+            errorResponse.Title.Should().Be("One or more validation errors occurred.");
+            errorResponse.Errors.Should().ContainKey(key);
+            errorResponse.Errors[key].Should().Contain(messageError);
+        }
+        
+      
+
+        [Fact]
+        public async Task UpdateUserSubsciption_WhenIdDoesNotMatch_ShouldReturnsBadRequest()
+        {
+            // Arrange
+            var updateUserSub = new UpdateUserSubsciptionDto { Id = Guid.NewGuid() };
+            var differentId = Guid.NewGuid();
+
+            // Act
+            var result = await _controller.UpdateUserSubsciption(differentId, updateUserSub);
+
+            // Assert
+            var badRequestResult = result as BadRequestObjectResult;
+            badRequestResult.Should().NotBeNull();
+            badRequestResult.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
+            badRequestResult.Value.Should().Be("User Subsciption ID information does not match");
+        }
+
+        [Fact]
+        public async Task UpdateUserSubsciption_WhenUserSubsciptionDoesNotExist_ShouldReturnsNotFound()
+        {
+            // Arrange
+            var updateCustomerReview = new UpdateUserSubsciptionDto { Id = Guid.NewGuid() };
+            A.CallTo(() => _userSubRepo.GetSingleByCondition(A<Expression<Func<UserSubscription, bool>>>._, A<string[]>._)).Returns(Task.FromResult<UserSubscription>(null));
+
+            // Act
+            var result = await _controller.UpdateUserSubsciption(updateCustomerReview.Id, updateCustomerReview);
+
+            // Assert
+            var notFoundResult = result as NotFoundObjectResult;
+            notFoundResult.Should().NotBeNull();
+            notFoundResult.StatusCode.Should().Be(StatusCodes.Status404NotFound);
+            notFoundResult.Value.Should().Be("User Subsciption not found.");
+        }
+        [Fact]
+        public async Task UpdateUserSubsciption_WhenUpdateSucceeds_ShouldReturnsOkResult()
+        {
+            // Arrange
+            var updateUserSub = new UpdateUserSubsciptionDto { Id = Guid.NewGuid() };
+            var existUserSub = new UserSubscription { Id = updateUserSub.Id };
+            A.CallTo(() => _userSubRepo.GetSingleByCondition(A<Expression<Func<UserSubscription, bool>>>._, A<string[]>._)).Returns(Task.FromResult(existUserSub));
+            A.CallTo(() => _mapper.Map(updateUserSub, existUserSub));
+            A.CallTo(() => _userSubRepo.Update(existUserSub)).Returns(Task.CompletedTask);
+
+            // Act
+            var result = await _controller.UpdateUserSubsciption(updateUserSub.Id, updateUserSub);
+
+            // Assert
+            var okResult = result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be(StatusCodes.Status200OK);
+            var response = okResult.Value as ActionUserSubsciptionResponse;
+            response.Should().NotBeNull();
+            response.Message.Should().Be("User Subsciption updated successfully.");
+            response.Id.Should().Be(existUserSub.Id);
+        }
+        [Fact]
+        public async Task UpdateUserSubsciption_WhenUpdateFails_ShouldReturnsInternalServerError()
+        {
+            // Arrange
+            var updateUserSub = new UpdateUserSubsciptionDto { Id = Guid.NewGuid() };
+            var existUserSub = new UserSubscription { Id = updateUserSub.Id };
+            A.CallTo(() => _userSubRepo.GetSingleByCondition(A<Expression<Func<UserSubscription, bool>>>._, A<string[]>._))
+                .Returns(Task.FromResult(existUserSub));
+            A.CallTo(() => _mapper.Map(updateUserSub, existUserSub));
+            A.CallTo(() => _userSubRepo.Update(existUserSub)).Throws(new Exception("Update failed"));
+
+            // Act
+            var result = await _controller.UpdateUserSubsciption(updateUserSub.Id, updateUserSub);
+
+            // Assert
+            var statusCodeResult = result as ObjectResult;
+            statusCodeResult.Should().NotBeNull();
+            statusCodeResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+            statusCodeResult.Value.Should().Be("Error updating user subsciption: Update failed");
+        }
+
+
+
+        #endregion
+
+        #region DeleteUserSubsciption
+        [Fact]
+        public async Task DeleteUserSubsciption_WhenDependenciesAreNull_ShouldReturnsInternalServerError()
+        {
+            // Arrange
+            var controller = new UserSubscriptionsController(null, null, null, null);
+            var id = Guid.NewGuid();
+
+            // Act
+            var result = await controller.DeleteUserSubsciption(id);
+
+            // Assert
+            var statusCodeResult = result as ObjectResult;
+            statusCodeResult.Should().NotBeNull();
+            statusCodeResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+            statusCodeResult.Value.Should().Be("Application service has not been created");
+        }
+
+        [Fact]
+        public async Task DeleteUserSubsciption_WhenUserSubsciptionDoesNotExist_ShouldReturnsNotFound()
+        {
+            // Arrange
+            var id = Guid.NewGuid();
+            A.CallTo(() => _userSubRepo.CheckContainsAsync(A<Expression<Func<UserSubscription, bool>>>._)).Returns(Task.FromResult(false));
+
+            // Act
+            var result = await _controller.DeleteUserSubsciption(id);
+
+            // Assert
+            var notFoundResult = result as NotFoundObjectResult;
+            notFoundResult.Should().NotBeNull();
+            notFoundResult.StatusCode.Should().Be(StatusCodes.Status404NotFound);
+            notFoundResult.Value.Should().Be($"Dont exist user subsciption with id {id.ToString()} to delete");
+        }
+
+        [Fact]
+        public async Task DeleteUserSubsciption_WhenDeleteSucceeds_ShouldReturnsOkResult()
+        {
+            // Arrange
+            var id = Guid.NewGuid();
+            A.CallTo(() => _userSubRepo.CheckContainsAsync(A<Expression<Func<UserSubscription, bool>>>._)).Returns(Task.FromResult(true));
+            A.CallTo(() => _userSubRepo.DeleteMulti(A<Expression<Func<UserSubscription, bool>>>._)).Returns(Task.CompletedTask);
+
+            // Act
+            var result = await _controller.DeleteUserSubsciption(id);
+
+            // Assert
+            var okResult = result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be(StatusCodes.Status200OK);
+            var response = okResult.Value as ActionUserSubsciptionResponse;
+            response.Should().NotBeNull();
+            response.Message.Should().Be("User subsciption deleted successfully.");
+            response.Id.Should().Be(id);
+        }
+
+        [Fact]
+        public async Task DDeleteUserSubsciption_WhenDeleteFails_ShouldReturnsInternalServerError()
+        {
+            // Arrange
+            var id = Guid.NewGuid();
+            A.CallTo(() => _userSubRepo.CheckContainsAsync(A<Expression<Func<UserSubscription, bool>>>._)).Returns(Task.FromResult(true));
+            A.CallTo(() => _userSubRepo.DeleteMulti(A<Expression<Func<UserSubscription, bool>>>._)).Throws(new Exception("Delete failed"));
+
+            // Act
+            var result = await _controller.DeleteUserSubsciption(id);
+
+            // Assert
+            var statusCodeResult = result as ObjectResult;
+            statusCodeResult.Should().NotBeNull();
+            statusCodeResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+            statusCodeResult.Value.Should().Be("Error delete user subsciption: Delete failed");
+        }
+        [Fact]
+        public async Task DeleteUserSubsciption_WhenPropertyIdInvalidFomat_ShouldReturnsBadRequest()
+        {
+            // Arrange
+            var controller = new UserSubscriptionsController(_userSubRepo, _userRepo, _subRepo, _mapper);
+            string key = "id";
+            string message = "The value 'e4d34798-4c18-4ca4-9014-191492e3b90' is not valid.";
+            controller.ModelState.AddModelError(key, message);
+
+            // Act
+            var result = await controller.DeleteUserSubsciption(Guid.NewGuid());
+
+            // Assert
+            var badRequestResult = result as BadRequestObjectResult;
+            badRequestResult.Should().NotBeNull();
+            badRequestResult.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
+            var errorResponse = badRequestResult.Value as ValidationProblemDetails;
+            errorResponse.Should().NotBeNull();
+            errorResponse.Title.Should().Be("One or more validation errors occurred.");
+            errorResponse.Errors.Should().ContainKey(key);
+            errorResponse.Errors[key].Should().Contain(message);
+        }
         #endregion
     }
 

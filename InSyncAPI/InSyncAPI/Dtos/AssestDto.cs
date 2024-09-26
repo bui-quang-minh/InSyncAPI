@@ -15,19 +15,22 @@ namespace InSyncAPI.Dtos
     }
     public class UpdateAssetDto
     {
+        [Required]
         public Guid Id { get; set; }
         [Required]
         [StringLength(255)]
         public string AssestName { get; set; } = null!;
+        [StringLength(50)]
         public string? Type { get; set; }
     }
     public class AddAssetDto
     {
+        [Required]
         public Guid ProjectId { get; set; }
         [Required]
         [StringLength(255)]
         public string AssestName { get; set; } = null!;
-        [StringLength(255)]
+        [StringLength(50)]
         public string? Type { get; set; }
         [Required]
         public string FilePath { get; set; } = null!;

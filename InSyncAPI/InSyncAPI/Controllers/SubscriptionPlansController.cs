@@ -5,6 +5,7 @@ using InSyncAPI.Dtos;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Query;
 using Repositorys;
+using System.ComponentModel.DataAnnotations;
 using System.Linq.Expressions;
 
 namespace InSyncAPI.Controllers
@@ -36,7 +37,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IQueryable<SubscriptionPlan>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
 
-        public async Task<IActionResult> Get()
+        public async Task<IActionResult> GetSubscriptionPlans()
         {
             if (_subscriptionPlanRepo == null)
             {
@@ -87,7 +88,10 @@ namespace InSyncAPI.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     value: "Application service has not been created");
             }
-
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new ValidationProblemDetails(ModelState));
+            }
             var subsciptionPlan = await _subscriptionPlanRepo.GetSingleByCondition(c => c.Id.Equals(id), includes);
             if (subsciptionPlan == null)
             {
@@ -112,7 +116,7 @@ namespace InSyncAPI.Controllers
 
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return BadRequest(new ValidationProblemDetails(ModelState));
             }
 
             var checkUserExist = await _userRepository.CheckContainsAsync(c => c.Id.Equals(newSubscription.UserId));
@@ -147,7 +151,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
 
-        public async Task<IActionResult> UpdatePrivacyPolicy(Guid id, UpdateSubscriptionPlanDto updateSubsciption)
+        public async Task<IActionResult> UpdateSubscriptionPlan(Guid id, UpdateSubscriptionPlanDto updateSubsciption)
         {
             if (_subscriptionPlanRepo == null || _mapper == null)
             {
@@ -157,7 +161,7 @@ namespace InSyncAPI.Controllers
 
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return BadRequest(new ValidationProblemDetails(ModelState));
             }
 
             if (id != updateSubsciption.Id)
@@ -202,7 +206,10 @@ namespace InSyncAPI.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     value: "Application service has not been created");
             }
-
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new ValidationProblemDetails(ModelState));
+            }
             var checkPolicyExist = await _subscriptionPlanRepo.CheckContainsAsync(c => c.Id.Equals(id));
             if (!checkPolicyExist)
             {
@@ -210,13 +217,13 @@ namespace InSyncAPI.Controllers
             }
             try
             {
-                await _subscriptionPlanRepo.DeleteMulti(c => c.Id.Equals(id));
+                await _subscriptionPlanRepo.DeleteSubsciptionPlan(id);
                 return Ok(new ActionSubsciptionPlanResponse { Message = "Subsciption plan deleted successfully.", Id = id });
             }
             catch (Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError,
-                   $"Error delete term: {ex.Message}");
+                   $"Error delete subsciption plan: {ex.Message}");
             }
 
 

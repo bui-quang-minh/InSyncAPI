@@ -134,7 +134,7 @@ namespace InSyncAPI.Controllers
             var checkExistProject = await _projectRepo.CheckContainsAsync(p => p.Id.Equals(newAsset.ProjectId));
             if(!checkExistProject)
             {
-                return NotFound("Project does not exist according to Asset information");
+                return BadRequest("Project does not exist according to Asset information");
             }
             var asset = _mapper.Map<Asset>(newAsset);
             asset.DateCreated = DateTime.Now;

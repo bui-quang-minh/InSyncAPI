@@ -33,7 +33,6 @@ namespace InSyncAPI.Dtos
     {
         public Guid Id { get; set; }
         public Guid SubscriptionPlanId { get; set; }
-        public Guid UserId { get; set; }
         [Required]
         public DateTime StripeCurrentPeriodEnd { get; set; }
         [Required]

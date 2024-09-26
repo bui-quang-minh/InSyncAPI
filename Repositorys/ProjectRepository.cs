@@ -11,7 +11,7 @@ namespace Repositorys
 {
     public interface IProjectRepository : IRepositoryBase<Project>
     {
-         Task DeleteProject(Guid id);  
+        Task DeleteProject(Guid id);
     }
     public class ProjectRepository : RepositoryBase<Project>, IProjectRepository
     {
@@ -21,7 +21,7 @@ namespace Repositorys
 
         public async Task DeleteProject(Guid id)
         {
-            var deleteProject =await _context.Projects.Include(p => p.Scenarios)
+            var deleteProject = await _context.Projects.Include(p => p.Scenarios)
                 .Include(p => p.Assets).FirstOrDefaultAsync(c => c.Id.Equals(id));
             if (deleteProject == null) return;
             if (deleteProject.Scenarios.Any())
@@ -32,11 +32,11 @@ namespace Repositorys
             if (deleteProject.Assets.Any())
             {
                 _context.Assets.RemoveRange(deleteProject.Assets);
-                _context.SaveChangesAsync();
+                await _context.SaveChangesAsync();
             }
             _context.Projects.Remove(deleteProject);
-            _context.SaveChangesAsync();
-           
+            await _context.SaveChangesAsync();
+
         }
     }
 }

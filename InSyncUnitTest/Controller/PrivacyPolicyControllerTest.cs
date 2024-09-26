@@ -530,6 +530,7 @@ namespace InSyncUnitTest.Controller
 
 
         #endregion
+
         #region DeletePrivacyPolicy
         [Fact]
         public async Task DeletePrivacyPolicy_WhenDependenciesAreNull_ShouldReturnsInternalServerError()
