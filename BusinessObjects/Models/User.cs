@@ -14,6 +14,7 @@ namespace BusinessObjects.Models
         }
 
         public Guid Id { get; set; }
+        public string? UserIdClerk { get; set; }
         public string UserName { get; set; } = null!;
         public string PasswordHash { get; set; } = null!;
         public string Email { get; set; } = null!;

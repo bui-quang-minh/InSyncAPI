@@ -102,7 +102,7 @@ namespace InSyncAPI.Controllers
 
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return BadRequest(new ValidationProblemDetails(ModelState));
             }
 
             PrivacyPolicy privacyPolicy = _mapper.Map<PrivacyPolicy>(newPrivacy);
@@ -142,12 +142,12 @@ namespace InSyncAPI.Controllers
 
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return BadRequest(new ValidationProblemDetails(ModelState));
             }
 
             if (id != updatePrivacy.Id)
             {
-                return BadRequest("PrivacyPolicy ID information does not match");
+                return BadRequest("Privacy Policy ID information does not match");
             }
 
             // Fetch the existing customer review to ensure it exists
@@ -187,7 +187,10 @@ namespace InSyncAPI.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     value: "Application service has not been created");
             }
-
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new ValidationProblemDetails(ModelState));
+            }
             var checkPolicyExist = await _privacyPolicyRepo.CheckContainsAsync(c => c.Id.Equals(id));
             if (!checkPolicyExist)
             {

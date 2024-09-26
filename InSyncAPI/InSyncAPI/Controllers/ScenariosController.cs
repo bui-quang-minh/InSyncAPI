@@ -129,6 +129,64 @@ namespace InSyncAPI.Controllers
             return Ok(responsePaging);
         }
 
+        [HttpGet("scenarios-user-clerk/{userIdClerk}")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewScenarioDto>>))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
+        public async Task<IActionResult> GetAllScenarioByUserIdClerk(string userIdClerk, int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
+        {
+            if (_scenarioRepo == null || _userRepo == null || _mapper == null)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    value: "Application service has not been created");
+            }
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new ValidationProblemDetails(ModelState));
+            }
+            index = index.Value < 0 ? INDEX_DEFAULT : index;
+            size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
+
+            var listScenario = _scenarioRepo.GetMultiPaging(c => c.CreatedByNavigation.UserIdClerk.Equals(userIdClerk),
+             out int total, index.Value, size.Value, includes);
+
+            var response = _mapper.Map<IEnumerable<ViewScenarioDto>>(listScenario);
+            var responsePaging = new ResponsePaging<IEnumerable<ViewScenarioDto>>
+            {
+                data = response,
+                totalOfData = total
+            };
+            return Ok(responsePaging);
+        }
+
+        [HttpGet("scenarios-user/{userId}")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewScenarioDto>>))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
+        public async Task<IActionResult> GetAllScenarioByUserId(Guid userId, int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
+        {
+            if (_scenarioRepo == null || _userRepo == null || _mapper == null)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    value: "Application service has not been created");
+            }
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new ValidationProblemDetails(ModelState));
+            }
+            index = index.Value < 0 ? INDEX_DEFAULT : index;
+            size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
+
+            var listScenario = _scenarioRepo.GetMultiPaging(c => c.CreatedBy.Equals(userId),
+             out int total, index.Value, size.Value, includes);
+
+            var response = _mapper.Map<IEnumerable<ViewScenarioDto>>(listScenario);
+            var responsePaging = new ResponsePaging<IEnumerable<ViewScenarioDto>>
+            {
+                data = response,
+                totalOfData = total
+            };
+            return Ok(responsePaging);
+        }
+
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionScenarioResponse))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]

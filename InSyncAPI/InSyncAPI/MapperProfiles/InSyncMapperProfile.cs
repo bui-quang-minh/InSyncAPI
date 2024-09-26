@@ -37,7 +37,11 @@ namespace InSync_Api.MapperProfile
             CreateMap<UpdateScenarioDto, Scenario>().ReverseMap();
             CreateMap<Scenario, ViewScenarioDto>()
                 .ForMember(c => c.ProjectName, a => a.MapFrom(r => r.Project.ProjectName))
-                .ForMember(c => c.UserName, a => a.MapFrom(r => r.CreatedByNavigation.UserName))
+                 .ForMember(c => c.AuthorId, a => a.MapFrom(r => r.CreatedByNavigation.Id))
+                .ForMember(c => c.AuthorName, a => a.MapFrom(r => r.CreatedByNavigation.UserName))
+                .ForMember(c => c.Title, a => a.MapFrom(r => r.ScenarioName))
+                .ForMember(c => c.CreatedAt, a => a.MapFrom(r => r.DateCreated))
+                .ForMember(c => c.UpdatedAt, a => a.MapFrom(r => r.DateUpdated))
                 .ReverseMap();
             // Project Dto
             CreateMap<AddProjectDto, Project>().ReverseMap();

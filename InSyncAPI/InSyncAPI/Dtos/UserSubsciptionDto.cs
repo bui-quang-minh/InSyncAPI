@@ -27,8 +27,7 @@ namespace InSyncAPI.Dtos
         public string StripeSubscriptionId { get; set; } = null!;
         [Required]
         public string StripePriceId { get; set; } = null!;
-        [Required]
-        public DateTime DateCreated { get; set; }
+        
     }
     public class UpdateUserSubsciptionDto
     {

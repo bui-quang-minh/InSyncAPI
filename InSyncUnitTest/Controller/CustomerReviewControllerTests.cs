@@ -71,8 +71,8 @@ namespace InSyncUnitTest.Controller
         [Fact]
         public async Task GetAllCustomerReview_WhenDependencyAreNull_ShouldReturnInternalServerError()
         {
-            var controller = new TermsController(null, null);
-            var result = await controller.GetAllTerms();
+            var controller = new CustomerReviewsController(null, null);
+            var result = await controller.GetAllCustomerReview();
 
 
             var statusCodeResult = result as ObjectResult;
@@ -81,7 +81,7 @@ namespace InSyncUnitTest.Controller
             statusCodeResult.Value.Should().Be("Application service has not been created");
         }
         [Fact]
-        public async Task GetAllCustomerReview_WithValidInput_ShouldReturnOkResultWithTerms()
+        public async Task GetAllCustomerReview_WithValidInput_ShouldReturnOkResultWithCustomerReviews()
         {
             // Arrange
 
@@ -100,12 +100,12 @@ namespace InSyncUnitTest.Controller
             var okResult = result as OkObjectResult;
             okResult.Should().NotBeNull();
             okResult.StatusCode.Should().Be(StatusCodes.Status200OK);
-            var returnedTerms = okResult.Value as IEnumerable<ViewCustomerReviewDto>;
-            returnedTerms.Should().NotBeNull();
-            returnedTerms.Should().HaveCount(2);
+            var returnedCustomerReviews = okResult.Value as ResponsePaging<IEnumerable<ViewCustomerReviewDto>>;
+            returnedCustomerReviews.Should().NotBeNull();
+            returnedCustomerReviews.data.Should().BeEquivalentTo(viewCustomerReviews);
         }
         [Fact]
-        public async Task GetAllCustomerReview_WithSizeOrIndexIsNegativeInteger_ShouldReturnOkResultWithTerms()
+        public async Task GetAllCustomerReview_WithSizeOrIndexIsNegativeInteger_ShouldReturnOkResultWithCustomerReviews()
         {
             // Arrange
 
@@ -124,13 +124,13 @@ namespace InSyncUnitTest.Controller
             var okResult = result as OkObjectResult;
             okResult.Should().NotBeNull();
             okResult.StatusCode.Should().Be(StatusCodes.Status200OK);
-            var returnedTerms = okResult.Value as IEnumerable<ViewCustomerReviewDto>;
-            returnedTerms.Should().NotBeNull();
-            returnedTerms.Should().HaveCount(2);
+            var returnedCustomerReviews = okResult.Value as ResponsePaging<IEnumerable<ViewCustomerReviewDto>>;
+            returnedCustomerReviews.Should().NotBeNull();
+            returnedCustomerReviews.data.Should().BeEquivalentTo(viewCustomerReviews);
         }
-        
+
         [Fact]
-        public async Task GetAllCustomerReview_WithSizeOrIndexNoParameterInApi_ShouldReturnOkResultWithTerms()
+        public async Task GetAllCustomerReview_WithSizeOrIndexNoParameterInApi_ShouldReturnOkResultWithCustomerReviews()
         {
             // Arrange
 
@@ -149,9 +149,9 @@ namespace InSyncUnitTest.Controller
             var okResult = result as OkObjectResult;
             okResult.Should().NotBeNull();
             okResult.StatusCode.Should().Be(StatusCodes.Status200OK);
-            var returnedTerms = okResult.Value as IEnumerable<ViewCustomerReviewDto>;
-            returnedTerms.Should().NotBeNull();
-            returnedTerms.Should().HaveCount(2);
+            var returnedCustomerReviews = okResult.Value as ResponsePaging< IEnumerable<ViewCustomerReviewDto>>;
+            returnedCustomerReviews.Should().NotBeNull();
+            returnedCustomerReviews.data.Should().BeEquivalentTo(viewCustomerReviews);
         }
 
 
@@ -453,16 +453,16 @@ namespace InSyncUnitTest.Controller
 
         #endregion
 
-        #region UdpateTerm
+        #region UdpateCustomerReview
         [Fact]
-        public async Task UpdatCustomerReviewTerm_WhenDependenciesAreNull_ShouldReturnsInternalServerError()
+        public async Task UpdatCustomerReviewCustomerReview_WhenDependenciesAreNull_ShouldReturnsInternalServerError()
         {
             // Arrange
             var controller = new CustomerReviewsController(null, null);
-            var updateCustomerReview= new UpdateCustomerReviewDto();
+            var updateCustomerReview = new UpdateCustomerReviewDto();
 
             // Act
-            var result = await controller.UpdateCustomerReview(Guid.NewGuid(),updateCustomerReview);
+            var result = await controller.UpdateCustomerReview(Guid.NewGuid(), updateCustomerReview);
 
             // Assert
             var statusCodeResult = result as ObjectResult;
@@ -471,15 +471,15 @@ namespace InSyncUnitTest.Controller
             statusCodeResult.Value.Should().Be("Application service has not been created");
         }
         [Fact]
-        public async Task UpdateTerm_WhenTermPropertyIdInvalidFomat_ShouldReturnsBadRequest()
+        public async Task UpdateCustomerReview_WhenCustomerReviewPropertyIdInvalidFomat_ShouldReturnsBadRequest()
         {
             // Arrange
             var controller = new CustomerReviewsController(_customerReviewRepo, _mapper);
-            var updateTerm = new UpdateCustomerReviewDto() ;
+            var updateCustomerReview = new UpdateCustomerReviewDto();
             controller.ModelState.AddModelError("id", "The value 'e4d34798-4c18-4ca4-9014-191492e3b90' is not valid.");
 
             // Act
-            var result = await controller.UpdateCustomerReview(Guid.NewGuid(), updateTerm);
+            var result = await controller.UpdateCustomerReview(Guid.NewGuid(), updateCustomerReview);
 
             // Assert
             var badRequestResult = result as BadRequestObjectResult;
@@ -522,7 +522,7 @@ namespace InSyncUnitTest.Controller
             controller.ModelState.AddModelError("Name", messageError);
 
             // Act
-            var result = await controller.UpdateCustomerReview(Guid.NewGuid(),newCustomerReview);
+            var result = await controller.UpdateCustomerReview(Guid.NewGuid(), newCustomerReview);
 
             // Assert
             var badRequestResult = result as BadRequestObjectResult;
@@ -582,7 +582,7 @@ namespace InSyncUnitTest.Controller
         }
 
         [Fact]
-        public async  Task UpdateCustomerReview_WhenCustomerReviewPropertyReviewNull_ShouldReturnsBadRequest()
+        public async Task UpdateCustomerReview_WhenCustomerReviewPropertyReviewNull_ShouldReturnsBadRequest()
         {
             // Arrange
             var controller = new CustomerReviewsController(_customerReviewRepo, _mapper);
@@ -615,7 +615,7 @@ namespace InSyncUnitTest.Controller
             controller.ModelState.AddModelError(property, messageError);
 
             // Act
-            var result = await controller.UpdateCustomerReview(Guid.NewGuid(),newCustomerReview);
+            var result = await controller.UpdateCustomerReview(Guid.NewGuid(), newCustomerReview);
 
             // Assert
             var badRequestResult = result as BadRequestObjectResult;
@@ -649,7 +649,7 @@ namespace InSyncUnitTest.Controller
         }
 
         [Fact]
-        public async Task UpdateCustomerReview_WhenTermDoesNotExist_ShouldReturnsNotFound()
+        public async Task UpdateCustomerReview_WhenCustomerReviewDoesNotExist_ShouldReturnsNotFound()
         {
             // Arrange
             var updateCustomerReview = new UpdateCustomerReviewDto { Id = Guid.NewGuid() };
@@ -668,7 +668,7 @@ namespace InSyncUnitTest.Controller
         public async Task UpdateCustomerReview_WhenUpdateSucceeds_ShouldReturnsOkResult()
         {
             // Arrange
-            var updateCustomerReview = new UpdateCustomerReviewDto {Id=Guid.NewGuid()};
+            var updateCustomerReview = new UpdateCustomerReviewDto { Id = Guid.NewGuid() };
             var existCustomerReview = new CustomerReview { Id = updateCustomerReview.Id };
             A.CallTo(() => _customerReviewRepo.GetSingleByCondition(A<Expression<Func<CustomerReview, bool>>>._, A<string[]>._)).Returns(Task.FromResult(existCustomerReview));
             A.CallTo(() => _mapper.Map(updateCustomerReview, existCustomerReview));
@@ -709,7 +709,7 @@ namespace InSyncUnitTest.Controller
 
 
         #endregion
-        #region DeleteTerm
+        #region DeleteCustomerReview
         [Fact]
         public async Task DeleteCustomerReview_WhenDependenciesAreNull_ShouldReturnsInternalServerError()
         {
@@ -784,7 +784,7 @@ namespace InSyncUnitTest.Controller
             statusCodeResult.Value.Should().Be("Error delete Customer Review: Delete failed");
         }
         [Fact]
-        public async Task DeleteCustomerReview_WhenTermPropertyIdInvalidFomat_ShouldReturnsBadRequest()
+        public async Task DeleteCustomerReview_WhenCustomerReviewPropertyIdInvalidFomat_ShouldReturnsBadRequest()
         {
             // Arrange
             var controller = new CustomerReviewsController(_customerReviewRepo, _mapper);

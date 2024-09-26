@@ -74,7 +74,7 @@ namespace InSyncAPI.Controllers
         [HttpGet("user/{userId}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewUserSubsciptionDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
-        public async Task<IActionResult> GetAllOfUser(Guid userId, int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
+        public async Task<IActionResult> GetAllUserSubsciptionOfUser(Guid userId, int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
         {
             if (_userRepo == null || _userSubRepo == null || _subRepo == null || _mapper == null)
             {
@@ -96,10 +96,37 @@ namespace InSyncAPI.Controllers
             };
             return Ok(responsePaging);
         }
+        [HttpGet("user/{userIdClerk}")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewUserSubsciptionDto>>))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
+        public async Task<IActionResult> GetAllUserSubsciptionOfUserClerk(string userIdClerk, int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
+        {
+            if (_userRepo == null || _userSubRepo == null || _subRepo == null || _mapper == null)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    value: "Application service has not been created");
+            }
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new ValidationProblemDetails(ModelState));
+            }
+            index = index.Value < 0 ? INDEX_DEFAULT : index;
+            size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
+            var listUserSubsciption = _userSubRepo.GetMultiPaging(c => c.User.UserIdClerk.Equals(userIdClerk), out int total, index.Value, size.Value, includes);
+            var response = _mapper.Map<IEnumerable<ViewUserSubsciptionDto>>(listUserSubsciption);
+            var responsePaging = new ResponsePaging<IEnumerable<ViewUserSubsciptionDto>>
+            {
+                data = response,
+                totalOfData = total
+            };
+            return Ok(responsePaging);
+        }
+
+
         [HttpGet("user-no-expired/{userId}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<ViewUserSubsciptionDto>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
-        public async Task<IActionResult> GetSubPlaneOfUserNoExpired(Guid userId)
+        public async Task<IActionResult> GetUserSubsciptionOfUserNoExpired(Guid userId)
         {
             if (_userRepo == null || _userSubRepo == null || _subRepo == null || _mapper == null)
             {
@@ -116,12 +143,32 @@ namespace InSyncAPI.Controllers
            
             return Ok(response);
         }
+        [HttpGet("user-clerk-no-expired/{userIdClerk}")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<ViewUserSubsciptionDto>))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
+        public async Task<IActionResult> GetUserSubsciptionOfUserClerkNoExpired(string userIdClerk)
+        {
+            if (_userRepo == null || _userSubRepo == null || _subRepo == null || _mapper == null)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    value: "Application service has not been created");
+            }
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new ValidationProblemDetails(ModelState));
+            }
+            var now = DateTime.Now;
+            var listUserSubsciption = _userSubRepo.GetMulti(c => c.User.UserIdClerk.Equals(userIdClerk) && c.StripeCurrentPeriodEnd >= now);
+            var response = _mapper.Map<IEnumerable<ViewUserSubsciptionDto>>(listUserSubsciption);
+
+            return Ok(response);
+        }
 
 
         [HttpGet("subsciption/{subId}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewUserSubsciptionDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
-        public async Task<IActionResult> GetAllOfSubsciption(Guid subId, int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
+        public async Task<IActionResult> GetAllUserSubsciptionOfSubsciption(Guid subId, int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
         {
             if (_userRepo == null || _userSubRepo == null || _subRepo == null || _mapper == null)
             {
@@ -185,6 +232,16 @@ namespace InSyncAPI.Controllers
             if (!ModelState.IsValid)
             {
                 return BadRequest(new ValidationProblemDetails(ModelState));
+            }
+            var checkUserExist = await _userRepo.CheckContainsAsync(c => c.Id.Equals(newUserSub.UserId));
+            if (!checkUserExist)
+            {
+                return BadRequest("Information of user provide invalid");
+            }
+            var checkSubPlaneExist = await _subRepo.CheckContainsAsync(c => c.Id.Equals(newUserSub.SubscriptionPlanId));
+            if (!checkSubPlaneExist)
+            {
+                return BadRequest("Information of subsciption plan provide invalid");
             }
 
             var userSubsciption = _mapper.Map<UserSubscription>(newUserSub);

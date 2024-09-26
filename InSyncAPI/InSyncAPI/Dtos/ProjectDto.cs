@@ -6,6 +6,7 @@ namespace InSyncAPI.Dtos
     {
         public Guid Id { get; set; }
         public string ProjectName { get; set; } = null!;
+        public string? Description { get; set; }
         public Guid UserId { get; set; }
         public string UserName { get; set; }
         public DateTime DateCreated { get; set; }
@@ -17,6 +18,7 @@ namespace InSyncAPI.Dtos
         [Required]
         [StringLength(255, MinimumLength = 5)]
         public string ProjectName { get; set; } = null!;
+        public string? Description { get; set; }
         public Guid UserId { get; set; }
         public bool IsPublish { get; set; }
     }
@@ -24,6 +26,7 @@ namespace InSyncAPI.Dtos
     {
         public Guid Id { get; set; }
         public string ProjectName { get; set; } = null!;
+        public string? Description { get; set; }
         public bool IsPublish { get; set; }
     }
     public class ActionProjectResponse

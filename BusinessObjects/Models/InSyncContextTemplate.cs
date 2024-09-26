@@ -5,13 +5,13 @@ using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace BusinessObjects.Models
 {
-    public partial class InSyncContext1 : DbContext
+    public partial class InSyncContextTemplate : DbContext
     {
-        public InSyncContext1()
+        public InSyncContextTemplate()
         {
         }
 
-        public InSyncContext1(DbContextOptions<InSyncContext1> options)
+        public InSyncContextTemplate(DbContextOptions<InSyncContextTemplate> options)
             : base(options)
         {
         }
@@ -31,6 +31,7 @@ namespace BusinessObjects.Models
         {
             if (!optionsBuilder.IsConfigured)
             {
+#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
                 optionsBuilder.UseSqlServer("server =103.9.77.22; database = InSync;uid=sa;pwd=InSync123!;MultipleActiveResultSets=True;Connection Timeout=30;Application Name=InSyncApi;");
             }
         }
@@ -141,6 +142,10 @@ namespace BusinessObjects.Models
                 entity.Property(e => e.DateUpdated)
                     .HasColumnType("datetime")
                     .HasColumnName("date_updated");
+
+                entity.Property(e => e.Description)
+                    .HasColumnType("text")
+                    .HasColumnName("description");
 
                 entity.Property(e => e.IsPublish).HasColumnName("is_publish");
 
@@ -326,6 +331,9 @@ namespace BusinessObjects.Models
 
             modelBuilder.Entity<User>(entity =>
             {
+                entity.HasIndex(e => e.UserIdClerk, "UQ__Users__EACE3C398BC32165")
+                    .IsUnique();
+
                 entity.HasIndex(e => e.UserName, "users_user_name_unique")
                     .IsUnique();
 
@@ -392,6 +400,10 @@ namespace BusinessObjects.Models
                 entity.Property(e => e.StatusUser)
                     .HasColumnName("status_user")
                     .HasDefaultValueSql("((1))");
+
+                entity.Property(e => e.UserIdClerk)
+                    .HasMaxLength(500)
+                    .HasColumnName("user_id_clerk");
 
                 entity.Property(e => e.UserName)
                     .HasMaxLength(255)

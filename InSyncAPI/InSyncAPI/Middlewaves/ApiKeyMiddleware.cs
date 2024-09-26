@@ -1,4 +1,4 @@
-﻿namespace InSyncAPI.Authentications
+﻿namespace InSyncAPI.Middlewaves
 {
     public class ApiKeyMiddleware
     {

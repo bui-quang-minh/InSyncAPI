@@ -103,9 +103,10 @@ namespace InSyncUnitTest.Controller
             var okResult = result as OkObjectResult;
             okResult.Should().NotBeNull();
             okResult.StatusCode.Should().Be(StatusCodes.Status200OK);
-            var returnedTerms = okResult.Value as IEnumerable<ViewTermDto>;
+            var returnedTerms = okResult.Value as ResponsePaging<IEnumerable<ViewTermDto>>;
             returnedTerms.Should().NotBeNull();
-            returnedTerms.Should().HaveCount(2);
+            returnedTerms.data.Should().BeEquivalentTo(viewTerms);
+            returnedTerms.data.Should().HaveCount(2);
         }
         [Fact]
         public async Task GetAllTerms_WithSizeOrIndexIsNegativeInteger_ShouldReturnOkResultWithTerms()
@@ -131,16 +132,17 @@ namespace InSyncUnitTest.Controller
             var okResult = result as OkObjectResult;
             okResult.Should().NotBeNull();
             okResult.StatusCode.Should().Be(StatusCodes.Status200OK);
-            var returnedTerms = okResult.Value as IEnumerable<ViewTermDto>;
+            var returnedTerms = okResult.Value as ResponsePaging<IEnumerable<ViewTermDto>>;
             returnedTerms.Should().NotBeNull();
-            returnedTerms.Should().HaveCount(2);
+            returnedTerms.data.Should().BeEquivalentTo(viewTerms);
+            returnedTerms.data.Should().HaveCount(2);
         }
         [Fact]
         public async Task GetAllTerms_WithSizeOrIndexNoParameterInApi_ShouldReturnOkResultWithTerms()
         {
             // Arrange
-            var term1 = new Term {  };
-            var term2 = new Term {};
+            var term1 = new Term { };
+            var term2 = new Term { };
             var termView1 = new ViewTermDto { };
             var termView2 = new ViewTermDto { };
             IEnumerable<Term> terms = new List<Term> { term1, term2 };
@@ -158,9 +160,10 @@ namespace InSyncUnitTest.Controller
             var okResult = result as OkObjectResult;
             okResult.Should().NotBeNull();
             okResult.StatusCode.Should().Be(StatusCodes.Status200OK);
-            var returnedTerms = okResult.Value as IEnumerable<ViewTermDto>;
+            var returnedTerms = okResult.Value as ResponsePaging<IEnumerable<ViewTermDto>>;
             returnedTerms.Should().NotBeNull();
-            returnedTerms.Should().HaveCount(2);
+            returnedTerms.data.Should().BeEquivalentTo(viewTerms);
+            
         }
 
 
@@ -310,7 +313,7 @@ namespace InSyncUnitTest.Controller
         }
 
         [Fact]
-        public async Task AddTerm_WhenAddFails_Should_ReturnsInternalServerError()
+        public async Task AddTerm_WhenAddFails_ShouldReturnsInternalServerError()
         {
             // Arrange
             var newTerm = new AddTermsDto { };
@@ -327,7 +330,25 @@ namespace InSyncUnitTest.Controller
             statusCodeResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
             statusCodeResult.Value.Should().Be("Error occurred while adding the term.");
         }
+        [Fact]
+        public async Task AddTerm_WhenThrowException_ShouldReturnsInternalServerError()
+        {
+            // Arrange
+            string messageException = "Id must be auto generator";
+            var newTerm = new AddTermsDto { };
+            var term = new Term { Id = Guid.NewGuid(), DateCreated = DateTime.Now };
+            A.CallTo(() => _mapper.Map<Term>(newTerm)).Returns(term);
+            A.CallTo(() => _termRepo.Add(term)).Throws(new Exception(messageException));
 
+            // Act
+            var result = await _controller.AddTerm(newTerm);
+
+            // Assert
+            var statusCodeResult = result as ObjectResult;
+            statusCodeResult.Should().NotBeNull();
+            statusCodeResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+            statusCodeResult.Value.Should().Be("An error occurred while adding Term into Database " + messageException);
+        }
         [Fact]
         public async Task AddTerm_WhenAddSucceeds_ShouldReturnsOkResult()
         {
@@ -365,7 +386,7 @@ namespace InSyncUnitTest.Controller
             var newTerm = new UpdateTermsDto();
 
             // Act
-            var result = await controller.UpdateTerm(Guid.NewGuid(),newTerm);
+            var result = await controller.UpdateTerm(Guid.NewGuid(), newTerm);
 
             // Assert
             var statusCodeResult = result as ObjectResult;
@@ -509,7 +530,7 @@ namespace InSyncUnitTest.Controller
             statusCodeResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
             statusCodeResult.Value.Should().Be("Error updating term: Update failed");
         }
-
+        
 
         #endregion
 
@@ -547,7 +568,7 @@ namespace InSyncUnitTest.Controller
             notFoundResult.StatusCode.Should().Be(StatusCodes.Status404NotFound);
             notFoundResult.Value.Should().Be($"Dont exist term with id {id.ToString()} to delete");
 
-           
+
 
 
         }

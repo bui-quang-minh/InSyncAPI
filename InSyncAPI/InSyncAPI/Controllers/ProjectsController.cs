@@ -86,7 +86,7 @@ namespace InSyncAPI.Controllers
             index = index.Value < 0 ? INDEX_DEFAULT : index;
             size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
 
-            var listProject = _projectRepo.GetMultiPaging(c => c.UserId.Equals(userId) 
+            var listProject = _projectRepo.GetMultiPaging(c => c.UserId.Equals(userId)
             && (isPublish == null || c.IsPublish == isPublish), out int total, index.Value, size.Value, includes);
 
             var response = _mapper.Map<IEnumerable<ViewProjectDto>>(listProject);
@@ -97,6 +97,39 @@ namespace InSyncAPI.Controllers
             };
             return Ok(responsePaging);
         }
+
+
+        [HttpGet("project-user-clerk-is-publish/{userIdClerk}")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewProjectDto>>))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
+        public async Task<IActionResult> GetAllProjectIsPublishByUserIdClerk(string userIdClerk, bool? isPublish, int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
+        {
+            if (_projectRepo == null || _mapper == null)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    value: "Application service has not been created");
+            }
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new ValidationProblemDetails(ModelState));
+            }
+            index = index.Value < 0 ? INDEX_DEFAULT : index;
+            size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
+
+            var listProject = _projectRepo.GetMultiPaging(c => c.User.UserIdClerk.Equals(userIdClerk)
+            && (isPublish == null || c.IsPublish == isPublish), out int total, index.Value, size.Value, includes);
+
+            var response = _mapper.Map<IEnumerable<ViewProjectDto>>(listProject);
+            var responsePaging = new ResponsePaging<IEnumerable<ViewProjectDto>>
+            {
+                data = response,
+                totalOfData = total
+            };
+            return Ok(responsePaging);
+        }
+
+
+
 
         [HttpGet("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ViewProjectDto))]
@@ -166,7 +199,7 @@ namespace InSyncAPI.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError,
                         value: "An error occurred while adding Project into Database " + ex.Message);
             }
-            
+
         }
         [HttpPut("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionPrivacyPolicyResponse))]
@@ -240,7 +273,7 @@ namespace InSyncAPI.Controllers
             }
             try
             {
-                await _projectRepo.DeleteMulti(c => c.Id.Equals(id));
+                await _projectRepo.DeleteProject(id);
                 return Ok(new ActionProjectResponse { Message = "Project deleted successfully.", Id = id });
             }
             catch (Exception ex)
