@@ -61,9 +61,10 @@ namespace InSyncAPI.Controllers
 
             index = index.Value < 0 ? INDEX_DEFAULT : index;
             size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
+            
 
             var listProject = _projectRepo.GetMultiPaging(c =>
-            string.IsNullOrEmpty(keySearch) || c.ProjectName.ToLower().Contains(keySearch.ToLower()) || c.Description.ToLower().Contains(keySearch.ToLower())
+            string.IsNullOrEmpty(keySearch) || c.ProjectName.ToLower().Contains(keySearch.ToLower())
             , out int total, index.Value, size.Value, includes);
             var response = _mapper.Map<IEnumerable<ViewProjectDto>>(listProject);
             var responsePaging = new ResponsePaging<IEnumerable<ViewProjectDto>>
