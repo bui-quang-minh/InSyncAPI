@@ -64,6 +64,7 @@ namespace InSync_Api.MapperProfile
                 .ReverseMap();
             //Clerk Mapper
             CreateMap<CreateUserDto, User>()
+                .ForMember(dest => dest.UserIdClerk, opt => opt.MapFrom(src => src.Data.Id))
                 .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.Data.Email_Addresses.FirstOrDefault().Email_Address))
                 .ForMember(dest => dest.DisplayName, opt => opt.MapFrom(src => src.Data.First_Name + " " + src.Data.Last_Name))
                 .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Data.Email_Addresses.FirstOrDefault().Email_Address))
