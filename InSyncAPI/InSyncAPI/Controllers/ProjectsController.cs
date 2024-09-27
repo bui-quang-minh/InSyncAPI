@@ -32,7 +32,7 @@ namespace InSyncAPI.Controllers
         [EnableQuery]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Project>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
-        public async Task<IActionResult> GetProjects()
+        public async Task<IActionResult> GetProjects(string? keySearch, string? order)
         {
             if (_projectRepo == null || _mapper == null)
             {
@@ -40,13 +40,18 @@ namespace InSyncAPI.Controllers
                     value: "Application service has not been created");
             }
             var response = _projectRepo.GetAll().AsQueryable();
+
+
             return Ok(response);
         }
+
+
+
         [HttpGet("pagination")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewProjectDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
 
-        public async Task<IActionResult> GetAllProject(int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
+        public async Task<IActionResult> GetAllProject(string? keySearch, int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
         {
             if (_projectRepo == null || _mapper == null)
             {
@@ -57,7 +62,9 @@ namespace InSyncAPI.Controllers
             index = index.Value < 0 ? INDEX_DEFAULT : index;
             size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
 
-            var listProject = _projectRepo.GetMultiPaging(c => true, out int total, index.Value, size.Value, includes);
+            var listProject = _projectRepo.GetMultiPaging(c =>
+            string.IsNullOrEmpty(keySearch) || c.ProjectName.ToLower().Contains(keySearch.ToLower()) || c.Description.ToLower().Contains(keySearch.ToLower())
+            , out int total, index.Value, size.Value, includes);
             var response = _mapper.Map<IEnumerable<ViewProjectDto>>(listProject);
             var responsePaging = new ResponsePaging<IEnumerable<ViewProjectDto>>
             {
