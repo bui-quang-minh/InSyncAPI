@@ -47,7 +47,7 @@ namespace InSync_Api.MapperProfile
             CreateMap<AddProjectDto, Project>().ReverseMap();
             CreateMap<UpdateProjectDto, Project>().ReverseMap();
             CreateMap<Project, ViewProjectDto>()
-                .ForMember(c => c.UserName, a => a.MapFrom(r => r.User.UserName))
+                .ForMember(c => c.displayName, a => a.MapFrom(r => r.User.DisplayName))
                 .ReverseMap();
             // Asset Dto
             CreateMap<AddAssetDto, Asset>().ReverseMap();

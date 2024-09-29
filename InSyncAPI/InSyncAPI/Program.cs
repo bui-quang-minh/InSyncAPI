@@ -7,6 +7,7 @@ using WebNewsAPIs.Extentions;
 using Microsoft.OpenApi;
 using Microsoft.OpenApi.Models;
 using DataAccess.ContextAccesss;
+using static System.Net.WebRequestMethods;
 
 namespace InSyncAPI
 {
@@ -15,13 +16,20 @@ namespace InSyncAPI
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+            string[] urlOrigins = new string[]
+            {
+                "https://insync-theta.vercel.app/",
+                "http://localhost:3000/",
+                "https://www.insync.com.vn/" ,
+                "https://insync-git-master-djao-duy-thais-projects.vercel.app/"
+            };
 
             // config url api InSensitive Route
             builder.Services.AddRouting(options =>
             {
                 options.LowercaseUrls = true;
                 options.AppendTrailingSlash = false;
-               
+
             });
 
 
@@ -50,7 +58,11 @@ namespace InSyncAPI
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("CORSPolicy", builder =>
-                builder.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin().SetIsOriginAllowed((host) => true));
+                builder
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowAnyOrigin()
+                .SetIsOriginAllowed((host) => true)) ;
             });
 
             var app = builder.Build();
@@ -61,7 +73,7 @@ namespace InSyncAPI
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
-           // app.UseMiddleware<ApiKeyMiddleware>();
+            // app.UseMiddleware<ApiKeyMiddleware>();
             app.UseAuthorization();
             app.UseAuthentication();
             app.UseCors("CORSPolicy");

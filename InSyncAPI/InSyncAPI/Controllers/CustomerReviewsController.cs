@@ -39,7 +39,7 @@ namespace InSyncAPI.Controllers
         [HttpGet("pagination")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewCustomerReviewDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
-        public async Task<IActionResult> GetAllCustomerReview(int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
+        public async Task<IActionResult> GetAllCustomerReview(string? keySearch = "", int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
         {
             if (_customerReviewRepo == null || _mapper == null)
             {
@@ -48,8 +48,11 @@ namespace InSyncAPI.Controllers
             }
             index = index.Value < 0 ? INDEX_DEFAULT : index;
             size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
-
-            var listCustomerReview = _customerReviewRepo.GetMultiPaging(c => true, out int total, index.Value, size.Value, null);
+            keySearch = keySearch.ToLower();
+            var listCustomerReview = _customerReviewRepo.GetMultiPaging
+            (c => c.JobTitle.ToLower().Contains(keySearch) || c.Name.ToLower().Contains(keySearch) ||c.Review.ToLower().Contains(keySearch)
+            , out int total, index.Value, size.Value, null
+            );
             var response = _mapper.Map<IEnumerable<ViewCustomerReviewDto>>(listCustomerReview);
             var responsePaging = new ResponsePaging<IEnumerable<ViewCustomerReviewDto>>
             {
@@ -62,19 +65,23 @@ namespace InSyncAPI.Controllers
         [HttpGet("pagination/is-publish")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewCustomerReviewDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
-        
-        public async Task<IActionResult> GetAllCustomerReviewIsPublish(bool isPublish, int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
+
+        public async Task<IActionResult> GetAllCustomerReviewIsPublish(bool isPublish,string? keySearch = "", int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
         {
             if (_customerReviewRepo == null || _mapper == null)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     value: "Application service has not been created");
             }
-            
+
             index = index.Value < 0 ? INDEX_DEFAULT : index;
             size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
 
-            var listCustomerReview = _customerReviewRepo.GetMultiPaging(c => c.IsShow == isPublish, out int total, index.Value, size.Value, null);
+            var listCustomerReview = _customerReviewRepo.GetMultiPaging
+            (c => c.IsShow == isPublish 
+            && (c.JobTitle.ToLower().Contains(keySearch) || c.Name.ToLower().Contains(keySearch) || c.Review.ToLower().Contains(keySearch))
+            , out int total, index.Value, size.Value, null
+            );
             var response = _mapper.Map<IEnumerable<ViewCustomerReviewDto>>(listCustomerReview);
             var responsePaging = new ResponsePaging<IEnumerable<ViewCustomerReviewDto>>
             {

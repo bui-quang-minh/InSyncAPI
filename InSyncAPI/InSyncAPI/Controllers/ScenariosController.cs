@@ -29,7 +29,7 @@ namespace InSyncAPI.Controllers
         {
             _scenarioRepo = scenarioRop;
             _userRepo = userRepo;
-            _projectRepo = projectRepo; 
+            _projectRepo = projectRepo;
             _mapper = mapper;
         }
         [HttpGet()]
@@ -50,19 +50,25 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewScenarioDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
 
-        public async Task<IActionResult> GetAllScenarios(int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
+        public async Task<IActionResult> GetAllScenarios(string? keySearch = "", int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
         {
             if (_scenarioRepo == null || _userRepo == null || _mapper == null)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     value: "Application service has not been created");
             }
-           
+
             index = index.Value < 0 ? INDEX_DEFAULT : index;
             size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
+            keySearch = keySearch.ToLower();
 
-            var listScenario = _scenarioRepo.GetMultiPaging(c => true, out int total, index.Value, size.Value, includes);
-            var response = _mapper.Map<IEnumerable<ViewScenarioDto>>(listScenario);
+
+            var listScenario = _scenarioRepo.GetMultiPaging
+            (c => c.ScenarioName.ToLower().Contains(keySearch)
+            , out int total, index.Value, size.Value, includes);
+            var response = _mapper.Map<IEnumerable<ViewScenarioDto>>(listScenario
+            );
+
             var responsePaging = new ResponsePaging<IEnumerable<ViewScenarioDto>>
             {
                 data = response,
@@ -101,7 +107,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
 
-        public async Task<IActionResult> GetScenarioOfProject(Guid projectId, Guid createdBy, int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
+        public async Task<IActionResult> GetScenarioOfProject(Guid projectId, Guid createdBy, string? keySearch = "", int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
         {
             if (_scenarioRepo == null || _userRepo == null || _mapper == null)
             {
@@ -110,10 +116,10 @@ namespace InSyncAPI.Controllers
             }
             index = index.Value < 0 ? INDEX_DEFAULT : index;
             size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
-            
+            keySearch = keySearch.ToLower();
 
-            var scenario =  _scenarioRepo.GetMultiPaging(
-                c => c.ProjectId.Equals(projectId) && c.CreatedBy.Equals(createdBy), 
+            var scenario = _scenarioRepo.GetMultiPaging(
+                c => c.ProjectId.Equals(projectId) && c.CreatedBy.Equals(createdBy) && c.ScenarioName.ToLower().Contains(keySearch),
                 out int total, index.Value, size.Value, includes);
 
             if (!scenario.Any())
@@ -129,10 +135,41 @@ namespace InSyncAPI.Controllers
             return Ok(responsePaging);
         }
 
+        [HttpGet("scenarios-project-useridclerk/{projectId}")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewScenarioDto>>))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
+
+        public async Task<IActionResult> GetScenarioOfProjectByUserClerk(Guid projectId, string userIdClerk, string? keySearch = "", int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
+        {
+            if (_scenarioRepo == null || _userRepo == null || _mapper == null)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    value: "Application service has not been created");
+            }
+            index = index.Value < 0 ? INDEX_DEFAULT : index;
+            size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
+            keySearch = keySearch.ToLower();
+
+            var scenario = _scenarioRepo.GetMultiPaging(
+                c => c.ProjectId.Equals(projectId) && c.CreatedByNavigation.UserIdClerk.Equals(userIdClerk) && c.ScenarioName.ToLower().Contains(keySearch),
+                out int total, index.Value, size.Value, includes);
+
+            var response = _mapper.Map<IEnumerable<ViewScenarioDto>>(scenario);
+            var responsePaging = new ResponsePaging<IEnumerable<ViewScenarioDto>>
+            {
+                data = response,
+                totalOfData = total
+            };
+            return Ok(responsePaging);
+        }
+
+
         [HttpGet("scenarios-user-clerk/{userIdClerk}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewScenarioDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
-        public async Task<IActionResult> GetAllScenarioByUserIdClerk(string userIdClerk, int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
+        public async Task<IActionResult> GetAllScenarioByUserIdClerk(string userIdClerk, string? keySearch = "", int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
         {
             if (_scenarioRepo == null || _userRepo == null || _mapper == null)
             {
@@ -145,9 +182,12 @@ namespace InSyncAPI.Controllers
             }
             index = index.Value < 0 ? INDEX_DEFAULT : index;
             size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
+            keySearch = keySearch.ToLower();
 
-            var listScenario = _scenarioRepo.GetMultiPaging(c => c.CreatedByNavigation.UserIdClerk.Equals(userIdClerk),
-             out int total, index.Value, size.Value, includes);
+            var listScenario = _scenarioRepo.GetMultiPaging(c =>
+            c.CreatedByNavigation.UserIdClerk.Equals(userIdClerk) && c.ScenarioName.ToLower().Contains(keySearch),
+             out int total, index.Value, size.Value, includes
+             );
 
             var response = _mapper.Map<IEnumerable<ViewScenarioDto>>(listScenario);
             var responsePaging = new ResponsePaging<IEnumerable<ViewScenarioDto>>
@@ -161,7 +201,7 @@ namespace InSyncAPI.Controllers
         [HttpGet("scenarios-user/{userId}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewScenarioDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
-        public async Task<IActionResult> GetAllScenarioByUserId(Guid userId, int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
+        public async Task<IActionResult> GetAllScenarioByUserId(Guid userId,string? keySearch = "", int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
         {
             if (_scenarioRepo == null || _userRepo == null || _mapper == null)
             {
@@ -174,8 +214,10 @@ namespace InSyncAPI.Controllers
             }
             index = index.Value < 0 ? INDEX_DEFAULT : index;
             size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
+            keySearch = keySearch.ToLower();
 
-            var listScenario = _scenarioRepo.GetMultiPaging(c => c.CreatedBy.Equals(userId),
+            var listScenario = _scenarioRepo.GetMultiPaging
+            (c => c.CreatedBy.Equals(userId) && c.ScenarioName.ToLower().Contains(keySearch),
              out int total, index.Value, size.Value, includes);
 
             var response = _mapper.Map<IEnumerable<ViewScenarioDto>>(listScenario);
@@ -234,7 +276,7 @@ namespace InSyncAPI.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError,
                         value: "An error occurred while adding scenario into Database " + ex.Message);
             }
-            
+
         }
         [HttpPut("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionScenarioResponse))]
@@ -317,7 +359,7 @@ namespace InSyncAPI.Controllers
             try
             {
                 await _scenarioRepo.Update(existingScenario);
-                return Ok(new ActionScenarioResponse{ Message = "Scenario updated favorite successfully.", Id = existingScenario.Id });
+                return Ok(new ActionScenarioResponse { Message = "Scenario updated favorite successfully.", Id = existingScenario.Id });
             }
             catch (Exception ex)
             {
@@ -350,7 +392,7 @@ namespace InSyncAPI.Controllers
             }
 
             existingScenario.DateUpdated = DateTime.Now;
-           existingScenario.StepsWeb = webjson;
+            existingScenario.StepsWeb = webjson;
             try
             {
                 await _scenarioRepo.Update(existingScenario);
@@ -428,7 +470,7 @@ namespace InSyncAPI.Controllers
             try
             {
                 await _scenarioRepo.Update(existingScenario);
-                return Ok(new ActionScenarioResponse{ Message = "Scenario rename successfully.", Id = existingScenario.Id });
+                return Ok(new ActionScenarioResponse { Message = "Scenario rename successfully.", Id = existingScenario.Id });
             }
             catch (Exception ex)
             {
@@ -466,7 +508,7 @@ namespace InSyncAPI.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError,
                    $"Error delete scenario: {ex.Message}");
             }
-           
+
         }
     }
 }

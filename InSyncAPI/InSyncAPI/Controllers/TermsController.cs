@@ -45,7 +45,7 @@ namespace InSyncAPI.Controllers
         [HttpGet("pagination")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewTermDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
-        public async Task<IActionResult> GetAllTerms(int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
+        public async Task<IActionResult> GetAllTerms(string? keySearch ="", int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
         {
             if (_termRepo == null || _mapper == null)
             {
@@ -54,8 +54,12 @@ namespace InSyncAPI.Controllers
             }
             index = index.Value < 0 ? INDEX_DEFAULT : index;
             size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
-            string[] includes = new string[] { };
-            var listTerms = _termRepo.GetMultiPaging(c => true, out int total, index.Value, size.Value, includes);
+            keySearch = keySearch.ToLower();
+
+
+            var listTerms = _termRepo.GetMultiPaging
+                (c => c.Answer.ToLower().Contains(keySearch) || c.Question.ToLower().Contains(keySearch)
+            , out int total, index.Value, size.Value);
             var response = _mapper.Map<IEnumerable<ViewTermDto>>(listTerms);
 
             var responsePaging = new ResponsePaging<IEnumerable<ViewTermDto>>

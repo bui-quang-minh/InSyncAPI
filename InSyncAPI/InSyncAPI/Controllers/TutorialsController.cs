@@ -40,7 +40,7 @@ namespace InSyncAPI.Controllers
         [HttpGet("pagination")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewTutorialDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
-        public async Task<IActionResult> GetAllTutorials(int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
+        public async Task<IActionResult> GetAllTutorials(string? keySearch = "", int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
         {
             if (_tutorialRepo == null || _mapper == null)
             {
@@ -49,8 +49,11 @@ namespace InSyncAPI.Controllers
             }
             index = index.Value < 0 ? INDEX_DEFAULT : index;
             size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
+            keySearch = keySearch.ToLower();
 
-            var listTutorial = _tutorialRepo.GetMultiPaging(c => true, out int total, index.Value, size.Value, null);
+            var listTutorial = _tutorialRepo.GetMultiPaging
+                (c => c.Title.ToLower().Contains(keySearch)
+            , out int total, index.Value, size.Value, null);
             var response = _mapper.Map<IEnumerable<ViewTutorialDto>>(listTutorial);
             var responsePaging = new ResponsePaging<IEnumerable<ViewTutorialDto>>
             {
