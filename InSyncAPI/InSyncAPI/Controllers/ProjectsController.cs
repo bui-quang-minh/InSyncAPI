@@ -61,7 +61,7 @@ namespace InSyncAPI.Controllers
 
             index = index.Value < 0 ? INDEX_DEFAULT : index;
             size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
-            keySearch = keySearch.ToLower();
+            keySearch = string.IsNullOrEmpty(keySearch)?"":string.IsNullOrEmpty(keySearch)?"":keySearch.ToLower();;
 
             var listProject = _projectRepo.GetMultiPaging(c =>
             c.ProjectName.ToLower().Contains(keySearch)
@@ -93,7 +93,7 @@ namespace InSyncAPI.Controllers
             }
             index = index.Value < 0 ? INDEX_DEFAULT : index;
             size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
-            keySearch = keySearch.ToLower();
+            keySearch = string.IsNullOrEmpty(keySearch)?"":keySearch.ToLower();;
 
             var listProject = _projectRepo.GetMultiPaging
             (c => c.UserId.Equals(userId) && c.ProjectName.ToLower().Contains(keySearch)
@@ -126,7 +126,7 @@ namespace InSyncAPI.Controllers
             }
             index = index.Value < 0 ? INDEX_DEFAULT : index;
             size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
-            keySearch = keySearch.ToLower();
+            keySearch = string.IsNullOrEmpty(keySearch)?"":keySearch.ToLower();;
             var listProject = _projectRepo.GetMultiPaging
             (c => c.User.UserIdClerk.Equals(userIdClerk) && c.ProjectName.ToLower().Contains(keySearch)
             && (isPublish == null || c.IsPublish == isPublish), out int total, index.Value, size.Value, includes);

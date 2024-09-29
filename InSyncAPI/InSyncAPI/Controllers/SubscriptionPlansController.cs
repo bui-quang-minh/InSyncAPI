@@ -64,7 +64,7 @@ namespace InSyncAPI.Controllers
 
             index = index.Value < 0 ? INDEX_DEFAULT : index;
             size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
-            keySearch = keySearch.ToLower();
+            keySearch = string.IsNullOrEmpty(keySearch)?"":keySearch.ToLower();;
 
             var listSubsciptionPlan = _subscriptionPlanRepo.GetMultiPaging
             (c => c.SubscriptionsName.ToLower().Contains(keySearch)

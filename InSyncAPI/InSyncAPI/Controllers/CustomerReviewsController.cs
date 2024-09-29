@@ -48,7 +48,7 @@ namespace InSyncAPI.Controllers
             }
             index = index.Value < 0 ? INDEX_DEFAULT : index;
             size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
-            keySearch = keySearch.ToLower();
+            keySearch = string.IsNullOrEmpty(keySearch)?"":keySearch.ToLower();;
             var listCustomerReview = _customerReviewRepo.GetMultiPaging
             (c => c.JobTitle.ToLower().Contains(keySearch) || c.Name.ToLower().Contains(keySearch) ||c.Review.ToLower().Contains(keySearch)
             , out int total, index.Value, size.Value, null

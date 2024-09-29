@@ -60,7 +60,7 @@ namespace InSyncAPI.Controllers
 
             index = index.Value < 0 ? INDEX_DEFAULT : index;
             size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
-            keySearch = keySearch.ToLower();
+            keySearch = string.IsNullOrEmpty(keySearch)?"":keySearch.ToLower();;
 
 
             var listScenario = _scenarioRepo.GetMultiPaging
@@ -116,7 +116,7 @@ namespace InSyncAPI.Controllers
             }
             index = index.Value < 0 ? INDEX_DEFAULT : index;
             size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
-            keySearch = keySearch.ToLower();
+            keySearch = string.IsNullOrEmpty(keySearch)?"":keySearch.ToLower();;
 
             var scenario = _scenarioRepo.GetMultiPaging(
                 c => c.ProjectId.Equals(projectId) && c.CreatedBy.Equals(createdBy) && c.ScenarioName.ToLower().Contains(keySearch),
@@ -150,7 +150,7 @@ namespace InSyncAPI.Controllers
             }
             index = index.Value < 0 ? INDEX_DEFAULT : index;
             size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
-            keySearch = keySearch.ToLower();
+            keySearch = string.IsNullOrEmpty(keySearch)?"":keySearch.ToLower();;
 
             var scenario = _scenarioRepo.GetMultiPaging(
                 c => c.ProjectId.Equals(projectId) && c.CreatedByNavigation.UserIdClerk.Equals(userIdClerk) && c.ScenarioName.ToLower().Contains(keySearch),
@@ -182,7 +182,7 @@ namespace InSyncAPI.Controllers
             }
             index = index.Value < 0 ? INDEX_DEFAULT : index;
             size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
-            keySearch = keySearch.ToLower();
+            keySearch = string.IsNullOrEmpty(keySearch)?"":keySearch.ToLower();;
 
             var listScenario = _scenarioRepo.GetMultiPaging(c =>
             c.CreatedByNavigation.UserIdClerk.Equals(userIdClerk) && c.ScenarioName.ToLower().Contains(keySearch),
@@ -214,7 +214,7 @@ namespace InSyncAPI.Controllers
             }
             index = index.Value < 0 ? INDEX_DEFAULT : index;
             size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
-            keySearch = keySearch.ToLower();
+            keySearch = string.IsNullOrEmpty(keySearch)?"":keySearch.ToLower();;
 
             var listScenario = _scenarioRepo.GetMultiPaging
             (c => c.CreatedBy.Equals(userId) && c.ScenarioName.ToLower().Contains(keySearch),

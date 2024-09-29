@@ -23,7 +23,7 @@ namespace InSyncAPI.Controllers
             nameof(Asset.Project)
         };
 
-        public AssetsController(IAssetRepository assestRepo,IProjectRepository projectRepo,
+        public AssetsController(IAssetRepository assestRepo, IProjectRepository projectRepo,
             IMapper mapper)
         {
             _assestRepo = assestRepo;
@@ -49,7 +49,7 @@ namespace InSyncAPI.Controllers
         [HttpGet("pagination")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewAssetDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
-        public async Task<IActionResult> GetAllAsset(string? keySearch = "",int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
+        public async Task<IActionResult> GetAllAsset(string? keySearch = "", int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
         {
             if (_assestRepo == null || _mapper == null)
             {
@@ -58,11 +58,11 @@ namespace InSyncAPI.Controllers
             }
             index = index.Value < 0 ? INDEX_DEFAULT : index;
             size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
-            
-            var listAssets = _assestRepo.GetMultiPaging(c =>  c.AssestName.ToLower().Contains(keySearch.ToLower())
+            keySearch = string.IsNullOrEmpty(keySearch) ? "" : keySearch.ToLower(); ;
+            var listAssets = _assestRepo.GetMultiPaging(c => c.AssestName.ToLower().Contains(keySearch)
             , out int total, index.Value, size.Value, includes);
             var response = _mapper.Map<IEnumerable<ViewAssetDto>>(listAssets);
-            var responsePaging = new ResponsePaging<IEnumerable<ViewAssetDto>>() 
+            var responsePaging = new ResponsePaging<IEnumerable<ViewAssetDto>>()
             {
                 data = response,
                 totalOfData = total
@@ -72,7 +72,7 @@ namespace InSyncAPI.Controllers
         [HttpGet("asset-project/{idProject}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewAssetDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
-        public async Task<IActionResult> GetAllAssetOfProject(Guid idProject,string? keySearch = "", int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
+        public async Task<IActionResult> GetAllAssetOfProject(Guid idProject, string? keySearch = "", int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
         {
             if (_assestRepo == null || _mapper == null)
             {
@@ -81,8 +81,9 @@ namespace InSyncAPI.Controllers
             }
             index = index.Value < 0 ? INDEX_DEFAULT : index;
             size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
+            keySearch = string.IsNullOrEmpty(keySearch) ? "" : keySearch.ToLower(); ;
 
-            var listAssets = _assestRepo.GetMultiPaging(c => c.ProjectId.Equals(idProject) && c.AssestName.ToLower().Contains(keySearch.ToLower())
+            var listAssets = _assestRepo.GetMultiPaging(c => c.ProjectId.Equals(idProject) && c.AssestName.ToLower().Contains(keySearch)
             , out int total, index.Value, size.Value, includes);
             var response = _mapper.Map<IEnumerable<ViewAssetDto>>(listAssets);
             var responsePaging = new ResponsePaging<IEnumerable<ViewAssetDto>>()
@@ -135,7 +136,7 @@ namespace InSyncAPI.Controllers
                 return BadRequest(new ValidationProblemDetails(ModelState));
             }
             var checkExistProject = await _projectRepo.CheckContainsAsync(p => p.Id.Equals(newAsset.ProjectId));
-            if(!checkExistProject)
+            if (!checkExistProject)
             {
                 return BadRequest("Project does not exist according to Asset information");
             }
@@ -155,7 +156,7 @@ namespace InSyncAPI.Controllers
             {
                 return StatusCode(StatusCodes.Status500InternalServerError,
                         value: "An error occurred while adding Asset into Database " + ex.Message);
-            }   
+            }
         }
 
         [HttpPut("{id}")]
