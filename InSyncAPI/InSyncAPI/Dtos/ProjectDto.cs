@@ -22,6 +22,15 @@ namespace InSyncAPI.Dtos
         public Guid UserId { get; set; }
         public bool IsPublish { get; set; }
     }
+    public class AddProjectClerkDto
+    {
+        [Required]
+        [StringLength(255, MinimumLength = 5)]
+        public string ProjectName { get; set; } = null!;
+        public string? Description { get; set; }
+        public string  UserIdClerk { get; set; }
+        public bool IsPublish { get; set; }
+    }
     public class UpdateProjectDto
     {
         public Guid Id { get; set; }

@@ -213,6 +213,53 @@ namespace InSyncAPI.Controllers
             }
 
         }
+        [HttpPost("ByUserClerk")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionPrivacyPolicyResponse))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
+
+        public async Task<IActionResult> AddProjectUserClerk(AddProjectClerkDto newProject)
+        {
+            if (_projectRepo == null || _mapper == null)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    value: "Application service has not been created");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            var checkUserExist = await _userRepo.GetSingleByCondition(c => c.UserIdClerk.Equals(newProject.UserIdClerk));
+            if (checkUserExist == null)
+            {
+                return NotFound("Information of user not correct . please check again! " + newProject.UserIdClerk.ToString());
+            }
+            Project project = _mapper.Map<Project>(newProject);
+            project.UserId = checkUserExist.Id;
+            project.DateCreated = DateTime.Now;
+
+            try
+            {
+                var response = await _projectRepo.Add(project);
+
+                if (response == null)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError,
+                        value: "Error occurred while adding the project.");
+                }
+
+                return Ok(new ActionProjectResponse { Message = "Project added successfully.", Id = response.Id });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                        value: "An error occurred while adding Project into Database " + ex.Message);
+            }
+
+        }
+
+
         [HttpPut("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionPrivacyPolicyResponse))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
