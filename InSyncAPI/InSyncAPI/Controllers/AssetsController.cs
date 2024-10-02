@@ -4,6 +4,7 @@ using InSyncAPI.Dtos;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Query;
+using Microsoft.VisualBasic;
 using Repositorys;
 using System.Linq;
 
@@ -142,6 +143,7 @@ namespace InSyncAPI.Controllers
             }
             var asset = _mapper.Map<Asset>(newAsset);
             asset.DateCreated = DateTime.Now;
+            
             try
             {
                 var response = await _assestRepo.Add(asset);

@@ -26,7 +26,8 @@ namespace InSync_Api.MapperProfile
             CreateMap<UpdateTutorialDto, Tutorial>().ReverseMap();
             CreateMap<Tutorial, ViewTutorialDto>().ReverseMap();
             // Subscription Plan
-            CreateMap<AddSubscriptionPlanDto, SubscriptionPlan>().ReverseMap();          
+            CreateMap<AddSubscriptionPlanDto, SubscriptionPlan>().ReverseMap();
+            CreateMap<AddSubscriptionPlanUserClerkDto, SubscriptionPlan>().ReverseMap();
             CreateMap<UpdateSubscriptionPlanDto, SubscriptionPlan>().ReverseMap();
             CreateMap<SubscriptionPlan, ViewSubscriptionPlanDto>()
                 .ForMember(c => c.UserName, a => a.MapFrom(r => r.User.UserName))
@@ -34,6 +35,7 @@ namespace InSync_Api.MapperProfile
             // Scenario Dto
            
             CreateMap<AddScenarioDto, Scenario>().ReverseMap();
+            CreateMap<AddScenarioUserClerkDto, Scenario>().ReverseMap();
             CreateMap<UpdateScenarioDto, Scenario>().ReverseMap();
             CreateMap<Scenario, ViewScenarioDto>()
                 .ForMember(c => c.ProjectName, a => a.MapFrom(r => r.Project.ProjectName))
@@ -58,6 +60,7 @@ namespace InSync_Api.MapperProfile
                 .ReverseMap();
             // User Subsciption Dto
             CreateMap<AddUserSubsciptionDto, UserSubscription>().ReverseMap();
+            CreateMap<AddUserSubsciptionUserClerkDto, UserSubscription>().ReverseMap();
             CreateMap<UpdateUserSubsciptionDto, UserSubscription>().ReverseMap();
             CreateMap<UserSubscription, ViewUserSubsciptionDto>()
                 .ForMember(c => c.UserName, a => a.MapFrom(r => r.User.UserName))

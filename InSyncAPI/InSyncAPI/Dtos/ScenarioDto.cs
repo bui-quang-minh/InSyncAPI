@@ -34,6 +34,21 @@ namespace InSyncAPI.Dtos
         public Guid CreatedBy { get; set; }
     }
 
+    public class AddScenarioUserClerkDto
+    {
+        [Required]
+        public Guid ProjectId { get; set; }
+        [Required]
+        [StringLength(255, MinimumLength = 5)]
+        public string ScenarioName { get; set; } = null!;
+        public string? Description { get; set; }
+        public string? StepsWeb { get; set; }
+        public string? StepsAndroid { get; set; }
+        public bool? IsFavorites { get; set; }
+        public string? ImageUrl { get; set; }
+        public string UserIdClerk { get; set; }
+    }
+
     public class UpdateScenarioDto
     {
         public Guid Id { get; set; }

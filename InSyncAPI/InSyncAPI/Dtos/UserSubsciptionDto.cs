@@ -17,7 +17,9 @@ namespace InSyncAPI.Dtos
     }
     public class AddUserSubsciptionDto
     {
+        [Required]
         public Guid SubscriptionPlanId { get; set; }
+        [Required]
         public Guid UserId { get; set; }
         [Required]
         public DateTime StripeCurrentPeriodEnd { get; set; }
@@ -28,6 +30,23 @@ namespace InSyncAPI.Dtos
         [Required]
         public string StripePriceId { get; set; } = null!;
         
+    }
+
+    public class AddUserSubsciptionUserClerkDto
+    {
+        [Required]
+        public Guid SubscriptionPlanId { get; set; }
+        [Required]
+        public String UserIdClerk { get; set; }
+        [Required]
+        public DateTime StripeCurrentPeriodEnd { get; set; }
+        [Required]
+        public string StripeCustomerId { get; set; } = null!;
+        [Required]
+        public string StripeSubscriptionId { get; set; } = null!;
+        [Required]
+        public string StripePriceId { get; set; } = null!;
+
     }
     public class UpdateUserSubsciptionDto
     {

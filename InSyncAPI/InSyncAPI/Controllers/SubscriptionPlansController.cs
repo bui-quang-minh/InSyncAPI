@@ -148,6 +148,52 @@ namespace InSyncAPI.Controllers
             }
 
         }
+        [HttpPost("ByUserClerk")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionSubsciptionPlanResponse))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
+
+        public async Task<IActionResult> AddSubsciptionPlanUserClerk(AddSubscriptionPlanUserClerkDto newSubscription)
+        {
+            if (_subscriptionPlanRepo == null || _mapper == null)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    value: "Application service has not been created");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new ValidationProblemDetails(ModelState));
+            }
+
+            var checkUserExist = await _userRepository.GetSingleByCondition(c => c.UserIdClerk.Equals(newSubscription.UserIdClerk));
+            if (checkUserExist == null)
+            {
+                return NotFound($"Dont exist user with id {newSubscription.UserIdClerk.ToString()} to add Subsciption Plan");
+            }
+
+            SubscriptionPlan subscriptionPlan = _mapper.Map<SubscriptionPlan>(newSubscription);
+            subscriptionPlan.DateCreated = DateTime.Now;
+            subscriptionPlan.UserId = checkUserExist.Id;
+            try
+            {
+                var response = await _subscriptionPlanRepo.Add(subscriptionPlan);
+                if (response == null)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError,
+                        value: "Error occurred while adding the subsciption plan.");
+                }
+
+                return Ok(new ActionSubsciptionPlanResponse { Message = "Subscription plan added successfully.", Id = response.Id });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                        value: "An error occurred while adding Subsciption Plan into Database " + ex.Message);
+            }
+
+        }
+
         [HttpPut("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionSubsciptionPlanResponse))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]

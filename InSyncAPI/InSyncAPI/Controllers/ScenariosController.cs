@@ -278,6 +278,57 @@ namespace InSyncAPI.Controllers
             }
 
         }
+        [HttpPost("ByUserClerk")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionScenarioResponse))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
+
+        public async Task<IActionResult> AddScenarioByUserClerk(AddScenarioUserClerkDto newScenario)
+        {
+            if (_scenarioRepo == null || _userRepo == null || _mapper == null)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    value: "Application service has not been created");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            var checkExistUser = await _userRepo.GetSingleByCondition(c => c.UserIdClerk.Equals(newScenario.UserIdClerk));
+            if (checkExistUser == null)
+            {
+                return NotFound("Don't exist user has id by : " + newScenario.UserIdClerk);
+            }
+            bool checkExistProject = await _projectRepo.CheckContainsAsync(c => c.Id.Equals(newScenario.ProjectId));
+            if (!checkExistProject)
+            {
+                return NotFound("Don't exist project has id by : " + newScenario.ProjectId);
+            }
+
+            Scenario scenario = _mapper.Map<Scenario>(newScenario);
+            scenario.DateCreated = DateTime.Now;
+            scenario.CreatedBy = checkExistUser.Id;
+
+            try
+            {
+                var response = await _scenarioRepo.Add(scenario);
+                if (response == null)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError,
+                        value: "Error occurred while adding the tutorial.");
+                }
+
+                return Ok(new ActionScenarioResponse { Message = "Scenario added successfully.", Id = response.Id });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                        value: "An error occurred while adding scenario into Database " + ex.Message);
+            }
+
+        }
+
         [HttpPut("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionScenarioResponse))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]

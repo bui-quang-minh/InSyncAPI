@@ -27,7 +27,7 @@ namespace Repositorys
             if (deleteProject.Scenarios.Any())
             {
                 _context.Scenarios.RemoveRange(deleteProject.Scenarios);
-                _context.SaveChangesAsync();
+               await _context.SaveChangesAsync();
             }
             if (deleteProject.Assets.Any())
             {
