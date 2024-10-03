@@ -96,7 +96,7 @@ namespace InSyncUnitTest.Controller
             A.CallTo(() => _mapper.Map<IEnumerable<ViewAssetDto>>(Assets)).Returns(viewAssets);
 
             // Act
-            var result = await _controller.GetAllAsset(index, size);
+            var result = await _controller.GetAllAsset(A<string>._,index, size);
 
             // Assert
             var okResult = result as OkObjectResult;
@@ -120,7 +120,7 @@ namespace InSyncUnitTest.Controller
             A.CallTo(() => _mapper.Map<IEnumerable<ViewAssetDto>>(Assets)).Returns(viewAssets);
 
             // Act
-            var result = await _controller.GetAllAsset(index, size);
+            var result = await _controller.GetAllAsset(A<string>._,index, size);
 
             // Assert
             var okResult = result as OkObjectResult;
@@ -235,6 +235,117 @@ namespace InSyncUnitTest.Controller
         }
 
         #endregion
+        #region GetAllAssetOfProject
+        [Fact]
+        public async Task GetAllAssetOfProject_WhenDependencyAreNull_ShouldReturnInternalServerError()
+        {
+            var controller = new AssetsController(null, null, null);
+            var result = await controller.GetAllAssetOfProject(Guid.NewGuid());
+
+
+            var statusCodeResult = result as ObjectResult;
+            statusCodeResult.Should().NotBeNull();
+            statusCodeResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+            statusCodeResult.Value.Should().Be("Application service has not been created");
+        }
+        [Fact]
+        public async Task GetAllAssetOfProject_WithValidInput_ShouldReturnOkResultWithAssets()
+        {
+            // Arrange
+
+            IEnumerable<Asset> Assets = new List<Asset> { new Asset(), new Asset() };
+            IEnumerable<ViewAssetDto> viewAssets = new List<ViewAssetDto> { new ViewAssetDto(), new ViewAssetDto() };
+            int total;
+            int index = 0, size = 2;
+            A.CallTo(() => _assetRepo.GetMultiPaging(A<Expression<Func<Asset, bool>>>._, out total, A<int>._, A<int>._, A<string[]>._))
+                .Returns(Assets);
+            A.CallTo(() => _mapper.Map<IEnumerable<ViewAssetDto>>(Assets)).Returns(viewAssets);
+
+            // Act
+            var result = await _controller.GetAllAssetOfProject(Guid.NewGuid(),"", index, size);
+
+            // Assert
+            var okResult = result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be(StatusCodes.Status200OK);
+            var returnedAssets = okResult.Value as ResponsePaging<IEnumerable<ViewAssetDto>>;
+            returnedAssets.Should().NotBeNull();
+            returnedAssets.data.Should().BeEquivalentTo(viewAssets);
+        }
+        [Fact]
+        public async Task GetAllAssetOfProject_WithSizeOrIndexIsNegativeInteger_ShouldReturnOkResultWithAssets()
+        {
+            // Arrange
+
+            IEnumerable<Asset> Assets = new List<Asset> { new Asset(), new Asset() };
+            IEnumerable<ViewAssetDto> viewAssets = new List<ViewAssetDto> { new ViewAssetDto(), new ViewAssetDto() };
+            int total;
+            int index = -1, size = -3;
+            A.CallTo(() => _assetRepo.GetMultiPaging(A<Expression<Func<Asset, bool>>>._, out total, A<int>._, A<int>._, A<string[]>._))
+                .Returns(Assets);
+            A.CallTo(() => _mapper.Map<IEnumerable<ViewAssetDto>>(Assets)).Returns(viewAssets);
+
+            // Act
+            var result = await _controller.GetAllAssetOfProject(Guid.NewGuid(),"", index, size);
+
+            // Assert
+            var okResult = result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be(StatusCodes.Status200OK);
+            var returnedAssets = okResult.Value as ResponsePaging<IEnumerable<ViewAssetDto>>;
+            returnedAssets.Should().NotBeNull();
+            returnedAssets.data.Should().BeEquivalentTo(viewAssets);
+        }
+
+        [Fact]
+        public async Task GetAllAssetOfProject_WithSizeOrIndexNoParameterInApi_ShouldReturnOkResultWithAssets()
+        {
+            // Arrange
+
+            IEnumerable<Asset> Assets = new List<Asset> { new Asset(), new Asset() };
+            IEnumerable<ViewAssetDto> viewAssets = new List<ViewAssetDto> { new ViewAssetDto(), new ViewAssetDto() };
+            int total;
+            string[] includes = new string[] { };
+            A.CallTo(() => _assetRepo.GetMultiPaging(A<Expression<Func<Asset, bool>>>._, out total, A<int>._, A<int>._, A<string[]>._))
+                .Returns(Assets);
+            A.CallTo(() => _mapper.Map<IEnumerable<ViewAssetDto>>(Assets)).Returns(viewAssets);
+
+            // Act
+            var result = await _controller.GetAllAssetOfProject(Guid.NewGuid());
+
+            // Assert
+            var okResult = result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be(StatusCodes.Status200OK);
+            var returnedAssets = okResult.Value as ResponsePaging<IEnumerable<ViewAssetDto>>;
+            returnedAssets.Should().NotBeNull();
+            returnedAssets.data.Should().BeEquivalentTo(viewAssets);
+        }
+        [Fact]
+        public async Task GetAllAssetOfProject_WithIdProjectInValidFomat_ReturnBadRequest()
+        {
+            // Arrange
+            var controller = new AssetsController(_assetRepo, _projectRepo, _mapper);
+            var invalidGuid = "e4d34798-4c18-4ca4-9014-191492e3b90"; // GUID sai định dạng
+            controller.ModelState.AddModelError("id", $"The value '{invalidGuid}' is not valid.");
+
+            // Act
+            var result = await controller.GetAllAssetOfProject(Guid.Empty);
+
+            // Assert
+            var badRequestResult = result as BadRequestObjectResult;
+            badRequestResult.Should().NotBeNull();
+            badRequestResult.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
+            var errorResponse = badRequestResult.Value as ValidationProblemDetails;
+            errorResponse.Should().NotBeNull();
+            errorResponse.Title.Should().Be("One or more validation errors occurred.");
+            errorResponse.Errors.Should().ContainKey("id");
+            errorResponse.Errors["id"].Should().Contain($"The value '{invalidGuid}' is not valid.");
+        }
+
+        #endregion
+
+
 
         #region AddAsset
         [Fact]

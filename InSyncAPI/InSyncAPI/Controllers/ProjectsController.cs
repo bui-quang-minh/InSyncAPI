@@ -30,9 +30,9 @@ namespace InSyncAPI.Controllers
         }
         [HttpGet()]
         [EnableQuery]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Project>))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IQueryable<Project>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
-        public async Task<IActionResult> GetProjects(string? keySearch, string? order)
+        public async Task<IActionResult> GetProjects()
         {
             if (_projectRepo == null || _mapper == null)
             {
@@ -40,7 +40,6 @@ namespace InSyncAPI.Controllers
                     value: "Application service has not been created");
             }
             var response = _projectRepo.GetAll().AsQueryable();
-
 
             return Ok(response);
         }
@@ -61,7 +60,7 @@ namespace InSyncAPI.Controllers
 
             index = index.Value < 0 ? INDEX_DEFAULT : index;
             size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
-            keySearch = string.IsNullOrEmpty(keySearch)?"":string.IsNullOrEmpty(keySearch)?"":keySearch.ToLower();;
+            keySearch = string.IsNullOrEmpty(keySearch) ? "" : string.IsNullOrEmpty(keySearch) ? "" : keySearch.ToLower(); ;
 
             var listProject = _projectRepo.GetMultiPaging(c =>
             c.ProjectName.ToLower().Contains(keySearch)
@@ -93,7 +92,7 @@ namespace InSyncAPI.Controllers
             }
             index = index.Value < 0 ? INDEX_DEFAULT : index;
             size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
-            keySearch = string.IsNullOrEmpty(keySearch)?"":keySearch.ToLower();;
+            keySearch = string.IsNullOrEmpty(keySearch) ? "" : keySearch.ToLower(); ;
 
             var listProject = _projectRepo.GetMultiPaging
             (c => c.UserId.Equals(userId) && c.ProjectName.ToLower().Contains(keySearch)
@@ -113,7 +112,7 @@ namespace InSyncAPI.Controllers
         [HttpGet("project-user-clerk-is-publish/{userIdClerk}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewProjectDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
-        public async Task<IActionResult> GetAllProjectIsPublishByUserIdClerk(string userIdClerk, bool? isPublish, string? keySearch="", int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
+        public async Task<IActionResult> GetAllProjectIsPublishByUserIdClerk(string userIdClerk, bool? isPublish, string? keySearch = "", int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
         {
             if (_projectRepo == null || _mapper == null)
             {
@@ -126,7 +125,7 @@ namespace InSyncAPI.Controllers
             }
             index = index.Value < 0 ? INDEX_DEFAULT : index;
             size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
-            keySearch = string.IsNullOrEmpty(keySearch)?"":keySearch.ToLower();;
+            keySearch = string.IsNullOrEmpty(keySearch) ? "" : keySearch.ToLower(); ;
             var listProject = _projectRepo.GetMultiPaging
             (c => c.User.UserIdClerk.Equals(userIdClerk) && c.ProjectName.ToLower().Contains(keySearch)
             && (isPublish == null || c.IsPublish == isPublish), out int total, index.Value, size.Value, includes);
@@ -149,7 +148,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
 
-        public async Task<IActionResult> GetProject(Guid id)
+        public async Task<IActionResult> GetProjectById(Guid id)
         {
             if (_projectRepo == null || _mapper == null)
             {
@@ -184,12 +183,12 @@ namespace InSyncAPI.Controllers
 
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return BadRequest(new ValidationProblemDetails(ModelState));
             }
             var checkUserExist = await _userRepo.CheckContainsAsync(c => c.Id.Equals(newProject.UserId));
             if (!checkUserExist)
             {
-                return NotFound("Information of user not correct . please check again! " + newProject.UserId.ToString());
+                return BadRequest("Information of user not correct . please check again! " + newProject.UserId.ToString());
             }
             Project project = _mapper.Map<Project>(newProject);
             project.DateCreated = DateTime.Now;
@@ -209,7 +208,7 @@ namespace InSyncAPI.Controllers
             catch (Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError,
-                        value: "An error occurred while adding Project into Database " + ex.Message);
+                        value: "An error occurred while adding project into Database " + ex.Message);
             }
 
         }
@@ -228,12 +227,12 @@ namespace InSyncAPI.Controllers
 
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return BadRequest(new ValidationProblemDetails(ModelState));
             }
             var checkUserExist = await _userRepo.GetSingleByCondition(c => c.UserIdClerk.Equals(newProject.UserIdClerk));
             if (checkUserExist == null)
             {
-                return NotFound("Information of user not correct . please check again! " + newProject.UserIdClerk.ToString());
+                return BadRequest("Information of user not correct . please check again! " + newProject.UserIdClerk.ToString());
             }
             Project project = _mapper.Map<Project>(newProject);
             project.UserId = checkUserExist.Id;
@@ -254,7 +253,7 @@ namespace InSyncAPI.Controllers
             catch (Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError,
-                        value: "An error occurred while adding Project into Database " + ex.Message);
+                        value: "An error occurred while adding project into Database " + ex.Message);
             }
 
         }
@@ -276,7 +275,7 @@ namespace InSyncAPI.Controllers
 
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return BadRequest(new ValidationProblemDetails(ModelState));
             }
 
             if (id != updateProject.Id)
@@ -325,8 +324,8 @@ namespace InSyncAPI.Controllers
             {
                 return BadRequest(new ValidationProblemDetails(ModelState));
             }
-            var checkReviewExist = await _projectRepo.CheckContainsAsync(c => c.Id.Equals(id));
-            if (!checkReviewExist)
+            var checkProjectExist = await _projectRepo.CheckContainsAsync(c => c.Id.Equals(id));
+            if (!checkProjectExist)
             {
                 return NotFound($"Dont exist project with id {id.ToString()} to delete");
             }

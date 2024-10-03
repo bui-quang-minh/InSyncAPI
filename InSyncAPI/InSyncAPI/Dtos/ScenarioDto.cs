@@ -31,6 +31,7 @@ namespace InSyncAPI.Dtos
         public string? StepsAndroid { get; set; }
         public bool? IsFavorites { get; set; }
         public string? ImageUrl { get; set; }
+        [Required]
         public Guid CreatedBy { get; set; }
     }
 
@@ -46,12 +47,15 @@ namespace InSyncAPI.Dtos
         public string? StepsAndroid { get; set; }
         public bool? IsFavorites { get; set; }
         public string? ImageUrl { get; set; }
+        [Required]
         public string UserIdClerk { get; set; }
     }
 
     public class UpdateScenarioDto
     {
+        [Required]
         public Guid Id { get; set; }
+        [Required]
         public Guid ProjectId { get; set; }
         [Required]
         [StringLength(255, MinimumLength = 5)]

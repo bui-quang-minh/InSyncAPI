@@ -16,24 +16,28 @@ namespace InSyncAPI.Dtos
     public class AddProjectDto
     {
         [Required]
-        [StringLength(255, MinimumLength = 5)]
+        [StringLength(255)]
         public string ProjectName { get; set; } = null!;
         public string? Description { get; set; }
+        [Required]
         public Guid UserId { get; set; }
         public bool IsPublish { get; set; }
     }
     public class AddProjectClerkDto
     {
         [Required]
-        [StringLength(255, MinimumLength = 5)]
+        [StringLength(255)]
         public string ProjectName { get; set; } = null!;
         public string? Description { get; set; }
+        [Required]
         public string  UserIdClerk { get; set; }
         public bool IsPublish { get; set; }
     }
     public class UpdateProjectDto
     {
         public Guid Id { get; set; }
+        [Required]
+        [StringLength(255)]
         public string ProjectName { get; set; } = null!;
         public string? Description { get; set; }
         public bool IsPublish { get; set; }

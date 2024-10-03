@@ -94,7 +94,7 @@ namespace InSyncUnitTest.Controller
             A.CallTo(() => _mapper.Map<IEnumerable<ViewCustomerReviewDto>>(customerReviews)).Returns(viewCustomerReviews);
 
             // Act
-            var result = await _controller.GetAllCustomerReview(index, size);
+            var result = await _controller.GetAllCustomerReview(A<string>._,index, size);
 
             // Assert
             var okResult = result as OkObjectResult;
@@ -118,7 +118,7 @@ namespace InSyncUnitTest.Controller
             A.CallTo(() => _mapper.Map<IEnumerable<ViewCustomerReviewDto>>(custoemrReviews)).Returns(viewCustomerReviews);
 
             // Act
-            var result = await _controller.GetAllCustomerReview(index, size);
+            var result = await _controller.GetAllCustomerReview(A<string>._,index, size);
 
             // Assert
             var okResult = result as OkObjectResult;

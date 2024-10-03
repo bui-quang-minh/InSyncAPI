@@ -43,6 +43,7 @@ namespace InSyncAPI.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     value: "Application service has not been created");
             }
+
             var response = _scenarioRepo.GetAll().AsQueryable();
             return Ok(response);
         }
@@ -60,7 +61,7 @@ namespace InSyncAPI.Controllers
 
             index = index.Value < 0 ? INDEX_DEFAULT : index;
             size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
-            keySearch = string.IsNullOrEmpty(keySearch)?"":keySearch.ToLower();;
+            keySearch = string.IsNullOrEmpty(keySearch) ? "" : keySearch.ToLower(); ;
 
 
             var listScenario = _scenarioRepo.GetMultiPaging
@@ -92,7 +93,10 @@ namespace InSyncAPI.Controllers
                     value: "Application service has not been created");
             }
 
-
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new ValidationProblemDetails(ModelState));
+            }
             var scenario = await _scenarioRepo.GetSingleByCondition(c => c.Id.Equals(id), includes);
             if (scenario == null)
             {
@@ -114,18 +118,19 @@ namespace InSyncAPI.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     value: "Application service has not been created");
             }
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new ValidationProblemDetails(ModelState));
+            }
             index = index.Value < 0 ? INDEX_DEFAULT : index;
             size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
-            keySearch = string.IsNullOrEmpty(keySearch)?"":keySearch.ToLower();;
+            keySearch = string.IsNullOrEmpty(keySearch) ? "" : keySearch.ToLower(); ;
 
             var scenario = _scenarioRepo.GetMultiPaging(
                 c => c.ProjectId.Equals(projectId) && c.CreatedBy.Equals(createdBy) && c.ScenarioName.ToLower().Contains(keySearch),
                 out int total, index.Value, size.Value, includes);
 
-            if (!scenario.Any())
-            {
-                return NotFound("No scenario in project by id : " + projectId.ToString());
-            }
+
             var response = _mapper.Map<IEnumerable<ViewScenarioDto>>(scenario);
             var responsePaging = new ResponsePaging<IEnumerable<ViewScenarioDto>>
             {
@@ -148,9 +153,13 @@ namespace InSyncAPI.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     value: "Application service has not been created");
             }
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new ValidationProblemDetails(ModelState));
+            }
             index = index.Value < 0 ? INDEX_DEFAULT : index;
             size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
-            keySearch = string.IsNullOrEmpty(keySearch)?"":keySearch.ToLower();;
+            keySearch = string.IsNullOrEmpty(keySearch) ? "" : keySearch.ToLower(); ;
 
             var scenario = _scenarioRepo.GetMultiPaging(
                 c => c.ProjectId.Equals(projectId) && c.CreatedByNavigation.UserIdClerk.Equals(userIdClerk) && c.ScenarioName.ToLower().Contains(keySearch),
@@ -182,7 +191,7 @@ namespace InSyncAPI.Controllers
             }
             index = index.Value < 0 ? INDEX_DEFAULT : index;
             size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
-            keySearch = string.IsNullOrEmpty(keySearch)?"":keySearch.ToLower();;
+            keySearch = string.IsNullOrEmpty(keySearch) ? "" : keySearch.ToLower(); ;
 
             var listScenario = _scenarioRepo.GetMultiPaging(c =>
             c.CreatedByNavigation.UserIdClerk.Equals(userIdClerk) && c.ScenarioName.ToLower().Contains(keySearch),
@@ -201,7 +210,7 @@ namespace InSyncAPI.Controllers
         [HttpGet("scenarios-user/{userId}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewScenarioDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
-        public async Task<IActionResult> GetAllScenarioByUserId(Guid userId,string? keySearch = "", int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
+        public async Task<IActionResult> GetAllScenarioByUserId(Guid userId, string? keySearch = "", int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
         {
             if (_scenarioRepo == null || _userRepo == null || _mapper == null)
             {
@@ -214,7 +223,7 @@ namespace InSyncAPI.Controllers
             }
             index = index.Value < 0 ? INDEX_DEFAULT : index;
             size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
-            keySearch = string.IsNullOrEmpty(keySearch)?"":keySearch.ToLower();;
+            keySearch = string.IsNullOrEmpty(keySearch) ? "" : keySearch.ToLower(); ;
 
             var listScenario = _scenarioRepo.GetMultiPaging
             (c => c.CreatedBy.Equals(userId) && c.ScenarioName.ToLower().Contains(keySearch),
@@ -244,17 +253,17 @@ namespace InSyncAPI.Controllers
 
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return BadRequest(new ValidationProblemDetails(ModelState));
             }
             bool checkExistUser = await _userRepo.CheckContainsAsync(c => c.Id.Equals(newScenario.CreatedBy));
             if (!checkExistUser)
             {
-                return NotFound("Don't exist user has id by : " + newScenario.CreatedBy);
+                return BadRequest("Don't exist user has id by : " + newScenario.CreatedBy);
             }
             bool checkExistProject = await _projectRepo.CheckContainsAsync(c => c.Id.Equals(newScenario.ProjectId));
             if (!checkExistProject)
             {
-                return NotFound("Don't exist project has id by : " + newScenario.ProjectId);
+                return BadRequest("Don't exist project has id by : " + newScenario.ProjectId);
             }
 
             Scenario scenario = _mapper.Map<Scenario>(newScenario);
@@ -266,7 +275,7 @@ namespace InSyncAPI.Controllers
                 if (response == null)
                 {
                     return StatusCode(StatusCodes.Status500InternalServerError,
-                        value: "Error occurred while adding the tutorial.");
+                        value: "Error occurred while adding the scenario.");
                 }
 
                 return Ok(new ActionScenarioResponse { Message = "Scenario added successfully.", Id = response.Id });
@@ -293,17 +302,17 @@ namespace InSyncAPI.Controllers
 
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return BadRequest(new ValidationProblemDetails(ModelState));
             }
             var checkExistUser = await _userRepo.GetSingleByCondition(c => c.UserIdClerk.Equals(newScenario.UserIdClerk));
             if (checkExistUser == null)
             {
-                return NotFound("Don't exist user has id by : " + newScenario.UserIdClerk);
+                return BadRequest("Don't exist user has id by : " + newScenario.UserIdClerk);
             }
             bool checkExistProject = await _projectRepo.CheckContainsAsync(c => c.Id.Equals(newScenario.ProjectId));
             if (!checkExistProject)
             {
-                return NotFound("Don't exist project has id by : " + newScenario.ProjectId);
+                return BadRequest("Don't exist project has id by : " + newScenario.ProjectId);
             }
 
             Scenario scenario = _mapper.Map<Scenario>(newScenario);
@@ -316,7 +325,7 @@ namespace InSyncAPI.Controllers
                 if (response == null)
                 {
                     return StatusCode(StatusCodes.Status500InternalServerError,
-                        value: "Error occurred while adding the tutorial.");
+                        value: "Error occurred while adding the scenario.");
                 }
 
                 return Ok(new ActionScenarioResponse { Message = "Scenario added successfully.", Id = response.Id });
