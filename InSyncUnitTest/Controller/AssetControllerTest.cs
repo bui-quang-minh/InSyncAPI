@@ -96,7 +96,7 @@ namespace InSyncUnitTest.Controller
             A.CallTo(() => _mapper.Map<IEnumerable<ViewAssetDto>>(Assets)).Returns(viewAssets);
 
             // Act
-            var result = await _controller.GetAllAsset(A<string>._,index, size);
+            var result = await _controller.GetAllAsset("",index, size);
 
             // Assert
             var okResult = result as OkObjectResult;
@@ -120,7 +120,7 @@ namespace InSyncUnitTest.Controller
             A.CallTo(() => _mapper.Map<IEnumerable<ViewAssetDto>>(Assets)).Returns(viewAssets);
 
             // Act
-            var result = await _controller.GetAllAsset(A<string>._,index, size);
+            var result = await _controller.GetAllAsset("",index, size);
 
             // Assert
             var okResult = result as OkObjectResult;

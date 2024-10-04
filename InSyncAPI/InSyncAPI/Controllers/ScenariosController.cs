@@ -354,7 +354,7 @@ namespace InSyncAPI.Controllers
 
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return BadRequest(new ValidationProblemDetails(ModelState));
             }
 
             if (id != updateScenario.Id)
@@ -367,12 +367,7 @@ namespace InSyncAPI.Controllers
             {
                 return NotFound("Scenario not found.");
             }
-            bool checkExistProject = await _projectRepo.CheckContainsAsync(c => c.Id.Equals(updateScenario.ProjectId));
-            if (!checkExistProject)
-            {
-                return NotFound("Don't exist project has id by : " + updateScenario.ProjectId);
-            }
-
+            
             existingScenario.DateUpdated = DateTime.Now;
             _mapper.Map(updateScenario, existingScenario);
 
@@ -384,7 +379,7 @@ namespace InSyncAPI.Controllers
             catch (Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError,
-                    $"Error updating tutorial: {ex.Message}");
+                    $"Error updating scenario: {ex.Message}");
             }
         }
 
@@ -440,6 +435,9 @@ namespace InSyncAPI.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     "Application service has not been created");
             }
+
+          
+
             if (!ModelState.IsValid)
             {
                 return BadRequest(new ValidationProblemDetails(ModelState));
@@ -517,7 +515,7 @@ namespace InSyncAPI.Controllers
 
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return BadRequest(new ValidationProblemDetails(ModelState));
             }
             var existingScenario = await _scenarioRepo.GetSingleByCondition(c => c.Id.Equals(id));
             if (existingScenario == null)
@@ -545,12 +543,16 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
 
-        public async Task<IActionResult> DeleteTutorial(Guid id)
+        public async Task<IActionResult> DeleteScenario(Guid id)
         {
             if (_scenarioRepo == null || _userRepo == null || _mapper == null)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     value: "Application service has not been created");
+            }
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new ValidationProblemDetails(ModelState));
             }
 
             var checkScenarioExist = await _scenarioRepo.CheckContainsAsync(c => c.Id.Equals(id));

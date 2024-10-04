@@ -1306,5 +1306,316 @@ namespace InSyncUnitTest.Controller
             response.Id.Should().Be(addedScenario.Id);
         }
         #endregion
+
+        #region UpdateScenario
+        [Fact]
+        public async Task UpdatScenario_WhenDependenciesAreNull_ShouldReturnsInternalServerError()
+        {
+            // Arrange
+            var controller = new ScenariosController(null,null, null, null);
+            var UpdateScenario = new UpdateScenarioDto();
+
+            // Act
+            var result = await controller.UpdateScenario(Guid.NewGuid(), UpdateScenario);
+
+            // Assert
+            var statusCodeResult = result as ObjectResult;
+            statusCodeResult.Should().NotBeNull();
+            statusCodeResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+            statusCodeResult.Value.Should().Be("Application service has not been created");
+        }
+        [Fact]
+        public async Task UpdateScenario_WhenScenarioPropertyIdInvalidFomat_ShouldReturnsBadRequest()
+        {
+            // Arrange
+            var controller = new ScenariosController(_scenarioRepo,_userRepo, _projectRepo, _mapper);
+            var UpdateScenario = new UpdateScenarioDto();
+            controller.ModelState.AddModelError("id", "The value 'e4d34798-4c18-4ca4-9014-191492e3b90' is not valid.");
+
+            // Act
+            var result = await controller.UpdateScenario(Guid.NewGuid(), UpdateScenario);
+
+            // Assert
+            var badRequestResult = result as BadRequestObjectResult;
+            badRequestResult.Should().NotBeNull();
+            badRequestResult.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
+            var errorResponse = badRequestResult.Value as ValidationProblemDetails;
+            errorResponse.Should().NotBeNull();
+            errorResponse.Title.Should().Be("One or more validation errors occurred.");
+            errorResponse.Errors.Should().ContainKey("id");
+            errorResponse.Errors["id"].Should().Contain("The value 'e4d34798-4c18-4ca4-9014-191492e3b90' is not valid.");
+        }
+
+        [Fact]
+        public async Task UpdateScenario_WhenScenarioPropertyIdNull_ShouldReturnsBadRequest()
+        {
+            // Arrange
+            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper);
+            var newScenario = new AddScenarioDto { };
+            string key = "Id";
+            string message = $"The {key} field is required.";
+            controller.ModelState.AddModelError(key, message);
+
+            // Act
+            var result = await controller.AddScenario(newScenario);
+
+            // Assert
+            var badRequestResult = result as BadRequestObjectResult;
+            badRequestResult.Should().NotBeNull();
+            badRequestResult.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
+            var errorResponse = badRequestResult.Value as ValidationProblemDetails;
+            errorResponse.Should().NotBeNull();
+            errorResponse.Title.Should().Be("One or more validation errors occurred.");
+            errorResponse.Errors.Should().ContainKey(key);
+            errorResponse.Errors[key].Should().Contain(message);
+        }
+
+        [Fact]
+        public async Task UpdateScenario_WithIdInValidFomat_ReturnBadRequest()
+        {
+            // Arrange
+            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper);
+            var invalidGuid = "e4d34798-4c18-4ca4-9014-191492e3b90"; // GUID sai định dạng
+            controller.ModelState.AddModelError("id", $"The value '{invalidGuid}' is not valid.");
+            var newScenarioDto = new AddScenarioDto();
+            // Act
+            var result = await controller.AddScenario(newScenarioDto);
+
+            // Assert
+            var badRequestResult = result as BadRequestObjectResult;
+            badRequestResult.Should().NotBeNull();
+            badRequestResult.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
+            var errorResponse = badRequestResult.Value as ValidationProblemDetails;
+            errorResponse.Should().NotBeNull();
+            errorResponse.Title.Should().Be("One or more validation errors occurred.");
+            errorResponse.Errors.Should().ContainKey("id");
+            errorResponse.Errors["id"].Should().Contain($"The value '{invalidGuid}' is not valid.");
+        }
+
+
+        [Fact]
+        public async Task UpdateScenario_WhenScenarioPropertyScenarioNameNull_ShouldReturnsBadRequest()
+        {
+            // Arrange
+            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper);
+            var newScenario = new AddScenarioDto { };
+            string key = "ScenarioName";
+            string message = $"The {key} field is required.";
+            controller.ModelState.AddModelError(key, message);
+
+            // Act
+            var result = await controller.AddScenario(newScenario);
+
+            // Assert
+            var badRequestResult = result as BadRequestObjectResult;
+            badRequestResult.Should().NotBeNull();
+            badRequestResult.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
+            var errorResponse = badRequestResult.Value as ValidationProblemDetails;
+            errorResponse.Should().NotBeNull();
+            errorResponse.Title.Should().Be("One or more validation errors occurred.");
+            errorResponse.Errors.Should().ContainKey(key);
+            errorResponse.Errors[key].Should().Contain(message);
+        }
+        [Fact]
+        public async Task UpdateScenario_WhenScenarioPropertyScenarioNameLengthLonger255_ShouldReturnsBadRequest()
+        {
+            // Arrange
+            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper);
+            var newScenario = new AddScenarioDto { };
+            string key = "ScenarioName";
+            string messageError = $"The field {key} must be a string with a maximum length of 255.";
+            controller.ModelState.AddModelError(key, messageError);
+
+            // Act
+            var result = await controller.AddScenario(newScenario);
+
+            // Assert
+            var badRequestResult = result as BadRequestObjectResult;
+            badRequestResult.Should().NotBeNull();
+            badRequestResult.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
+            var errorResponse = badRequestResult.Value as ValidationProblemDetails;
+            errorResponse.Should().NotBeNull();
+            errorResponse.Title.Should().Be("One or more validation errors occurred.");
+            errorResponse.Errors.Should().ContainKey(key);
+            errorResponse.Errors[key].Should().Contain(messageError);
+        }
+
+
+        [Fact]
+        public async Task UpdateScenario_WhenIdDoesNotMatch_ShouldReturnsBadRequest()
+        {
+            // Arrange
+            var UpdateScenario = new UpdateScenarioDto { Id = Guid.NewGuid() };
+            var differentId = Guid.NewGuid();
+
+            // Act
+            var result = await _controller.UpdateScenario(differentId, UpdateScenario);
+
+            // Assert
+            var badRequestResult = result as BadRequestObjectResult;
+            badRequestResult.Should().NotBeNull();
+            badRequestResult.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
+            badRequestResult.Value.Should().Be("Scenario ID information does not match");
+        }
+
+        [Fact]
+        public async Task UpdateScenario_WhenScenarioDoesNotExist_ShouldReturnsNotFound()
+        {
+            // Arrange
+            var UpdateScenario = new UpdateScenarioDto { Id = Guid.NewGuid() };
+            A.CallTo(() => _scenarioRepo.GetSingleByCondition(A<Expression<Func<Scenario, bool>>>._, A<string[]>._)).Returns(Task.FromResult<Scenario>(null));
+
+            // Act
+            var result = await _controller.UpdateScenario(UpdateScenario.Id, UpdateScenario);
+
+            // Assert
+            var notFoundResult = result as NotFoundObjectResult;
+            notFoundResult.Should().NotBeNull();
+            notFoundResult.StatusCode.Should().Be(StatusCodes.Status404NotFound);
+            notFoundResult.Value.Should().Be("Scenario not found.");
+        }
+        [Fact]
+        public async Task UpdateScenario_WhenUpdateSucceeds_ShouldReturnsOkResult()
+        {
+            // Arrange
+            var UpdateScenario = new UpdateScenarioDto { Id = Guid.NewGuid() };
+            var existScenario = new Scenario { Id = UpdateScenario.Id };
+            A.CallTo(() => _scenarioRepo.GetSingleByCondition(A<Expression<Func<Scenario, bool>>>._, A<string[]>._)).Returns(Task.FromResult(existScenario));
+            A.CallTo(() => _mapper.Map(UpdateScenario, existScenario));
+            A.CallTo(() => _scenarioRepo.Update(existScenario)).Returns(Task.CompletedTask);
+
+            // Act
+            var result = await _controller.UpdateScenario(UpdateScenario.Id, UpdateScenario);
+
+            // Assert
+            var okResult = result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be(StatusCodes.Status200OK);
+            var response = okResult.Value as ActionScenarioResponse;
+            response.Should().NotBeNull();
+            response.Message.Should().Be("Scenario updated successfully.");
+            response.Id.Should().Be(existScenario.Id);
+        }
+        [Fact]
+        public async Task UpdateScenario_WhenUpdateFails_ShouldReturnsInternalServerError()
+        {
+            // Arrange
+            var UpdateScenario = new UpdateScenarioDto { Id = Guid.NewGuid() };
+            var existScenario = new Scenario { Id = UpdateScenario.Id };
+            A.CallTo(() => _scenarioRepo.GetSingleByCondition(A<Expression<Func<Scenario, bool>>>._, A<string[]>._))
+                .Returns(Task.FromResult(existScenario));
+            A.CallTo(() => _mapper.Map(UpdateScenario, existScenario));
+            A.CallTo(() => _scenarioRepo.Update(existScenario)).Throws(new Exception("Update failed"));
+
+            // Act
+            var result = await _controller.UpdateScenario(UpdateScenario.Id, UpdateScenario);
+
+            // Assert
+            var statusCodeResult = result as ObjectResult;
+            statusCodeResult.Should().NotBeNull();
+            statusCodeResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+            statusCodeResult.Value.Should().Be("Error updating scenario: Update failed");
+        }
+
+
+        #endregion
+
+        #region DeleteScenario
+        [Fact]
+        public async Task DeleteScenario_WhenDependenciesAreNull_ShouldReturnsInternalServerError()
+        {
+            // Arrange
+            var controller = new ScenariosController(null, null, null, null);
+            var id = Guid.NewGuid();
+
+            // Act
+            var result = await controller.DeleteScenario(id);
+
+            // Assert
+            var statusCodeResult = result as ObjectResult;
+            statusCodeResult.Should().NotBeNull();
+            statusCodeResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+            statusCodeResult.Value.Should().Be("Application service has not been created");
+        }
+
+        [Fact]
+        public async Task DeleteScenario_WhenScenarioDoesNotExist_ShouldReturnsNotFound()
+        {
+            // Arrange
+            var id = Guid.NewGuid();
+            A.CallTo(() => _scenarioRepo.CheckContainsAsync(A<Expression<Func<Scenario, bool>>>._)).Returns(Task.FromResult(false));
+
+            // Act
+            var result = await _controller.DeleteScenario(id);
+
+            // Assert
+            var notFoundResult = result as NotFoundObjectResult;
+            notFoundResult.Should().NotBeNull();
+            notFoundResult.StatusCode.Should().Be(StatusCodes.Status404NotFound);
+            notFoundResult.Value.Should().Be($"Dont exist scenario with id {id.ToString()} to delete");
+
+        }
+
+        [Fact]
+        public async Task DeleteScenario_WhenDeleteSucceeds_ShouldReturnsOkResult()
+        {
+            // Arrange
+            var id = Guid.NewGuid();
+            A.CallTo(() => _scenarioRepo.CheckContainsAsync(A<Expression<Func<Scenario, bool>>>._)).Returns(Task.FromResult(true));
+            A.CallTo(() => _scenarioRepo.DeleteMulti(A<Expression<Func<Scenario, bool>>>._)).Returns(Task.CompletedTask);
+
+            // Act
+            var result = await _controller.DeleteScenario(id);
+
+            // Assert
+            var okResult = result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be(StatusCodes.Status200OK);
+            var response = okResult.Value as ActionScenarioResponse;
+            response.Should().NotBeNull();
+            response.Message.Should().Be("Scenario deleted successfully.");
+            response.Id.Should().Be(id);
+        }
+
+        [Fact]
+        public async Task DeleteScenario_WhenDeleteFails_ShouldReturnsInternalServerError()
+        {
+            // Arrange
+            var id = Guid.NewGuid();
+            A.CallTo(() => _scenarioRepo.CheckContainsAsync(A<Expression<Func<Scenario, bool>>>._)).Returns(Task.FromResult(true));
+            A.CallTo(() => _scenarioRepo.DeleteMulti(A<Expression<Func<Scenario, bool>>>._)).Throws(new Exception("Delete failed"));
+
+            // Act
+            var result = await _controller.DeleteScenario(id);
+
+            // Assert
+            var statusCodeResult = result as ObjectResult;
+            statusCodeResult.Should().NotBeNull();
+            statusCodeResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+            statusCodeResult.Value.Should().Be("Error delete scenario: Delete failed");
+        }
+        [Fact]
+        public async Task DeleteScenario_WhenScenarioPropertyIdInvalidFomat_ShouldReturnsBadRequest()
+        {
+            // Arrange
+            var controller = new ScenariosController(_scenarioRepo,_userRepo, _projectRepo, _mapper);
+            string key = "id";
+            string message = "The value 'e4d34798-4c18-4ca4-9014-191492e3b90' is not valid.";
+            controller.ModelState.AddModelError(key, message);
+
+            // Act
+            var result = await controller.DeleteScenario(Guid.NewGuid());
+
+            // Assert
+            var badRequestResult = result as BadRequestObjectResult;
+            badRequestResult.Should().NotBeNull();
+            badRequestResult.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
+            var errorResponse = badRequestResult.Value as ValidationProblemDetails;
+            errorResponse.Should().NotBeNull();
+            errorResponse.Title.Should().Be("One or more validation errors occurred.");
+            errorResponse.Errors.Should().ContainKey(key);
+            errorResponse.Errors[key].Should().Contain(message);
+        }
+        #endregion
     }
 }

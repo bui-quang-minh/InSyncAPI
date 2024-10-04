@@ -94,7 +94,7 @@ namespace InSyncUnitTest.Controller
             A.CallTo(() => _mapper.Map<IEnumerable<ViewPrivacyPolicyDto>>(privacyPolicys)).Returns(viewPrivacyPolicys);
 
             // Act
-            var result = await _controller.GetAllPrivacyPolicy(A<string>._,index, size);
+            var result = await _controller.GetAllPrivacyPolicy("",index, size);
 
             // Assert
             var okResult = result as OkObjectResult;
@@ -118,7 +118,7 @@ namespace InSyncUnitTest.Controller
             A.CallTo(() => _mapper.Map<IEnumerable<ViewPrivacyPolicyDto>>(privacyPolicys)).Returns(viewPrivacyPolicys);
 
             // Act
-            var result = await _controller.GetAllPrivacyPolicy(A<string>._,index, size);
+            var result = await _controller.GetAllPrivacyPolicy("",index, size);
 
             // Assert
             var okResult = result as OkObjectResult;

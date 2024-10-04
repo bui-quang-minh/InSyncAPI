@@ -97,7 +97,7 @@ namespace InSyncUnitTest.Controller
             A.CallTo(() => _mapper.Map<IEnumerable<ViewTermDto>>(terms)).Returns(viewTerms);
 
             // Act
-            var result = await _controller.GetAllTerms(A<string>._,index, size);
+            var result = await _controller.GetAllTerms("",index, size);
 
             // Assert
             var okResult = result as OkObjectResult;
@@ -126,7 +126,7 @@ namespace InSyncUnitTest.Controller
             A.CallTo(() => _mapper.Map<IEnumerable<ViewTermDto>>(terms)).Returns(viewTerms);
 
             // Act
-            var result = await _controller.GetAllTerms(A<string>._,index, size);
+            var result = await _controller.GetAllTerms("",index, size);
 
             // Assert
             var okResult = result as OkObjectResult;

@@ -55,8 +55,7 @@ namespace InSyncAPI.Dtos
     {
         [Required]
         public Guid Id { get; set; }
-        [Required]
-        public Guid ProjectId { get; set; }
+        
         [Required]
         [StringLength(255, MinimumLength = 5)]
         public string ScenarioName { get; set; } = null!;

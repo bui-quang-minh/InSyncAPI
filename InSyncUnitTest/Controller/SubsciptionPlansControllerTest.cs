@@ -95,7 +95,7 @@ namespace InSyncUnitTest.Controller
             A.CallTo(() => _mapper.Map<IEnumerable<ViewSubscriptionPlanDto>>(SubscriptionPlans)).Returns(viewSubscriptionPlans);
 
             // Act
-            var result = await _controller.GetAllSubsciptionPlan(A<string>._, index, size);
+            var result = await _controller.GetAllSubsciptionPlan("", index, size);
 
             // Assert
             var okResult = result as OkObjectResult;
@@ -119,7 +119,7 @@ namespace InSyncUnitTest.Controller
             A.CallTo(() => _mapper.Map<IEnumerable<ViewSubscriptionPlanDto>>(SubscriptionPlans)).Returns(viewSubscriptionPlans);
 
             // Act
-            var result = await _controller.GetAllSubsciptionPlan(A<string>._, index, size);
+            var result = await _controller.GetAllSubsciptionPlan("", index, size);
 
             // Assert
             var okResult = result as OkObjectResult;

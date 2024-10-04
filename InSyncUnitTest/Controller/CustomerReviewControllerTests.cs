@@ -94,7 +94,7 @@ namespace InSyncUnitTest.Controller
             A.CallTo(() => _mapper.Map<IEnumerable<ViewCustomerReviewDto>>(customerReviews)).Returns(viewCustomerReviews);
 
             // Act
-            var result = await _controller.GetAllCustomerReview(A<string>._,index, size);
+            var result = await _controller.GetAllCustomerReview("",index, size);
 
             // Assert
             var okResult = result as OkObjectResult;
@@ -118,7 +118,7 @@ namespace InSyncUnitTest.Controller
             A.CallTo(() => _mapper.Map<IEnumerable<ViewCustomerReviewDto>>(custoemrReviews)).Returns(viewCustomerReviews);
 
             // Act
-            var result = await _controller.GetAllCustomerReview(A<string>._,index, size);
+            var result = await _controller.GetAllCustomerReview("",index, size);
 
             // Assert
             var okResult = result as OkObjectResult;
@@ -415,7 +415,7 @@ namespace InSyncUnitTest.Controller
             var customerReview = new CustomerReview { };
             var message = "An error occurred while adding Customer Review into Database";
             A.CallTo(() => _mapper.Map<CustomerReview>(newCustomerReview)).Returns(customerReview);
-            A.CallTo(() => _customerReviewRepo.Add(customerReview)).Throws(new Exception(message));
+            A.CallTo(() => _customerReviewRepo.Add(customerReview)).Throws(new Exception(""));
 
             // Act
             var result = await _controller.AddCustomerReview(newCustomerReview);
