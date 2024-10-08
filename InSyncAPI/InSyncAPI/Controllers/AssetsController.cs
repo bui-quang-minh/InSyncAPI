@@ -50,7 +50,7 @@ namespace InSyncAPI.Controllers
         [HttpGet("pagination")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewAssetDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
-        public async Task<IActionResult> GetAllAsset(string? keySearch = "", int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
+        public async Task<IActionResult> GetAllAsset(int? index, int? size, string? keySearch = "")
         {
             if (_assestRepo == null || _mapper == null)
             {
@@ -90,7 +90,7 @@ namespace InSyncAPI.Controllers
         [HttpGet("asset-project/{idProject}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewAssetDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
-        public async Task<IActionResult> GetAllAssetOfProject(Guid idProject, string? keySearch = "", int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
+        public async Task<IActionResult> GetAllAssetOfProject(Guid idProject, int? index, int? size, string? keySearch = "")
         {
             if (_assestRepo == null || _mapper == null)
             {
