@@ -57,11 +57,28 @@ namespace InSyncAPI.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     value: "Application service has not been created");
             }
-            index = index.Value < 0 ? INDEX_DEFAULT : index;
-            size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
+
+            IEnumerable<Asset> listAssets = new List<Asset>();
+            int total = 0;
             keySearch = string.IsNullOrEmpty(keySearch) ? "" : keySearch.ToLower(); ;
-            var listAssets = _assestRepo.GetMultiPaging(c => c.AssestName.ToLower().Contains(keySearch)
-            , out int total, index.Value, size.Value, includes);
+            if (index == null || size == null)
+            {
+                listAssets = _assestRepo.GetMulti
+                    (c => c.AssestName.ToLower().Contains(keySearch), includes);
+                total = listAssets.Count();
+            }
+            else
+            {
+                index = index.Value < 0 ? INDEX_DEFAULT : index;
+                size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
+
+                listAssets = _assestRepo.GetMultiPaging
+                (c => c.AssestName.ToLower().Contains(keySearch)
+                , out total, index.Value, size.Value, includes
+                );
+
+            }
+
             var response = _mapper.Map<IEnumerable<ViewAssetDto>>(listAssets);
             var responsePaging = new ResponsePaging<IEnumerable<ViewAssetDto>>()
             {
@@ -84,12 +101,27 @@ namespace InSyncAPI.Controllers
             {
                 return BadRequest(new ValidationProblemDetails(ModelState));
             }
-            index = index.Value < 0 ? INDEX_DEFAULT : index;
-            size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
-            keySearch = string.IsNullOrEmpty(keySearch) ? "" : keySearch.ToLower(); ;
 
-            var listAssets = _assestRepo.GetMultiPaging(c => c.ProjectId.Equals(idProject) && c.AssestName.ToLower().Contains(keySearch)
-            , out int total, index.Value, size.Value, includes);
+            IEnumerable<Asset> listAssets = new List<Asset>();
+            int total = 0;
+            keySearch = string.IsNullOrEmpty(keySearch) ? "" : keySearch.ToLower(); ;
+            if (index == null || size == null)
+            {
+                listAssets = _assestRepo.GetMulti
+                    (c => c.ProjectId.Equals(idProject) && c.AssestName.ToLower().Contains(keySearch), includes);
+                total = listAssets.Count();
+            }
+            else
+            {
+                index = index.Value < 0 ? INDEX_DEFAULT : index;
+                size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
+                listAssets = _assestRepo.GetMultiPaging
+                (c => c.ProjectId.Equals(idProject) && c.AssestName.ToLower().Contains(keySearch)
+                , out total, index.Value, size.Value, includes
+                );
+
+            }
+
             var response = _mapper.Map<IEnumerable<ViewAssetDto>>(listAssets);
             var responsePaging = new ResponsePaging<IEnumerable<ViewAssetDto>>()
             {
@@ -147,7 +179,7 @@ namespace InSyncAPI.Controllers
             }
             var asset = _mapper.Map<Asset>(newAsset);
             asset.DateCreated = DateTime.Now;
-            
+
             try
             {
                 var response = await _assestRepo.Add(asset);

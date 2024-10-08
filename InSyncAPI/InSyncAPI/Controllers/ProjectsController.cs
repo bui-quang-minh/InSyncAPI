@@ -50,21 +50,37 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewProjectDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
 
-        public async Task<IActionResult> GetAllProject(string? keySearch = "", int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
+        public async Task<IActionResult> GetAllProject(int? index, int? size, string? keySearch = "")
         {
             if (_projectRepo == null || _mapper == null)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     value: "Application service has not been created");
             }
+            IEnumerable<Project> listProject = new List<Project>();
+            int total = 0;
+            keySearch = string.IsNullOrEmpty(keySearch) ? "" : keySearch.ToLower();
 
-            index = index.Value < 0 ? INDEX_DEFAULT : index;
-            size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
-            keySearch = string.IsNullOrEmpty(keySearch) ? "" : string.IsNullOrEmpty(keySearch) ? "" : keySearch.ToLower(); ;
+            if (index == null || size == null)
+            {
+                listProject = _projectRepo.GetMulti
+                    (c =>
+                     c.ProjectName.ToLower().Contains(keySearch), includes
+                    );
+                total = listProject.Count();
+            }
+            else
+            {
+                index = index.Value < 0 ? INDEX_DEFAULT : index;
+                size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
+                listProject = _projectRepo.GetMultiPaging
+                (c =>
+                c.ProjectName.ToLower().Contains(keySearch)
+                , out total, index.Value, size.Value, includes
+                );
+            }
 
-            var listProject = _projectRepo.GetMultiPaging(c =>
-            c.ProjectName.ToLower().Contains(keySearch)
-            , out int total, index.Value, size.Value, includes);
+
             var response = _mapper.Map<IEnumerable<ViewProjectDto>>(listProject);
             var responsePaging = new ResponsePaging<IEnumerable<ViewProjectDto>>
             {
@@ -79,7 +95,7 @@ namespace InSyncAPI.Controllers
         [HttpGet("project-user-is-publish/{userId}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewProjectDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
-        public async Task<IActionResult> GetAllProjectIsPublishOfUser(Guid userId, bool? isPublish, string? keySearch = "", int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
+        public async Task<IActionResult> GetAllProjectIsPublishOfUser(Guid userId, int? index, int? size, bool? isPublish, string? keySearch = "" )
         {
             if (_projectRepo == null || _mapper == null)
             {
@@ -90,14 +106,29 @@ namespace InSyncAPI.Controllers
             {
                 return BadRequest(new ValidationProblemDetails(ModelState));
             }
-            index = index.Value < 0 ? INDEX_DEFAULT : index;
-            size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
-            keySearch = string.IsNullOrEmpty(keySearch) ? "" : keySearch.ToLower(); ;
 
-            var listProject = _projectRepo.GetMultiPaging
-            (c => c.UserId.Equals(userId) && c.ProjectName.ToLower().Contains(keySearch)
-            && (isPublish == null || c.IsPublish == isPublish), out int total, index.Value, size.Value, includes
-            );
+            IEnumerable<Project> listProject = new List<Project>();
+            int total = 0;
+            keySearch = string.IsNullOrEmpty(keySearch) ? "" : keySearch.ToLower();
+
+            if (index == null || size == null)
+            {
+                listProject = _projectRepo.GetMulti
+                    (c => c.UserId.Equals(userId) && c.ProjectName.ToLower().Contains(keySearch)
+                        && (isPublish == null || c.IsPublish == isPublish), includes
+                    );
+                total = listProject.Count();
+            }
+            else
+            {
+                index = index.Value < 0 ? INDEX_DEFAULT : index;
+                size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
+                listProject = _projectRepo.GetMultiPaging
+                (c => c.UserId.Equals(userId) && c.ProjectName.ToLower().Contains(keySearch)
+                     && (isPublish == null || c.IsPublish == isPublish)
+                , out total, index.Value, size.Value, includes
+                );
+            }
 
             var response = _mapper.Map<IEnumerable<ViewProjectDto>>(listProject);
             var responsePaging = new ResponsePaging<IEnumerable<ViewProjectDto>>
@@ -112,7 +143,7 @@ namespace InSyncAPI.Controllers
         [HttpGet("project-user-clerk-is-publish/{userIdClerk}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewProjectDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
-        public async Task<IActionResult> GetAllProjectIsPublishByUserIdClerk(string userIdClerk, bool? isPublish, string? keySearch = "", int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
+        public async Task<IActionResult> GetAllProjectIsPublishByUserIdClerk(string userIdClerk, bool? isPublish, int? index, int? size, string? keySearch = "")
         {
             if (_projectRepo == null || _mapper == null)
             {
@@ -123,12 +154,28 @@ namespace InSyncAPI.Controllers
             {
                 return BadRequest(new ValidationProblemDetails(ModelState));
             }
-            index = index.Value < 0 ? INDEX_DEFAULT : index;
-            size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
-            keySearch = string.IsNullOrEmpty(keySearch) ? "" : keySearch.ToLower(); ;
-            var listProject = _projectRepo.GetMultiPaging
-            (c => c.User.UserIdClerk.Equals(userIdClerk) && c.ProjectName.ToLower().Contains(keySearch)
-            && (isPublish == null || c.IsPublish == isPublish), out int total, index.Value, size.Value, includes);
+            IEnumerable<Project> listProject = new List<Project>();
+            int total = 0;
+            keySearch = string.IsNullOrEmpty(keySearch) ? "" : keySearch.ToLower();
+
+            if (index == null || size == null)
+            {
+                listProject = _projectRepo.GetMulti
+                    (c => c.User.UserIdClerk.Equals(userIdClerk) && c.ProjectName.ToLower().Contains(keySearch)
+                     && (isPublish == null || c.IsPublish == isPublish), includes
+                    );
+                total = listProject.Count();
+            }
+            else
+            {
+                index = index.Value < 0 ? INDEX_DEFAULT : index;
+                size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
+                listProject = _projectRepo.GetMultiPaging
+                (c => c.User.UserIdClerk.Equals(userIdClerk) && c.ProjectName.ToLower().Contains(keySearch)
+                     && (isPublish == null || c.IsPublish == isPublish)
+                , out total, index.Value, size.Value, includes
+                );
+            }
 
             var response = _mapper.Map<IEnumerable<ViewProjectDto>>(listProject);
             var responsePaging = new ResponsePaging<IEnumerable<ViewProjectDto>>

@@ -51,7 +51,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewScenarioDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
 
-        public async Task<IActionResult> GetAllScenarios(string? keySearch = "", int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
+        public async Task<IActionResult> GetAllScenarios(int? index, int? size, string? keySearch = "")
         {
             if (_scenarioRepo == null || _userRepo == null || _mapper == null)
             {
@@ -59,17 +59,28 @@ namespace InSyncAPI.Controllers
                     value: "Application service has not been created");
             }
 
-            index = index.Value < 0 ? INDEX_DEFAULT : index;
-            size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
-            keySearch = string.IsNullOrEmpty(keySearch) ? "" : keySearch.ToLower(); ;
+            IEnumerable<Scenario> listScenario = new List<Scenario>();
+            int total = 0;
+            keySearch = string.IsNullOrEmpty(keySearch) ? "" : keySearch.ToLower();
+            if (index == null || size == null)
+            {
+                listScenario = _scenarioRepo.GetMulti
+                    (c => c.ScenarioName.ToLower().Contains(keySearch), includes
+                    );
+                total = listScenario.Count();
+            }
+            else
+            {
+                index = index.Value < 0 ? INDEX_DEFAULT : index;
+                size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
+                listScenario = _scenarioRepo.GetMultiPaging
+                    (c => c.ScenarioName.ToLower().Contains(keySearch)
+                    , out total, index.Value, size.Value, includes
+                 );
+            }
 
-
-            var listScenario = _scenarioRepo.GetMultiPaging
-            (c => c.ScenarioName.ToLower().Contains(keySearch)
-            , out int total, index.Value, size.Value, includes);
             var response = _mapper.Map<IEnumerable<ViewScenarioDto>>(listScenario
             );
-
             var responsePaging = new ResponsePaging<IEnumerable<ViewScenarioDto>>
             {
                 data = response,
@@ -111,7 +122,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
 
-        public async Task<IActionResult> GetScenarioOfProject(Guid projectId, Guid createdBy, string? keySearch = "", int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
+        public async Task<IActionResult> GetScenarioOfProject(Guid projectId, Guid createdBy, int? index, int? size, string? keySearch = "")
         {
             if (_scenarioRepo == null || _userRepo == null || _mapper == null)
             {
@@ -122,16 +133,27 @@ namespace InSyncAPI.Controllers
             {
                 return BadRequest(new ValidationProblemDetails(ModelState));
             }
-            index = index.Value < 0 ? INDEX_DEFAULT : index;
-            size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
-            keySearch = string.IsNullOrEmpty(keySearch) ? "" : keySearch.ToLower(); ;
 
-            var scenario = _scenarioRepo.GetMultiPaging(
-                c => c.ProjectId.Equals(projectId) && c.CreatedBy.Equals(createdBy) && c.ScenarioName.ToLower().Contains(keySearch),
-                out int total, index.Value, size.Value, includes);
-
-
-            var response = _mapper.Map<IEnumerable<ViewScenarioDto>>(scenario);
+            IEnumerable<Scenario> listScenario = new List<Scenario>();
+            int total = 0;
+            keySearch = string.IsNullOrEmpty(keySearch) ? "" : keySearch.ToLower();
+            if (index == null || size == null)
+            {
+                listScenario = _scenarioRepo.GetMulti
+                    (c => c.ProjectId.Equals(projectId) && c.CreatedBy.Equals(createdBy) && c.ScenarioName.ToLower().Contains(keySearch), includes
+                    );
+                total = listScenario.Count();
+            }
+            else
+            {
+                index = index.Value < 0 ? INDEX_DEFAULT : index;
+                size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
+                listScenario = _scenarioRepo.GetMultiPaging
+                    (c => c.ProjectId.Equals(projectId) && c.CreatedBy.Equals(createdBy) && c.ScenarioName.ToLower().Contains(keySearch)
+                    , out total, index.Value, size.Value, includes
+                 );
+            }
+            var response = _mapper.Map<IEnumerable<ViewScenarioDto>>(listScenario);
             var responsePaging = new ResponsePaging<IEnumerable<ViewScenarioDto>>
             {
                 data = response,
@@ -146,7 +168,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
 
-        public async Task<IActionResult> GetScenarioOfProjectByUserClerk(Guid projectId, string userIdClerk, string? keySearch = "", int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
+        public async Task<IActionResult> GetScenarioOfProjectByUserClerk(Guid projectId, string userIdClerk, int? index, int? size, string? keySearch = "")
         {
             if (_scenarioRepo == null || _userRepo == null || _mapper == null)
             {
@@ -157,15 +179,28 @@ namespace InSyncAPI.Controllers
             {
                 return BadRequest(new ValidationProblemDetails(ModelState));
             }
-            index = index.Value < 0 ? INDEX_DEFAULT : index;
-            size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
-            keySearch = string.IsNullOrEmpty(keySearch) ? "" : keySearch.ToLower(); ;
 
-            var scenario = _scenarioRepo.GetMultiPaging(
-                c => c.ProjectId.Equals(projectId) && c.CreatedByNavigation.UserIdClerk.Equals(userIdClerk) && c.ScenarioName.ToLower().Contains(keySearch),
-                out int total, index.Value, size.Value, includes);
+            IEnumerable<Scenario> listScenario = new List<Scenario>();
+            int total = 0;
+            keySearch = string.IsNullOrEmpty(keySearch) ? "" : keySearch.ToLower();
+            if (index == null || size == null)
+            {
+                listScenario = _scenarioRepo.GetMulti
+                    (c => c.ProjectId.Equals(projectId) && c.CreatedByNavigation.UserIdClerk.Equals(userIdClerk) && c.ScenarioName.ToLower().Contains(keySearch), includes
+                    );
+                total = listScenario.Count();
+            }
+            else
+            {
+                index = index.Value < 0 ? INDEX_DEFAULT : index;
+                size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
+                listScenario = _scenarioRepo.GetMultiPaging
+                    (c => c.ProjectId.Equals(projectId) && c.CreatedByNavigation.UserIdClerk.Equals(userIdClerk) && c.ScenarioName.ToLower().Contains(keySearch)
+                    , out total, index.Value, size.Value, includes
+                 );
+            }
 
-            var response = _mapper.Map<IEnumerable<ViewScenarioDto>>(scenario);
+            var response = _mapper.Map<IEnumerable<ViewScenarioDto>>(listScenario);
             var responsePaging = new ResponsePaging<IEnumerable<ViewScenarioDto>>
             {
                 data = response,
@@ -178,7 +213,7 @@ namespace InSyncAPI.Controllers
         [HttpGet("scenarios-user-clerk/{userIdClerk}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewScenarioDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
-        public async Task<IActionResult> GetAllScenarioByUserIdClerk(string userIdClerk, string? keySearch = "", int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
+        public async Task<IActionResult> GetAllScenarioByUserIdClerk(string userIdClerk, int? index, int? size, string? keySearch = "")
         {
             if (_scenarioRepo == null || _userRepo == null || _mapper == null)
             {
@@ -189,14 +224,29 @@ namespace InSyncAPI.Controllers
             {
                 return BadRequest(new ValidationProblemDetails(ModelState));
             }
-            index = index.Value < 0 ? INDEX_DEFAULT : index;
-            size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
-            keySearch = string.IsNullOrEmpty(keySearch) ? "" : keySearch.ToLower(); ;
 
-            var listScenario = _scenarioRepo.GetMultiPaging(c =>
-            c.CreatedByNavigation.UserIdClerk.Equals(userIdClerk) && c.ScenarioName.ToLower().Contains(keySearch),
-             out int total, index.Value, size.Value, includes
-             );
+            IEnumerable<Scenario> listScenario = new List<Scenario>();
+            int total = 0;
+            keySearch = string.IsNullOrEmpty(keySearch) ? "" : keySearch.ToLower();
+            if (index == null || size == null)
+            {
+                listScenario = _scenarioRepo.GetMulti
+                    (c =>
+                    c.CreatedByNavigation.UserIdClerk.Equals(userIdClerk) && c.ScenarioName.ToLower().Contains(keySearch), includes
+                    );
+                total = listScenario.Count();
+            }
+            else
+            {
+                index = index.Value < 0 ? INDEX_DEFAULT : index;
+                size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
+                listScenario = _scenarioRepo.GetMultiPaging
+                    (c =>
+                         c.CreatedByNavigation.UserIdClerk.Equals(userIdClerk) && c.ScenarioName.ToLower().Contains(keySearch)
+                    , out total, index.Value, size.Value, includes
+                 );
+            }
+
 
             var response = _mapper.Map<IEnumerable<ViewScenarioDto>>(listScenario);
             var responsePaging = new ResponsePaging<IEnumerable<ViewScenarioDto>>
@@ -221,13 +271,29 @@ namespace InSyncAPI.Controllers
             {
                 return BadRequest(new ValidationProblemDetails(ModelState));
             }
-            index = index.Value < 0 ? INDEX_DEFAULT : index;
-            size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
-            keySearch = string.IsNullOrEmpty(keySearch) ? "" : keySearch.ToLower(); ;
 
-            var listScenario = _scenarioRepo.GetMultiPaging
-            (c => c.CreatedBy.Equals(userId) && c.ScenarioName.ToLower().Contains(keySearch),
-             out int total, index.Value, size.Value, includes);
+
+            IEnumerable<Scenario> listScenario = new List<Scenario>();
+            int total = 0;
+            keySearch = string.IsNullOrEmpty(keySearch) ? "" : keySearch.ToLower();
+            if (index == null || size == null)
+            {
+                listScenario = _scenarioRepo.GetMulti
+                    (c =>
+                    c.CreatedBy.Equals(userId) && c.ScenarioName.ToLower().Contains(keySearch), includes
+                    );
+                total = listScenario.Count();
+            }
+            else
+            {
+                index = index.Value < 0 ? INDEX_DEFAULT : index;
+                size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
+                listScenario = _scenarioRepo.GetMultiPaging
+                    (c =>
+                       c.CreatedBy.Equals(userId) && c.ScenarioName.ToLower().Contains(keySearch)
+                    , out total, index.Value, size.Value, includes
+                 );
+            }
 
             var response = _mapper.Map<IEnumerable<ViewScenarioDto>>(listScenario);
             var responsePaging = new ResponsePaging<IEnumerable<ViewScenarioDto>>
@@ -367,7 +433,7 @@ namespace InSyncAPI.Controllers
             {
                 return NotFound("Scenario not found.");
             }
-            
+
             existingScenario.DateUpdated = DateTime.Now;
             _mapper.Map(updateScenario, existingScenario);
 
@@ -436,7 +502,7 @@ namespace InSyncAPI.Controllers
                     "Application service has not been created");
             }
 
-          
+
 
             if (!ModelState.IsValid)
             {

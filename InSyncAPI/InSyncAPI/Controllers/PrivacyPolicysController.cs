@@ -40,21 +40,33 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewPrivacyPolicyDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
 
-        public async Task<IActionResult> GetAllPrivacyPolicy(string? keySearch = "", int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
+        public async Task<IActionResult> GetAllPrivacyPolicy(int? index, int? size, string? keySearch = "")
         {
             if (_privacyPolicyRepo == null || _mapper == null)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     value: "Application service has not been created");
             }
-            index = index.Value < 0 ? INDEX_DEFAULT : index;
-            size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
-            keySearch = string.IsNullOrEmpty(keySearch) ? "" : keySearch.ToLower(); ;
 
-            var listPrivacyPolicy = _privacyPolicyRepo.GetMultiPaging
+            IEnumerable<PrivacyPolicy> listPrivacyPolicy = new List<PrivacyPolicy>();
+            int total = 0;
+            keySearch = string.IsNullOrEmpty(keySearch) ? "" : keySearch.ToLower();
+            if (index == null || size == null)
+            {
+                listPrivacyPolicy = _privacyPolicyRepo.GetMulti
+                    (c => c.Title.ToLower().Contains(keySearch)
+                    );
+                total = listPrivacyPolicy.Count();
+            }
+            else
+            {
+                index = index.Value < 0 ? INDEX_DEFAULT : index;
+                size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
+                listPrivacyPolicy = _privacyPolicyRepo.GetMultiPaging
             (c => c.Title.ToLower().Contains(keySearch)
-            , out int total, index.Value, size.Value, null
+            , out total, index.Value, size.Value, null
             );
+            }
 
             var response = _mapper.Map<IEnumerable<ViewPrivacyPolicyDto>>(listPrivacyPolicy);
             var responsePaging = new ResponsePaging<IEnumerable<ViewPrivacyPolicyDto>>

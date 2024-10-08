@@ -52,7 +52,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewSubscriptionPlanDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
 
-        public async Task<IActionResult> GetAllSubsciptionPlan(string? keySearch = "",int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
+        public async Task<IActionResult> GetAllSubsciptionPlan(int? index, int? size, string? keySearch = "" )
         {
 
             if (_subscriptionPlanRepo == null || _mapper == null)
@@ -61,14 +61,25 @@ namespace InSyncAPI.Controllers
                     value: "Application service has not been created");
             }
 
-
-            index = index.Value < 0 ? INDEX_DEFAULT : index;
-            size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
-            keySearch = string.IsNullOrEmpty(keySearch)?"":keySearch.ToLower();;
-
-            var listSubsciptionPlan = _subscriptionPlanRepo.GetMultiPaging
+            IEnumerable<SubscriptionPlan> listSubsciptionPlan = new List<SubscriptionPlan>();
+            int total = 0;
+            keySearch = string.IsNullOrEmpty(keySearch) ? "" : keySearch.ToLower();
+            if (index == null || size == null)
+            {
+                listSubsciptionPlan = _subscriptionPlanRepo.GetMulti
+                    (c => c.SubscriptionsName.ToLower().Contains(keySearch), includes
+                    );
+                total = listSubsciptionPlan.Count();
+            }
+            else
+            {
+                index = index.Value < 0 ? INDEX_DEFAULT : index;
+                size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
+                listSubsciptionPlan = _subscriptionPlanRepo.GetMultiPaging
             (c => c.SubscriptionsName.ToLower().Contains(keySearch)
-                , out int total, index.Value, size.Value, includes);
+            , out total, index.Value, size.Value, includes
+            );
+            }
             var response = _mapper.Map<IEnumerable<ViewSubscriptionPlanDto>>(listSubsciptionPlan);
             var responsePaging = new ResponsePaging<IEnumerable<ViewSubscriptionPlanDto>>
             {

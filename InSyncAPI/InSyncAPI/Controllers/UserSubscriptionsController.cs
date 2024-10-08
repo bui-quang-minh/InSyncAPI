@@ -53,16 +53,31 @@ namespace InSyncAPI.Controllers
         [HttpGet("pagination")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewUserSubsciptionDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
-        public async Task<IActionResult> GetAllUserSubscription(int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
+        public async Task<IActionResult> GetAllUserSubscription(int? index, int? size)
         {
             if (_userRepo == null || _userSubRepo == null || _subRepo == null || _mapper == null)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     value: "Application service has not been created");
             }
-            index = index.Value < 0 ? INDEX_DEFAULT : index;
-            size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
-            var listUserSubsciption = _userSubRepo.GetMultiPaging(c => true, out int total, index.Value, size.Value, includes);
+
+            IEnumerable<UserSubscription> listUserSubsciption = new List<UserSubscription>();
+            int total = 0;
+          
+            if (index == null || size == null)
+            {
+                listUserSubsciption = _userSubRepo.GetMulti
+                    (c => true, includes);
+                total = listUserSubsciption.Count();
+            }
+            else
+            {
+                index = index.Value < 0 ? INDEX_DEFAULT : index;
+                size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
+                listUserSubsciption = _userSubRepo.GetMultiPaging
+            (c => true, out total, index.Value, size.Value, includes
+            );
+            }
             var response = _mapper.Map<IEnumerable<ViewUserSubsciptionDto>>(listUserSubsciption);
             var responsePaging = new ResponsePaging<IEnumerable<ViewUserSubsciptionDto>>
             {
@@ -85,9 +100,25 @@ namespace InSyncAPI.Controllers
             {
                 return BadRequest(new ValidationProblemDetails(ModelState));
             }
-            index = index.Value < 0 ? INDEX_DEFAULT : index;
-            size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
-            var listUserSubsciption = _userSubRepo.GetMultiPaging(c => c.UserId.Equals(userId), out int total, index.Value, size.Value, includes);
+
+            IEnumerable<UserSubscription> listUserSubsciption = new List<UserSubscription>();
+            int total = 0;
+
+            if (index == null || size == null)
+            {
+                listUserSubsciption = _userSubRepo.GetMulti
+                    (c => c.UserId.Equals(userId), includes);
+                total = listUserSubsciption.Count();
+            }
+            else
+            {
+                index = index.Value < 0 ? INDEX_DEFAULT : index;
+                size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
+                listUserSubsciption = _userSubRepo.GetMultiPaging
+            (c => c.UserId.Equals(userId), out total, index.Value, size.Value, includes
+            );
+            }
+
             var response = _mapper.Map<IEnumerable<ViewUserSubsciptionDto>>(listUserSubsciption);
             var responsePaging = new ResponsePaging<IEnumerable<ViewUserSubsciptionDto>>
             {
@@ -110,9 +141,25 @@ namespace InSyncAPI.Controllers
             {
                 return BadRequest(new ValidationProblemDetails(ModelState));
             }
-            index = index.Value < 0 ? INDEX_DEFAULT : index;
-            size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
-            var listUserSubsciption = _userSubRepo.GetMultiPaging(c => c.User.UserIdClerk.Equals(userIdClerk), out int total, index.Value, size.Value, includes);
+
+            IEnumerable<UserSubscription> listUserSubsciption = new List<UserSubscription>();
+            int total = 0;
+
+            if (index == null || size == null)
+            {
+                listUserSubsciption = _userSubRepo.GetMulti
+                    (c => c.User.UserIdClerk.Equals(userIdClerk), includes);
+                total = listUserSubsciption.Count();
+            }
+            else
+            {
+                index = index.Value < 0 ? INDEX_DEFAULT : index;
+                size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
+                listUserSubsciption = _userSubRepo.GetMultiPaging
+            (c => c.User.UserIdClerk.Equals(userIdClerk), out total, index.Value, size.Value, includes
+            );
+            }
+           
             var response = _mapper.Map<IEnumerable<ViewUserSubsciptionDto>>(listUserSubsciption);
             var responsePaging = new ResponsePaging<IEnumerable<ViewUserSubsciptionDto>>
             {
@@ -179,9 +226,25 @@ namespace InSyncAPI.Controllers
             {
                 return BadRequest(new ValidationProblemDetails(ModelState));
             }
-            index = index.Value < 0 ? INDEX_DEFAULT : index;
-            size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
-            var listUserSubsciption = _userSubRepo.GetMultiPaging(c => c.SubscriptionPlanId.Equals(subId), out int total, index.Value, size.Value, includes);
+
+            IEnumerable<UserSubscription> listUserSubsciption = new List<UserSubscription>();
+            int total = 0;
+
+            if (index == null || size == null)
+            {
+                listUserSubsciption = _userSubRepo.GetMulti
+                    (c => c.SubscriptionPlanId.Equals(subId), includes);
+                total = listUserSubsciption.Count();
+            }
+            else
+            {
+                index = index.Value < 0 ? INDEX_DEFAULT : index;
+                size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
+                listUserSubsciption = _userSubRepo.GetMultiPaging
+            (c => c.SubscriptionPlanId.Equals(subId), out total, index.Value, size.Value, includes
+            );
+            }
+
             var response = _mapper.Map<IEnumerable<ViewUserSubsciptionDto>>(listUserSubsciption);
             var responsePaging = new ResponsePaging<IEnumerable<ViewUserSubsciptionDto>>
             {

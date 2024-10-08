@@ -45,23 +45,35 @@ namespace InSyncAPI.Controllers
         [HttpGet("pagination")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewTermDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
-        public async Task<IActionResult> GetAllTerms(string? keySearch ="", int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
+        public async Task<IActionResult> GetAllTerms(int? index, int? size, string? keySearch = "")
         {
             if (_termRepo == null || _mapper == null)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     value: "Application service has not been created");
             }
-            index = index.Value < 0 ? INDEX_DEFAULT : index;
-            size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
-            keySearch = string.IsNullOrEmpty(keySearch)?"":keySearch.ToLower();;
 
+            IEnumerable<Term> listTerms = new List<Term>();
+            int total = 0;
+            keySearch = string.IsNullOrEmpty(keySearch) ? "" : keySearch.ToLower();
+            if (index == null || size == null)
+            {
+                listTerms = _termRepo.GetMulti(
+                    c => c.Answer.ToLower().Contains(keySearch) || c.Question.ToLower().Contains(keySearch)
+                    );
+                total = listTerms.Count();
+            }
+            else
+            {
+                index = index.Value < 0 ? INDEX_DEFAULT : index;
+                size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
+                listTerms = _termRepo.GetMultiPaging
+            (c => c.Answer.ToLower().Contains(keySearch) || c.Question.ToLower().Contains(keySearch)
+            , out total, index.Value, size.Value
+            );
+            }
 
-            var listTerms = _termRepo.GetMultiPaging
-                (c => c.Answer.ToLower().Contains(keySearch) || c.Question.ToLower().Contains(keySearch)
-            , out int total, index.Value, size.Value);
             var response = _mapper.Map<IEnumerable<ViewTermDto>>(listTerms);
-
             var responsePaging = new ResponsePaging<IEnumerable<ViewTermDto>>
             {
                 data = response,
