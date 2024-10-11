@@ -41,7 +41,7 @@ namespace InSyncAPI.Dtos
         [Required]
         public Guid ProjectId { get; set; }
         [Required]
-        [StringLength(255, MinimumLength = 5)]
+        [StringLength(255)]
         public string ScenarioName { get; set; } = null!;
         public string? Description { get; set; }
         public string? StepsWeb { get; set; }
@@ -58,7 +58,7 @@ namespace InSyncAPI.Dtos
         public Guid Id { get; set; }
         
         [Required]
-        [StringLength(255, MinimumLength = 5)]
+        [StringLength(255)]
         public string ScenarioName { get; set; } = null!;
         public string? Description { get; set; }
         public string? StepsWeb { get; set; }
@@ -70,7 +70,7 @@ namespace InSyncAPI.Dtos
     {
         public Guid Id { get; set; }
         [Required]
-        [StringLength(255, MinimumLength = 5)]
+        [StringLength(255)]
         public string ScenarioName { get; set; } = null!;
     }
     public class ActionScenarioResponse

@@ -594,7 +594,7 @@ namespace InSyncAPI.Controllers
             try
             {
                 await _scenarioRepo.Update(existingScenario);
-                return Ok(new ActionScenarioResponse { Message = "Scenario rename successfully.", Id = existingScenario.Id });
+                return Ok(new ActionScenarioResponse { Message = "Scenario renamed successfully.", Id = existingScenario.Id });
             }
             catch (Exception ex)
             {
