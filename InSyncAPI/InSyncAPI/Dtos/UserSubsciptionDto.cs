@@ -7,7 +7,8 @@ namespace InSyncAPI.Dtos
         public Guid Id { get; set; }
         public Guid SubscriptionPlanId { get; set; }
         public string SubscriptionPlanName { get; set; }
-        public Guid UserId { get; set; }
+        public string UserId { get; set; }
+        public Guid UserIdGuid { get; set; }
         public string DisplayName { get; set; }
         public DateTime StripeCurrentPeriodEnd { get; set; }
         public string StripeCustomerId { get; set; } = null!;

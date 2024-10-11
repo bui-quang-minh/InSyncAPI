@@ -8,7 +8,8 @@ namespace InSyncAPI.Dtos
         public string SubscriptionsName { get; set; } = null!;
         public bool Status { get; set; }
         public decimal Price { get; set; }
-        public Guid UserId { get; set; }
+        public string UserId { get; set; }
+        public string UserIdGuid { get; set; }
         public string DisplayName { get;set; }
         public string Content { get; set; } = null!;
         public DateTime DateCreated { get; set; }

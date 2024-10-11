@@ -7,8 +7,9 @@ namespace InSyncAPI.Dtos
         public Guid Id { get; set; }
         public string ProjectName { get; set; } = null!;
         public string? Description { get; set; }
-        public Guid UserId { get; set; }
-        public string displayName { get; set; }
+        public string UserId { get; set; }
+        public Guid UserIdGuid { get; set; }
+        public string DisplayName { get; set; }
         public DateTime DateCreated { get; set; }
         public DateTime? DateUpdated { get; set; }
         public bool IsPublish { get; set; }

@@ -15,7 +15,8 @@ namespace InSyncAPI.Dtos
         public string? StepsAndroid { get; set; }
         public bool? IsFavorites { get; set; }
         public string? ImageUrl { get; set; }
-        public Guid? AuthorId { get; set; }
+        public string AuthorId { get; set; }
+        public Guid? AuthorIdGuid { get; set; }
         public string AuthorName { get; set; }
     }
 

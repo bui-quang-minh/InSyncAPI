@@ -4,15 +4,15 @@ using InSyncAPI.Dtos;
 
 namespace InSync_Api.MapperProfile
 {
-    public class InSyncMapperProfile: Profile
+    public class InSyncMapperProfile : Profile
     {
-       
-        public InSyncMapperProfile() 
+
+        public InSyncMapperProfile()
         {
             // CustomerReview 
             CreateMap<AddCustomerReviewDto, CustomerReview>().ReverseMap();
             CreateMap<UpdateCustomerReviewDto, CustomerReview>().ReverseMap();
-            CreateMap<CustomerReview,ViewCustomerReviewDto>().ReverseMap();
+            CreateMap<CustomerReview, ViewCustomerReviewDto>().ReverseMap();
             //PrivacyPolicy
             CreateMap<AddPrivacyPolicyDto, PrivacyPolicy>().ReverseMap();
             CreateMap<UpdatePrivacyPolicyDto, PrivacyPolicy>().ReverseMap();
@@ -31,15 +31,18 @@ namespace InSync_Api.MapperProfile
             CreateMap<UpdateSubscriptionPlanDto, SubscriptionPlan>().ReverseMap();
             CreateMap<SubscriptionPlan, ViewSubscriptionPlanDto>()
                 .ForMember(c => c.DisplayName, a => a.MapFrom(r => r.User.DisplayName))
+                 .ForMember(c => c.UserId, a => a.MapFrom(r => r.User.UserIdClerk))
+                  .ForMember(c => c.UserIdGuid, a => a.MapFrom(r => r.UserId))
                 .ReverseMap();
             // Scenario Dto
-           
+
             CreateMap<AddScenarioDto, Scenario>().ReverseMap();
             CreateMap<AddScenarioUserClerkDto, Scenario>().ReverseMap();
             CreateMap<UpdateScenarioDto, Scenario>().ReverseMap();
             CreateMap<Scenario, ViewScenarioDto>()
                 .ForMember(c => c.ProjectName, a => a.MapFrom(r => r.Project.ProjectName))
-                 .ForMember(c => c.AuthorId, a => a.MapFrom(r => r.CreatedByNavigation.Id))
+                .ForMember(c => c.AuthorId, a => a.MapFrom(r => r.CreatedByNavigation.UserIdClerk))
+                .ForMember(c => c.AuthorIdGuid, a => a.MapFrom(r => r.CreatedByNavigation.Id))
                 .ForMember(c => c.AuthorName, a => a.MapFrom(r => r.CreatedByNavigation.DisplayName))
                 .ForMember(c => c.Title, a => a.MapFrom(r => r.ScenarioName))
                 .ForMember(c => c.CreatedAt, a => a.MapFrom(r => r.DateCreated))
@@ -50,7 +53,9 @@ namespace InSync_Api.MapperProfile
             CreateMap<AddProjectClerkDto, Project>().ReverseMap();
             CreateMap<UpdateProjectDto, Project>().ReverseMap();
             CreateMap<Project, ViewProjectDto>()
-                .ForMember(c => c.displayName, a => a.MapFrom(r => r.User.DisplayName))
+                .ForMember(c => c.DisplayName, a => a.MapFrom(r => r.User.DisplayName))
+                 .ForMember(c => c.UserIdGuid, a => a.MapFrom(r => r.UserId))
+                .ForMember(c => c.UserId, a => a.MapFrom(r => r.User.UserIdClerk))
                 .ReverseMap();
             // Asset Dto
             CreateMap<AddAssetDto, Asset>().ReverseMap();
@@ -64,6 +69,8 @@ namespace InSync_Api.MapperProfile
             CreateMap<UpdateUserSubsciptionDto, UserSubscription>().ReverseMap();
             CreateMap<UserSubscription, ViewUserSubsciptionDto>()
                 .ForMember(c => c.DisplayName, a => a.MapFrom(r => r.User.DisplayName))
+                .ForMember(c => c.UserId, a => a.MapFrom(r => r.User.UserIdClerk))
+                .ForMember(c => c.UserIdGuid, a => a.MapFrom(r => r.UserId))
                 .ForMember(c => c.SubscriptionPlanName, a => a.MapFrom(r => r.SubscriptionPlan.SubscriptionsName))
                 .ReverseMap();
             //Clerk Mapper
