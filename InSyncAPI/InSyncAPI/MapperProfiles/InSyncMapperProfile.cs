@@ -30,7 +30,7 @@ namespace InSync_Api.MapperProfile
             CreateMap<AddSubscriptionPlanUserClerkDto, SubscriptionPlan>().ReverseMap();
             CreateMap<UpdateSubscriptionPlanDto, SubscriptionPlan>().ReverseMap();
             CreateMap<SubscriptionPlan, ViewSubscriptionPlanDto>()
-                .ForMember(c => c.UserName, a => a.MapFrom(r => r.User.UserName))
+                .ForMember(c => c.DisplayName, a => a.MapFrom(r => r.User.DisplayName))
                 .ReverseMap();
             // Scenario Dto
            
@@ -63,7 +63,7 @@ namespace InSync_Api.MapperProfile
             CreateMap<AddUserSubsciptionUserClerkDto, UserSubscription>().ReverseMap();
             CreateMap<UpdateUserSubsciptionDto, UserSubscription>().ReverseMap();
             CreateMap<UserSubscription, ViewUserSubsciptionDto>()
-                .ForMember(c => c.UserName, a => a.MapFrom(r => r.User.UserName))
+                .ForMember(c => c.DisplayName, a => a.MapFrom(r => r.User.DisplayName))
                 .ForMember(c => c.SubscriptionPlanName, a => a.MapFrom(r => r.SubscriptionPlan.SubscriptionsName))
                 .ReverseMap();
             //Clerk Mapper

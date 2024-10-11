@@ -9,7 +9,7 @@ namespace InSyncAPI.Dtos
         public bool Status { get; set; }
         public decimal Price { get; set; }
         public Guid UserId { get; set; }
-        public string UserName { get;set; }
+        public string DisplayName { get;set; }
         public string Content { get; set; } = null!;
         public DateTime DateCreated { get; set; }
         public DateTime? DateUpdated { get; set; }
