@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Query;
 using Repositorys;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
 using System.Linq.Expressions;
 
 namespace InSyncAPI.Controllers
@@ -16,6 +17,8 @@ namespace InSyncAPI.Controllers
     {
         private ISubscriptionPlanRepository _subscriptionPlanRepo;
         private IUserRepository _userRepository;
+        private ILogger<SubscriptionPlansController> _logger;
+        private readonly string TAG = nameof(SubscriptionPlansController) + " - ";
         private const int ITEM_PAGES_DEFAULT = 10;
         private const int INDEX_DEFAULT = 0;
         private IMapper _mapper;
@@ -26,11 +29,12 @@ namespace InSyncAPI.Controllers
 
         public SubscriptionPlansController(ISubscriptionPlanRepository subscriptionPlanRepo,
             IUserRepository userRepository,
-            IMapper mapper)
+            IMapper mapper, ILogger<SubscriptionPlansController> logger)
         {
             _subscriptionPlanRepo = subscriptionPlanRepo;
             _userRepository = userRepository;
             _mapper = mapper;
+            _logger = logger;
         }
         [HttpGet()]
         [EnableQuery]
@@ -39,55 +43,84 @@ namespace InSyncAPI.Controllers
 
         public async Task<IActionResult> GetSubscriptionPlans()
         {
+            var stopwatch = Stopwatch.StartNew();
+            _logger.LogInformation("Received a request to get subscription plans at {RequestTime}", DateTime.UtcNow);
+
             if (_subscriptionPlanRepo == null)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    value: "Application service has not been created");
+                _logger.LogError("Subscription plan repository is not initialized.");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Application service has not been created");
             }
 
-            var response = _subscriptionPlanRepo.GetAll().AsQueryable();
-            return Ok(response);
+            try
+            {
+                var response = _subscriptionPlanRepo.GetAll().AsQueryable();
+                stopwatch.Stop();
+                _logger.LogInformation("Successfully retrieved subscription plans in {ElapsedMilliseconds}ms.", stopwatch.ElapsedMilliseconds);
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                stopwatch.Stop();
+                _logger.LogError(ex, "Error retrieving subscription plans in {ElapsedMilliseconds}ms.", stopwatch.ElapsedMilliseconds);
+                return StatusCode(StatusCodes.Status500InternalServerError, $"Error retrieving subscription plans: {ex.Message}");
+            }
         }
+
         [HttpGet("pagination")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewSubscriptionPlanDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
 
-        public async Task<IActionResult> GetAllSubsciptionPlan(int? index, int? size, string? keySearch = "" )
+        public async Task<IActionResult> GetAllSubsciptionPlan(int? index, int? size, string? keySearch = "")
         {
+            var stopwatch = Stopwatch.StartNew();
+            _logger.LogInformation("Received a request to get all subscription plans at {RequestTime}", DateTime.UtcNow);
 
             if (_subscriptionPlanRepo == null || _mapper == null)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    value: "Application service has not been created");
+                _logger.LogError("Subscription plan repository or mapper is not initialized.");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Application service has not been created");
             }
 
             IEnumerable<SubscriptionPlan> listSubsciptionPlan = new List<SubscriptionPlan>();
             int total = 0;
             keySearch = string.IsNullOrEmpty(keySearch) ? "" : keySearch.ToLower();
-            if (index == null || size == null)
+
+            try
             {
-                listSubsciptionPlan = _subscriptionPlanRepo.GetMulti
-                    (c => c.SubscriptionsName.ToLower().Contains(keySearch), includes
-                    );
-                total = listSubsciptionPlan.Count();
+                if (index == null || size == null)
+                {
+                    listSubsciptionPlan = _subscriptionPlanRepo.GetMulti
+                        (c => c.SubscriptionsName.ToLower().Contains(keySearch), includes);
+                    total = listSubsciptionPlan.Count();
+                }
+                else
+                {
+                    index = index.Value < 0 ? INDEX_DEFAULT : index;
+                    size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
+                    listSubsciptionPlan = _subscriptionPlanRepo.GetMultiPaging
+                        (c => c.SubscriptionsName.ToLower().Contains(keySearch), out total, index.Value, size.Value, includes);
+                }
+
+                var response = _mapper.Map<IEnumerable<ViewSubscriptionPlanDto>>(listSubsciptionPlan);
+                var responsePaging = new ResponsePaging<IEnumerable<ViewSubscriptionPlanDto>>
+                {
+                    data = response,
+                    totalOfData = total
+                };
+
+                stopwatch.Stop();
+                _logger.LogInformation("Successfully retrieved subscription plans in {ElapsedMilliseconds}ms with total count: {TotalCount}.", stopwatch.ElapsedMilliseconds, total);
+                return Ok(responsePaging);
             }
-            else
+            catch (Exception ex)
             {
-                index = index.Value < 0 ? INDEX_DEFAULT : index;
-                size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
-                listSubsciptionPlan = _subscriptionPlanRepo.GetMultiPaging
-            (c => c.SubscriptionsName.ToLower().Contains(keySearch)
-            , out total, index.Value, size.Value, includes
-            );
+                stopwatch.Stop();
+                _logger.LogError(ex, "Error retrieving subscription plans in {ElapsedMilliseconds}ms.", stopwatch.ElapsedMilliseconds);
+                return StatusCode(StatusCodes.Status500InternalServerError, $"Error retrieving subscription plans: {ex.Message}");
             }
-            var response = _mapper.Map<IEnumerable<ViewSubscriptionPlanDto>>(listSubsciptionPlan);
-            var responsePaging = new ResponsePaging<IEnumerable<ViewSubscriptionPlanDto>>
-            {
-                data = response,
-                totalOfData = total
-            };
-            return Ok(responsePaging);
         }
+
 
         [HttpGet("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ViewSubscriptionPlanDto))]
@@ -97,23 +130,44 @@ namespace InSyncAPI.Controllers
 
         public async Task<IActionResult> GetSubsciptionPlanById(Guid id)
         {
+            var stopwatch = Stopwatch.StartNew();
+            _logger.LogInformation("Received a request to get subscription plan by ID: {Id} at {RequestTime}", id, DateTime.UtcNow);
+
             if (_subscriptionPlanRepo == null || _mapper == null)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    value: "Application service has not been created");
+                _logger.LogError("Subscription plan repository or mapper is not initialized.");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Application service has not been created");
             }
+
             if (!ModelState.IsValid)
             {
+                _logger.LogWarning("Invalid model state for request to get subscription plan by ID: {Id}.", id);
                 return BadRequest(new ValidationProblemDetails(ModelState));
             }
-            var subsciptionPlan = await _subscriptionPlanRepo.GetSingleByCondition(c => c.Id.Equals(id), includes);
-            if (subsciptionPlan == null)
+
+            try
             {
-                return NotFound("No subsciption plan has an ID : " + id.ToString());
+                var subsciptionPlan = await _subscriptionPlanRepo.GetSingleByCondition(c => c.Id.Equals(id), includes);
+
+                if (subsciptionPlan == null)
+                {
+                    _logger.LogWarning("No subscription plan found with ID: {Id}.", id);
+                    return NotFound("No subscription plan has an ID: " + id.ToString());
+                }
+
+                var response = _mapper.Map<ViewSubscriptionPlanDto>(subsciptionPlan);
+                stopwatch.Stop();
+                _logger.LogInformation("Successfully retrieved subscription plan by ID: {Id} in {ElapsedMilliseconds}ms.", id, stopwatch.ElapsedMilliseconds);
+                return Ok(response);
             }
-            var response = _mapper.Map<ViewSubscriptionPlanDto>(subsciptionPlan);
-            return Ok(response);
+            catch (Exception ex)
+            {
+                stopwatch.Stop();
+                _logger.LogError(ex, "Error retrieving subscription plan by ID: {Id} in {ElapsedMilliseconds}ms.", id, stopwatch.ElapsedMilliseconds);
+                return StatusCode(StatusCodes.Status500InternalServerError, $"Error retrieving subscription plan: {ex.Message}");
+            }
         }
+
 
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionSubsciptionPlanResponse))]
@@ -122,43 +176,52 @@ namespace InSyncAPI.Controllers
 
         public async Task<IActionResult> AddSubsciptionPlan(AddSubscriptionPlanDto newSubscription)
         {
+            var stopwatch = Stopwatch.StartNew();
+            _logger.LogInformation("Received a request to add a new subscription plan at {RequestTime}", DateTime.UtcNow);
+
             if (_subscriptionPlanRepo == null || _mapper == null)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    value: "Application service has not been created");
+                _logger.LogError("Subscription plan repository or mapper is not initialized.");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Application service has not been created");
             }
 
             if (!ModelState.IsValid)
             {
+                _logger.LogWarning("Invalid model state for request to add subscription plan: {@NewSubscription}", newSubscription);
                 return BadRequest(new ValidationProblemDetails(ModelState));
             }
 
             var checkUserExist = await _userRepository.CheckContainsAsync(c => c.Id.Equals(newSubscription.UserId));
             if (!checkUserExist)
             {
-                return NotFound($"Dont exist user with id {newSubscription.UserId.ToString()} to add Subsciption Plan");
+                _logger.LogWarning("User with ID: {UserId} does not exist when attempting to add subscription plan.", newSubscription.UserId);
+                return NotFound($"Don't exist user with id {newSubscription.UserId.ToString()} to add Subscription Plan");
             }
 
             SubscriptionPlan subscriptionPlan = _mapper.Map<SubscriptionPlan>(newSubscription);
             subscriptionPlan.DateCreated = DateTime.Now;
+
             try
             {
                 var response = await _subscriptionPlanRepo.Add(subscriptionPlan);
                 if (response == null)
                 {
-                    return StatusCode(StatusCodes.Status500InternalServerError,
-                        value: "Error occurred while adding the subsciption plan.");
+                    _logger.LogError("Failed to add subscription plan; response is null.");
+                    return StatusCode(StatusCodes.Status500InternalServerError, "Error occurred while adding the subscription plan.");
                 }
 
+                stopwatch.Stop();
+                _logger.LogInformation("Subscription plan added successfully with ID: {Id} in {ElapsedMilliseconds}ms.", response.Id, stopwatch.ElapsedMilliseconds);
                 return Ok(new ActionSubsciptionPlanResponse { Message = "Subscription plan added successfully.", Id = response.Id });
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                        value: "An error occurred while adding Subsciption Plan into Database " + ex.Message);
+                stopwatch.Stop();
+                _logger.LogError(ex, "An error occurred while adding subscription plan into Database in {ElapsedMilliseconds}ms.", stopwatch.ElapsedMilliseconds);
+                return StatusCode(StatusCodes.Status500InternalServerError, $"An error occurred while adding Subscription Plan into Database: {ex.Message}");
             }
-
         }
+
         [HttpPost("ByUserClerk")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionSubsciptionPlanResponse))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
@@ -166,44 +229,53 @@ namespace InSyncAPI.Controllers
 
         public async Task<IActionResult> AddSubsciptionPlanUserClerk(AddSubscriptionPlanUserClerkDto newSubscription)
         {
+            var stopwatch = Stopwatch.StartNew();
+            _logger.LogInformation("Received a request to add a new subscription plan for user clerk at {RequestTime}", DateTime.UtcNow);
+
             if (_subscriptionPlanRepo == null || _mapper == null)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    value: "Application service has not been created");
+                _logger.LogError("Subscription plan repository or mapper is not initialized.");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Application service has not been created");
             }
 
             if (!ModelState.IsValid)
             {
+                _logger.LogWarning("Invalid model state for request to add subscription plan: {@NewSubscription}", newSubscription);
                 return BadRequest(new ValidationProblemDetails(ModelState));
             }
 
             var checkUserExist = await _userRepository.GetSingleByCondition(c => c.UserIdClerk.Equals(newSubscription.UserIdClerk));
             if (checkUserExist == null)
             {
-                return NotFound($"Dont exist user with id {newSubscription.UserIdClerk.ToString()} to add Subsciption Plan");
+                _logger.LogWarning("User with clerk ID: {UserIdClerk} does not exist when attempting to add subscription plan.", newSubscription.UserIdClerk);
+                return NotFound($"Don't exist user with id {newSubscription.UserIdClerk.ToString()} to add Subscription Plan");
             }
 
             SubscriptionPlan subscriptionPlan = _mapper.Map<SubscriptionPlan>(newSubscription);
             subscriptionPlan.DateCreated = DateTime.Now;
             subscriptionPlan.UserId = checkUserExist.Id;
+
             try
             {
                 var response = await _subscriptionPlanRepo.Add(subscriptionPlan);
                 if (response == null)
                 {
-                    return StatusCode(StatusCodes.Status500InternalServerError,
-                        value: "Error occurred while adding the subsciption plan.");
+                    _logger.LogError("Failed to add subscription plan; response is null.");
+                    return StatusCode(StatusCodes.Status500InternalServerError, "Error occurred while adding the subscription plan.");
                 }
 
+                stopwatch.Stop();
+                _logger.LogInformation("Subscription plan added successfully with ID: {Id} for clerk ID: {UserIdClerk} in {ElapsedMilliseconds}ms.", response.Id, newSubscription.UserIdClerk, stopwatch.ElapsedMilliseconds);
                 return Ok(new ActionSubsciptionPlanResponse { Message = "Subscription plan added successfully.", Id = response.Id });
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                        value: "An error occurred while adding Subsciption Plan into Database " + ex.Message);
+                stopwatch.Stop();
+                _logger.LogError(ex, "An error occurred while adding subscription plan into Database for clerk ID: {UserIdClerk} in {ElapsedMilliseconds}ms.", newSubscription.UserIdClerk, stopwatch.ElapsedMilliseconds);
+                return StatusCode(StatusCodes.Status500InternalServerError, $"An error occurred while adding Subscription Plan into Database: {ex.Message}");
             }
-
         }
+
 
         [HttpPut("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionSubsciptionPlanResponse))]
@@ -213,44 +285,52 @@ namespace InSyncAPI.Controllers
 
         public async Task<IActionResult> UpdateSubscriptionPlan(Guid id, UpdateSubscriptionPlanDto updateSubsciption)
         {
+            var stopwatch = Stopwatch.StartNew();
+            _logger.LogInformation("Received a request to update subscription plan with ID: {Id} at {RequestTime}", id, DateTime.UtcNow);
+
             if (_subscriptionPlanRepo == null || _mapper == null)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    "Application service has not been created");
+                _logger.LogError("Subscription plan repository or mapper is not initialized.");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Application service has not been created");
             }
 
             if (!ModelState.IsValid)
             {
+                _logger.LogWarning("Invalid model state for request to update subscription plan: {@UpdateSubscription}", updateSubsciption);
                 return BadRequest(new ValidationProblemDetails(ModelState));
             }
 
             if (id != updateSubsciption.Id)
             {
-                return BadRequest("Subsciption plan ID information does not match");
+                _logger.LogWarning("Subscription plan ID information does not match. Expected: {ExpectedId}, Provided: {ProvidedId}", id, updateSubsciption.Id);
+                return BadRequest("Subscription plan ID information does not match");
             }
-
 
             var existSubsciption = await _subscriptionPlanRepo.GetSingleByCondition(c => c.Id.Equals(id));
-
             if (existSubsciption == null)
             {
-                return NotFound("Subsciption plan not found.");
+                _logger.LogWarning("Subscription plan with ID: {Id} not found when attempting to update.", id);
+                return NotFound("Subscription plan not found.");
             }
-            existSubsciption.DateUpdated = DateTime.Now;
 
+            existSubsciption.DateUpdated = DateTime.Now;
             _mapper.Map(updateSubsciption, existSubsciption);
 
             try
             {
                 await _subscriptionPlanRepo.Update(existSubsciption);
-                return Ok(new ActionSubsciptionPlanResponse { Message = "Subsciption plan updated successfully.", Id = existSubsciption.Id });
+                stopwatch.Stop();
+                _logger.LogInformation("Subscription plan with ID: {Id} updated successfully in {ElapsedMilliseconds}ms.", existSubsciption.Id, stopwatch.ElapsedMilliseconds);
+                return Ok(new ActionSubsciptionPlanResponse { Message = "Subscription plan updated successfully.", Id = existSubsciption.Id });
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    $"Error updating subsciption plan: {ex.Message}");
+                stopwatch.Stop();
+                _logger.LogError(ex, "Error updating subscription plan with ID: {Id} in {ElapsedMilliseconds}ms.", existSubsciption.Id, stopwatch.ElapsedMilliseconds);
+                return StatusCode(StatusCodes.Status500InternalServerError, $"Error updating subscription plan: {ex.Message}");
             }
         }
+
 
 
         [HttpDelete("{id}")]
@@ -261,32 +341,42 @@ namespace InSyncAPI.Controllers
 
         public async Task<IActionResult> DeleteSubsciptionPlan(Guid id)
         {
+            var stopwatch = Stopwatch.StartNew();
+            _logger.LogInformation("Received a request to delete subscription plan with ID: {Id} at {RequestTime}", id, DateTime.UtcNow);
+
             if (_subscriptionPlanRepo == null || _mapper == null)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    value: "Application service has not been created");
+                _logger.LogError("Subscription plan repository or mapper is not initialized.");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Application service has not been created");
             }
+
             if (!ModelState.IsValid)
             {
+                _logger.LogWarning("Invalid model state for request to delete subscription plan.");
                 return BadRequest(new ValidationProblemDetails(ModelState));
             }
+
             var checkPolicyExist = await _subscriptionPlanRepo.CheckContainsAsync(c => c.Id.Equals(id));
             if (!checkPolicyExist)
             {
-                return NotFound($"Dont exist subsciption plan with id {id.ToString()} to delete");
+                _logger.LogWarning("Attempted to delete subscription plan with ID: {Id} that does not exist.", id);
+                return NotFound($"Don't exist subscription plan with id {id} to delete");
             }
+
             try
             {
                 await _subscriptionPlanRepo.DeleteSubsciptionPlan(id);
-                return Ok(new ActionSubsciptionPlanResponse { Message = "Subsciption plan deleted successfully.", Id = id });
+                stopwatch.Stop();
+                _logger.LogInformation("Subscription plan with ID: {Id} deleted successfully in {ElapsedMilliseconds}ms.", id, stopwatch.ElapsedMilliseconds);
+                return Ok(new ActionSubsciptionPlanResponse { Message = "Subscription plan deleted successfully.", Id = id });
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                   $"Error delete subsciption plan: {ex.Message}");
+                stopwatch.Stop();
+                _logger.LogError(ex, "Error deleting subscription plan with ID: {Id} in {ElapsedMilliseconds}ms.", id, stopwatch.ElapsedMilliseconds);
+                return StatusCode(StatusCodes.Status500InternalServerError, $"Error delete subscription plan: {ex.Message}");
             }
-
-
         }
+
     }
 }

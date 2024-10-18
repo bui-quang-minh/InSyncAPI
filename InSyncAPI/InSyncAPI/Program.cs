@@ -1,4 +1,4 @@
-using InSync_Api.DependencyInjectService;
+﻿using InSync_Api.DependencyInjectService;
 using InSync_Api.MapperProfile;
 using InSyncAPI.Authentications;
 using InSyncAPI.Extentions;
@@ -7,7 +7,9 @@ using WebNewsAPIs.Extentions;
 using Microsoft.OpenApi;
 using Microsoft.OpenApi.Models;
 using DataAccess.ContextAccesss;
+
 using static System.Net.WebRequestMethods;
+using Serilog;
 
 namespace InSyncAPI
 {
@@ -31,11 +33,14 @@ namespace InSyncAPI
                 options.AppendTrailingSlash = false;
 
             });
+            builder.AddLogServiceExtention();
 
 
             // Add services to the container.
             builder.Services.AddAuthorization();
             builder.ConfigAuthenAuthor();
+            // Add services Log tot he container
+          
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
@@ -62,10 +67,15 @@ namespace InSyncAPI
                 .AllowAnyHeader()
                 .AllowAnyMethod()
                 .AllowAnyOrigin()
-                .SetIsOriginAllowed((host) => true)) ;
+                .SetIsOriginAllowed((host) => true));
             });
 
             var app = builder.Build();
+           
+            // Ghi log các yêu cầu HTTP
+            app.UseSerilogRequestLogging();
+            // Add middleware in to system
+            app.AddMiddlewareExtetion();
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
@@ -79,7 +89,21 @@ namespace InSyncAPI
             app.UseCors("CORSPolicy");
             app.MapControllers();
 
-            app.Run();
+            try
+            {
+                Log.Information("Starting web host");
+                app.Run();
+            }
+            catch (Exception ex)
+            {
+                Log.Fatal(ex, "Host terminated unexpectedly");
+            }
+            finally
+            {
+                Log.CloseAndFlush(); // Đảm bảo tất cả log đã được ghi trước khi dừng ứng dụng
+            }
+
+
         }
     }
 }
