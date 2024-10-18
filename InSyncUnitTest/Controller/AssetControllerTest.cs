@@ -6,6 +6,8 @@ using InSyncAPI.Controllers;
 using InSyncAPI.Dtos;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Logging;
 using Repositorys;
 using System;
 using System.Collections.Generic;
@@ -13,6 +15,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
+using Xunit;
 
 namespace InSyncUnitTest.Controller
 {
@@ -21,13 +24,15 @@ namespace InSyncUnitTest.Controller
         private IAssetRepository _assetRepo;
         private IProjectRepository _projectRepo;
         private IMapper _mapper;
+        private ILogger<AssetsController> _logger;
         private AssetsController _controller;
         public AssetControllerTest()
         {
             _assetRepo = A.Fake<IAssetRepository>();
             _projectRepo = A.Fake<IProjectRepository>();
             _mapper = A.Fake<IMapper>();
-            _controller = new AssetsController(_assetRepo, _projectRepo, _mapper);
+            _logger = A.Fake<ILogger<AssetsController>>();
+            _controller = new AssetsController(_assetRepo, _projectRepo, _mapper, _logger);
         }
 
         #region GetAssets
@@ -35,7 +40,7 @@ namespace InSyncUnitTest.Controller
         public async Task GetAssets_WhenDependenciesAreNull_ShouldReturnsInternalServerError()
         {
             // Arrange
-            var controller = new AssetsController(null,null, null);
+            var controller = new AssetsController(null, null, null, _logger);
 
             // Act
             var result = await controller.GetAssets();
@@ -67,14 +72,31 @@ namespace InSyncUnitTest.Controller
             response.Should().HaveCount(2);
         }
 
+        [Fact]
+        public async Task GetAssets_WhenOccurredException_ShouldReturnsInternalServerError()
+        {
+            // Arrange
+            var message = "An error occurred while retrieving assets.";
+            A.CallTo(() => _assetRepo.GetAll(A<string[]>._)).Throws(new Exception(message));
+
+            // Act
+            var result = await _controller.GetAssets();
+
+            // Assert
+            var statusCodeResult = result as ObjectResult;
+            statusCodeResult.Should().NotBeNull();
+            statusCodeResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+            statusCodeResult.Value.Should().Be(message);
+        }
+
         #endregion
 
         #region GetAllAsset
         [Fact]
         public async Task GetAllAsset_WhenDependencyAreNull_ShouldReturnInternalServerError()
         {
-            var controller = new AssetsController(null,null, null);
-            var result = await controller.GetAllAsset();
+            var controller = new AssetsController(null, null, null, _logger);
+            var result = await controller.GetAllAsset(0, 2, "");
 
 
             var statusCodeResult = result as ObjectResult;
@@ -96,7 +118,7 @@ namespace InSyncUnitTest.Controller
             A.CallTo(() => _mapper.Map<IEnumerable<ViewAssetDto>>(Assets)).Returns(viewAssets);
 
             // Act
-            var result = await _controller.GetAllAsset("",index, size);
+            var result = await _controller.GetAllAsset(index, size, "");
 
             // Assert
             var okResult = result as OkObjectResult;
@@ -120,7 +142,7 @@ namespace InSyncUnitTest.Controller
             A.CallTo(() => _mapper.Map<IEnumerable<ViewAssetDto>>(Assets)).Returns(viewAssets);
 
             // Act
-            var result = await _controller.GetAllAsset("",index, size);
+            var result = await _controller.GetAllAsset(index, size, "");
 
             // Assert
             var okResult = result as OkObjectResult;
@@ -140,12 +162,12 @@ namespace InSyncUnitTest.Controller
             IEnumerable<ViewAssetDto> viewAssets = new List<ViewAssetDto> { new ViewAssetDto(), new ViewAssetDto() };
             int total;
             string[] includes = new string[] { };
-            A.CallTo(() => _assetRepo.GetMultiPaging(A<Expression<Func<Asset, bool>>>._, out total, A<int>._, A<int>._, A<string[]>._))
+            A.CallTo(() => _assetRepo.GetMulti(A<Expression<Func<Asset, bool>>>._, A<string[]>._))
                 .Returns(Assets);
             A.CallTo(() => _mapper.Map<IEnumerable<ViewAssetDto>>(Assets)).Returns(viewAssets);
 
             // Act
-            var result = await _controller.GetAllAsset();
+            var result = await _controller.GetAllAsset(null, null, "");
 
             // Assert
             var okResult = result as OkObjectResult;
@@ -156,6 +178,22 @@ namespace InSyncUnitTest.Controller
             returnedAssets.data.Should().BeEquivalentTo(viewAssets);
         }
 
+        [Fact]
+        public async Task GetAllAsset_WhenOccurredException_ShouldReturnsInternalServerError()
+        {
+            // Arrange
+            var message = "An error occurred while retrieving assets.";
+            A.CallTo(() => _assetRepo.GetMulti(A<Expression<Func<Asset, bool>>>._, A<string[]>._)).Throws(new Exception(message));
+
+            // Act
+            var result = await _controller.GetAllAsset(null, null, "");
+
+            // Assert
+            var statusCodeResult = result as ObjectResult;
+            statusCodeResult.Should().NotBeNull();
+            statusCodeResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+            statusCodeResult.Value.Should().Be(message);
+        }
 
         #endregion
 
@@ -164,7 +202,7 @@ namespace InSyncUnitTest.Controller
         public async Task GetAssetById_WithDependencyNull_ShouldReturnInternalServer()
         {
             //Arrange
-            var controller = new AssetsController(null,null, null);
+            var controller = new AssetsController(null, null, null, _logger);
             //Act
             var result = await controller.GetAssetById(Guid.NewGuid());
             //Assert
@@ -194,7 +232,7 @@ namespace InSyncUnitTest.Controller
         public async Task GetAssetById_WithIdInValidFomat_ReturnBadRequest()
         {
             // Arrange
-            var controller = new AssetsController(_assetRepo,_projectRepo, _mapper);
+            var controller = new AssetsController(_assetRepo, _projectRepo, _mapper, _logger);
             var invalidGuid = "e4d34798-4c18-4ca4-9014-191492e3b90"; // GUID sai định dạng
             controller.ModelState.AddModelError("id", $"The value '{invalidGuid}' is not valid.");
 
@@ -234,13 +272,29 @@ namespace InSyncUnitTest.Controller
             returnedCR.Should().BeEquivalentTo(viewAsset);
         }
 
+        [Fact]
+        public async Task GetAssetById_WhenOccurredException_ShouldReturnsInternalServerError()
+        {
+            // Arrange
+            var message = "An error occurred while retrieving asset.";
+            A.CallTo(() => _assetRepo.GetSingleByCondition(A<Expression<Func<Asset, bool>>>._,A<string[]>._)).Throws(new Exception(message));
+
+            // Act
+            var result = await _controller.GetAssetById(Guid.NewGuid());
+
+            // Assert
+            var statusCodeResult = result as ObjectResult;
+            statusCodeResult.Should().NotBeNull();
+            statusCodeResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+            statusCodeResult.Value.Should().Be(message);
+        }
         #endregion
         #region GetAllAssetOfProject
         [Fact]
         public async Task GetAllAssetOfProject_WhenDependencyAreNull_ShouldReturnInternalServerError()
         {
-            var controller = new AssetsController(null, null, null);
-            var result = await controller.GetAllAssetOfProject(Guid.NewGuid());
+            var controller = new AssetsController(null, null, null, _logger);
+            var result = await controller.GetAllAssetOfProject(Guid.NewGuid(), 0, 2, "");
 
 
             var statusCodeResult = result as ObjectResult;
@@ -262,7 +316,7 @@ namespace InSyncUnitTest.Controller
             A.CallTo(() => _mapper.Map<IEnumerable<ViewAssetDto>>(Assets)).Returns(viewAssets);
 
             // Act
-            var result = await _controller.GetAllAssetOfProject(Guid.NewGuid(),"", index, size);
+            var result = await _controller.GetAllAssetOfProject(Guid.NewGuid(), index, size, "");
 
             // Assert
             var okResult = result as OkObjectResult;
@@ -286,7 +340,7 @@ namespace InSyncUnitTest.Controller
             A.CallTo(() => _mapper.Map<IEnumerable<ViewAssetDto>>(Assets)).Returns(viewAssets);
 
             // Act
-            var result = await _controller.GetAllAssetOfProject(Guid.NewGuid(),"", index, size);
+            var result = await _controller.GetAllAssetOfProject(Guid.NewGuid(), index, size, "");
 
             // Assert
             var okResult = result as OkObjectResult;
@@ -311,7 +365,7 @@ namespace InSyncUnitTest.Controller
             A.CallTo(() => _mapper.Map<IEnumerable<ViewAssetDto>>(Assets)).Returns(viewAssets);
 
             // Act
-            var result = await _controller.GetAllAssetOfProject(Guid.NewGuid());
+            var result = await _controller.GetAllAssetOfProject(Guid.NewGuid(), 0, 2, "");
 
             // Assert
             var okResult = result as OkObjectResult;
@@ -325,12 +379,12 @@ namespace InSyncUnitTest.Controller
         public async Task GetAllAssetOfProject_WithIdProjectInValidFomat_ReturnBadRequest()
         {
             // Arrange
-            var controller = new AssetsController(_assetRepo, _projectRepo, _mapper);
+            var controller = new AssetsController(_assetRepo, _projectRepo, _mapper, _logger);
             var invalidGuid = "e4d34798-4c18-4ca4-9014-191492e3b90"; // GUID sai định dạng
             controller.ModelState.AddModelError("id", $"The value '{invalidGuid}' is not valid.");
 
             // Act
-            var result = await controller.GetAllAssetOfProject(Guid.Empty);
+            var result = await controller.GetAllAssetOfProject(Guid.Empty, 0, 2, "");
 
             // Assert
             var badRequestResult = result as BadRequestObjectResult;
@@ -343,6 +397,22 @@ namespace InSyncUnitTest.Controller
             errorResponse.Errors["id"].Should().Contain($"The value '{invalidGuid}' is not valid.");
         }
 
+        [Fact]
+        public async Task GetAllAssetOfProject_WhenOccurredException_ShouldReturnsInternalServerError()
+        {
+            // Arrange
+            var message = "An error occurred while retrieving assets.";
+            A.CallTo(() => _assetRepo.GetMulti(A<Expression<Func<Asset, bool>>>._,A<string[]>._)).Throws(new Exception(message));
+
+            // Act
+            var result = await _controller.GetAllAssetOfProject(Guid.NewGuid(),null,null, "");
+
+            // Assert
+            var statusCodeResult = result as ObjectResult;
+            statusCodeResult.Should().NotBeNull();
+            statusCodeResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+            statusCodeResult.Value.Should().Be(message);
+        }
         #endregion
 
 
@@ -352,7 +422,7 @@ namespace InSyncUnitTest.Controller
         public async Task AddAsset_WhenDependenciesAreNull_ShouldReturnsInternalServerError()
         {
             // Arrange
-            var controller = new AssetsController(null,null, null);
+            var controller = new AssetsController(null, null, null, _logger);
             var newAsset = new AddAssetDto();
 
             // Act
@@ -369,7 +439,7 @@ namespace InSyncUnitTest.Controller
         public async Task AddAsset_WhenAssetPropertyProjectIdNull_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new AssetsController(_assetRepo,_projectRepo, _mapper);
+            var controller = new AssetsController(_assetRepo, _projectRepo, _mapper, _logger);
             var newAsset = new AddAssetDto { };
             string key = "ProjectId";
             string message = $"The {key} field is required.";
@@ -393,7 +463,7 @@ namespace InSyncUnitTest.Controller
         public async Task AddAsset_WithProjectIdInValidFomat_ReturnBadRequest()
         {
             // Arrange
-            var controller = new AssetsController(_assetRepo, _projectRepo, _mapper);
+            var controller = new AssetsController(_assetRepo, _projectRepo, _mapper, _logger);
             var invalidGuid = "e4d34798-4c18-4ca4-9014-191492e3b90"; // GUID sai định dạng
             controller.ModelState.AddModelError("id", $"The value '{invalidGuid}' is not valid.");
 
@@ -417,7 +487,7 @@ namespace InSyncUnitTest.Controller
         public async Task AddAsset_WhenAssetPropertyAssestNameNull_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new AssetsController(_assetRepo, _projectRepo, _mapper);
+            var controller = new AssetsController(_assetRepo, _projectRepo, _mapper, _logger);
             var newAsset = new AddAssetDto { };
             string key = "AssestName";
             string message = $"The {key} field is required.";
@@ -440,7 +510,7 @@ namespace InSyncUnitTest.Controller
         public async Task AddAsset_WhenAssetPropertyAssetNameLengthLonger255_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new AssetsController(_assetRepo,_projectRepo, _mapper);
+            var controller = new AssetsController(_assetRepo, _projectRepo, _mapper, _logger);
             var newAsset = new AddAssetDto { };
             string key = "AssestName";
             string messageError = $"The field {key} must be a string with a maximum length of 255.";
@@ -464,7 +534,7 @@ namespace InSyncUnitTest.Controller
         public async Task AddAsset_WhenAssetPropertyTypeLengthLonger50_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new AssetsController(_assetRepo, _projectRepo, _mapper);
+            var controller = new AssetsController(_assetRepo, _projectRepo, _mapper, _logger);
             var newAsset = new AddAssetDto { };
             string key = "Type";
             string messageError = $"The field {key} must be a string with a maximum length of 50.";
@@ -489,7 +559,7 @@ namespace InSyncUnitTest.Controller
         public async Task AddAsset_WhenAssetPropertyFilePathNull_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new AssetsController(_assetRepo, _projectRepo, _mapper);
+            var controller = new AssetsController(_assetRepo, _projectRepo, _mapper, _logger);
             var newAsset = new AddAssetDto { };
             string key = "FilePath";
             string message = $"The {key} field is required.";
@@ -538,7 +608,7 @@ namespace InSyncUnitTest.Controller
             // Arrange
             var newAsset = new AddAssetDto { };
             var Asset = new Asset { };
-            A.CallTo(() => _projectRepo.CheckContainsAsync(A<Expression<Func<Project,bool>>>._)).Returns(Task.FromResult(true));
+            A.CallTo(() => _projectRepo.CheckContainsAsync(A<Expression<Func<Project, bool>>>._)).Returns(Task.FromResult(true));
             A.CallTo(() => _mapper.Map<Asset>(newAsset)).Returns(Asset);
             A.CallTo(() => _assetRepo.Add(Asset)).Returns(Task.FromResult<Asset>(null));
 
@@ -557,11 +627,11 @@ namespace InSyncUnitTest.Controller
             // Arrange
             var newAsset = new AddAssetDto { };
             var Asset = new Asset { };
-            string messageException = "Privacy existed";
-            var message = "An error occurred while adding Asset into Database " + messageException;
+            
+            var message = "An error occurred while adding Asset into Database.";
             A.CallTo(() => _projectRepo.CheckContainsAsync(A<Expression<Func<Project, bool>>>._)).Returns(Task.FromResult(true));
             A.CallTo(() => _mapper.Map<Asset>(newAsset)).Returns(Asset);
-            A.CallTo(() => _assetRepo.Add(Asset)).Throws(new Exception(messageException));
+            A.CallTo(() => _assetRepo.Add(Asset)).Throws(new Exception(message));
 
             // Act
             var result = await _controller.AddAsset(newAsset);
@@ -605,7 +675,7 @@ namespace InSyncUnitTest.Controller
         public async Task UpdatAssetAsset_WhenDependenciesAreNull_ShouldReturnsInternalServerError()
         {
             // Arrange
-            var controller = new AssetsController(null,null, null);
+            var controller = new AssetsController(null, null, null, _logger);
             var updateAsset = new UpdateAssetDto();
 
             // Act
@@ -620,7 +690,7 @@ namespace InSyncUnitTest.Controller
         public async Task UpdatAssetAsset_WhenAssetPropertyIdNull_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new AssetsController(_assetRepo, _projectRepo, _mapper);
+            var controller = new AssetsController(_assetRepo, _projectRepo, _mapper, _logger);
             var newAsset = new AddAssetDto { };
             string key = "Id";
             string message = $"The {key} field is required.";
@@ -644,7 +714,7 @@ namespace InSyncUnitTest.Controller
         public async Task UpdatAssetAsset_WithIdInValidFomat_ReturnBadRequest()
         {
             // Arrange
-            var controller = new AssetsController(_assetRepo, _projectRepo, _mapper);
+            var controller = new AssetsController(_assetRepo, _projectRepo, _mapper, _logger);
             var invalidGuid = "e4d34798-4c18-4ca4-9014-191492e3b90"; // GUID sai định dạng
             controller.ModelState.AddModelError("id", $"The value '{invalidGuid}' is not valid.");
 
@@ -668,7 +738,7 @@ namespace InSyncUnitTest.Controller
         public async Task UpdatAssetAsset_WhenAssetPropertyAssestNameNull_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new AssetsController(_assetRepo, _projectRepo, _mapper);
+            var controller = new AssetsController(_assetRepo, _projectRepo, _mapper, _logger);
             var newAsset = new AddAssetDto { };
             string key = "AssestName";
             string message = $"The {key} field is required.";
@@ -691,7 +761,7 @@ namespace InSyncUnitTest.Controller
         public async Task UpdatAssetAsset_WhenAssetPropertyAssetNameLengthLonger255_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new AssetsController(_assetRepo, _projectRepo, _mapper);
+            var controller = new AssetsController(_assetRepo, _projectRepo, _mapper, _logger);
             var newAsset = new AddAssetDto { };
             string key = "AssestName";
             string messageError = $"The field {key} must be a string with a maximum length of 255.";
@@ -715,7 +785,7 @@ namespace InSyncUnitTest.Controller
         public async Task UpdatAssetAsset_WhenAssetPropertyTypeLengthLonger50_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new AssetsController(_assetRepo, _projectRepo, _mapper);
+            var controller = new AssetsController(_assetRepo, _projectRepo, _mapper, _logger);
             var newAsset = new AddAssetDto { };
             string key = "Type";
             string messageError = $"The field {key} must be a string with a maximum length of 50.";
@@ -820,7 +890,7 @@ namespace InSyncUnitTest.Controller
         public async Task DeleteAsset_WhenDependenciesAreNull_ShouldReturnsInternalServerError()
         {
             // Arrange
-            var controller = new AssetsController(null,null, null);
+            var controller = new AssetsController(null, null, null, _logger);
             var id = Guid.NewGuid();
 
             // Act
@@ -847,7 +917,7 @@ namespace InSyncUnitTest.Controller
             var notFoundResult = result as NotFoundObjectResult;
             notFoundResult.Should().NotBeNull();
             notFoundResult.StatusCode.Should().Be(StatusCodes.Status404NotFound);
-            notFoundResult.Value.Should().Be($"Dont exist asset with id {id.ToString()} to delete");
+            notFoundResult.Value.Should().Be($"Don't exist asset with id {id.ToString()} to delete");
 
         }
 
@@ -893,7 +963,7 @@ namespace InSyncUnitTest.Controller
         public async Task DeleteAsset_WhenAssetPropertyIdInvalidFomat_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new AssetsController(_assetRepo,_projectRepo, _mapper);
+            var controller = new AssetsController(_assetRepo, _projectRepo, _mapper, _logger);
             string key = "id";
             string message = "The value 'e4d34798-4c18-4ca4-9014-191492e3b90' is not valid.";
             controller.ModelState.AddModelError(key, message);

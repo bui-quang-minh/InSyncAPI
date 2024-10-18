@@ -1,11 +1,13 @@
 ﻿using AutoMapper;
 using BusinessObjects.Models;
+using Castle.Core.Logging;
 using FakeItEasy;
 using FluentAssertions;
 using InSyncAPI.Controllers;
 using InSyncAPI.Dtos;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Repositorys;
 using System;
 using System.Collections.Generic;
@@ -20,12 +22,14 @@ namespace InSyncUnitTest.Controller
     {
         private IPrivacyPolicyRepository _privacyPolicyRepo;
         private IMapper _mapper;
+        private ILogger<PrivacyPolicysController> _logger;
         private PrivacyPolicysController _controller;
         public PrivacyPolicyControllerTest()
         {
             _privacyPolicyRepo = A.Fake<IPrivacyPolicyRepository>();
             _mapper = A.Fake<IMapper>();
-            _controller = new PrivacyPolicysController(_privacyPolicyRepo, _mapper);
+            _logger = A.Fake<ILogger<PrivacyPolicysController>>();
+            _controller = new PrivacyPolicysController(_privacyPolicyRepo, _mapper, _logger);
         }
 
         #region GetPrivacyPolicys
@@ -33,7 +37,7 @@ namespace InSyncUnitTest.Controller
         public async Task GetPrivacyPolicys_WhenDependenciesAreNull_ShouldReturnsInternalServerError()
         {
             // Arrange
-            var controller = new PrivacyPolicysController(null, null);
+            var controller = new PrivacyPolicysController(null, null, _logger);
 
             // Act
             var result = await controller.GetPrivacyPolicys();
@@ -64,15 +68,32 @@ namespace InSyncUnitTest.Controller
             response.Should().BeEquivalentTo(privacyPolicys);
             response.Should().HaveCount(2);
         }
+        [Fact]
+        public async Task GetPrivacyPolicy_WhenOccurredException_ShouldReturnsInternalServerError()
+        {
+            // Arrange
+            var message = "An error occurred while retrieving privacy policies.";
+            var response = $"Error retrieving privacy policies: {message}";
 
+            A.CallTo(() => _privacyPolicyRepo.GetAll(A<string[]>._)).Throws(new Exception(message));
+
+            // Act
+            var result = await _controller.GetPrivacyPolicys();
+
+            // Assert
+            var statusCodeResult = result as ObjectResult;
+            statusCodeResult.Should().NotBeNull();
+            statusCodeResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+            statusCodeResult.Value.Should().Be(response);
+        }
         #endregion
 
         #region GetAllPrivacyPolicy
         [Fact]
         public async Task GetAllPrivacyPolicy_WhenDependencyAreNull_ShouldReturnInternalServerError()
         {
-            var controller = new PrivacyPolicysController(null, null);
-            var result = await controller.GetAllPrivacyPolicy();
+            var controller = new PrivacyPolicysController(null, null, _logger);
+            var result = await controller.GetAllPrivacyPolicy(0, 2, "");
 
 
             var statusCodeResult = result as ObjectResult;
@@ -94,7 +115,7 @@ namespace InSyncUnitTest.Controller
             A.CallTo(() => _mapper.Map<IEnumerable<ViewPrivacyPolicyDto>>(privacyPolicys)).Returns(viewPrivacyPolicys);
 
             // Act
-            var result = await _controller.GetAllPrivacyPolicy("",index, size);
+            var result = await _controller.GetAllPrivacyPolicy(index, size, "");
 
             // Assert
             var okResult = result as OkObjectResult;
@@ -118,7 +139,7 @@ namespace InSyncUnitTest.Controller
             A.CallTo(() => _mapper.Map<IEnumerable<ViewPrivacyPolicyDto>>(privacyPolicys)).Returns(viewPrivacyPolicys);
 
             // Act
-            var result = await _controller.GetAllPrivacyPolicy("",index, size);
+            var result = await _controller.GetAllPrivacyPolicy(index, size, "");
 
             // Assert
             var okResult = result as OkObjectResult;
@@ -138,12 +159,12 @@ namespace InSyncUnitTest.Controller
             IEnumerable<ViewPrivacyPolicyDto> viewPrivacyPolicys = new List<ViewPrivacyPolicyDto> { new ViewPrivacyPolicyDto(), new ViewPrivacyPolicyDto() };
             int total;
             string[] includes = new string[] { };
-            A.CallTo(() => _privacyPolicyRepo.GetMultiPaging(A<Expression<Func<PrivacyPolicy, bool>>>._, out total, A<int>._, A<int>._, A<string[]>._))
+            A.CallTo(() => _privacyPolicyRepo.GetMulti(A<Expression<Func<PrivacyPolicy, bool>>>._, A<string[]>._))
                 .Returns(privacyPolicys);
             A.CallTo(() => _mapper.Map<IEnumerable<ViewPrivacyPolicyDto>>(privacyPolicys)).Returns(viewPrivacyPolicys);
 
             // Act
-            var result = await _controller.GetAllPrivacyPolicy();
+            var result = await _controller.GetAllPrivacyPolicy(null, null, "");
 
             // Assert
             var okResult = result as OkObjectResult;
@@ -152,6 +173,24 @@ namespace InSyncUnitTest.Controller
             var returnedPrivacyPolicys = okResult.Value as ResponsePaging<IEnumerable<ViewPrivacyPolicyDto>>;
             returnedPrivacyPolicys.Should().NotBeNull();
             returnedPrivacyPolicys.data.Should().BeEquivalentTo(viewPrivacyPolicys);
+        }
+        [Fact]
+        public async Task GetAllPrivacyPolicy_WhenOccurredException_ShouldReturnsInternalServerError()
+        {
+            // Arrange
+            var message = "An error occurred while retrieving privacy policies.";
+            var response = $"Error retrieving privacy policies: {message}";
+
+            A.CallTo(() => _privacyPolicyRepo.GetMulti(A<Expression<Func<PrivacyPolicy, bool>>>._, A<string[]>._)).Throws(new Exception(message));
+
+            // Act
+            var result = await _controller.GetAllPrivacyPolicy(null, null, "");
+
+            // Assert
+            var statusCodeResult = result as ObjectResult;
+            statusCodeResult.Should().NotBeNull();
+            statusCodeResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+            statusCodeResult.Value.Should().Be(response);
         }
 
 
@@ -162,7 +201,7 @@ namespace InSyncUnitTest.Controller
         public async Task GetPrivacyPolicyById_WithDependencyNull_ShouldReturnInternalServer()
         {
             //Arrange
-            var controller = new PrivacyPolicysController(null, null);
+            var controller = new PrivacyPolicysController(null, null, _logger);
             //Act
             var result = await controller.GetPrivacyPolicyById(Guid.NewGuid());
             //Assert
@@ -185,14 +224,14 @@ namespace InSyncUnitTest.Controller
             var notFoundResult = result as NotFoundObjectResult;
             notFoundResult.Should().NotBeNull();
             notFoundResult.StatusCode.Should().Be(StatusCodes.Status404NotFound);
-            notFoundResult.Value.Should().Be($"No privacy policy has an ID : {privacyPolicyId}");
+            notFoundResult.Value.Should().Be($"No privacy policy has an ID: {privacyPolicyId}");
         }
 
         [Fact]
         public async Task GetPrivacyPolicyById_WithIdInValidFomat_ReturnBadRequest()
         {
             // Arrange
-            var controller = new PrivacyPolicysController(_privacyPolicyRepo, _mapper);
+            var controller = new PrivacyPolicysController(_privacyPolicyRepo, _mapper, _logger);
             var invalidGuid = "e4d34798-4c18-4ca4-9014-191492e3b90"; // GUID sai định dạng
             controller.ModelState.AddModelError("id", $"The value '{invalidGuid}' is not valid.");
 
@@ -232,6 +271,24 @@ namespace InSyncUnitTest.Controller
             returnedCR.Should().BeEquivalentTo(viewprivacyPolicy);
         }
 
+        [Fact]
+        public async Task GetPrivacyPolicyById_WhenOccurredException_ShouldReturnsInternalServerError()
+        {
+            // Arrange
+            var message = "An error occurred while retrieving privacy policies.";
+            var response = $"Error retrieving privacy policy: {message}";
+
+            A.CallTo(() => _privacyPolicyRepo.GetSingleByCondition(A<Expression<Func<PrivacyPolicy, bool>>>._, A<string[]>._)).Throws(new Exception(message));
+
+            // Act
+            var result = await _controller.GetPrivacyPolicyById(Guid.NewGuid());
+
+            // Assert
+            var statusCodeResult = result as ObjectResult;
+            statusCodeResult.Should().NotBeNull();
+            statusCodeResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+            statusCodeResult.Value.Should().Be(response);
+        }
         #endregion
 
         #region AddPrivacyPolicy
@@ -239,7 +296,7 @@ namespace InSyncUnitTest.Controller
         public async Task AddPrivacyPolicy_WhenDependenciesAreNull_ShouldReturnsInternalServerError()
         {
             // Arrange
-            var controller = new PrivacyPolicysController(null, null);
+            var controller = new PrivacyPolicysController(null, null, _logger);
             var newPrivacyPolicy = new AddPrivacyPolicyDto();
 
             // Act
@@ -256,7 +313,7 @@ namespace InSyncUnitTest.Controller
         public async Task AddPrivacyPolicy_WhenPrivacyPolicyPropertyNameNull_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new PrivacyPolicysController(_privacyPolicyRepo, _mapper);
+            var controller = new PrivacyPolicysController(_privacyPolicyRepo, _mapper, _logger);
             var newPrivacyPolicy = new AddPrivacyPolicyDto { };
             string key = "Title";
             string message = $"The {key} field is required.";
@@ -279,7 +336,7 @@ namespace InSyncUnitTest.Controller
         public async Task AddPrivacyPolicy_WhenPrivacyPolicyPropertyNameLengthLonger300_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new PrivacyPolicysController(_privacyPolicyRepo, _mapper);
+            var controller = new PrivacyPolicysController(_privacyPolicyRepo, _mapper, _logger);
             var newPrivacyPolicy = new AddPrivacyPolicyDto { };
             string key = "Title";
             string messageError = $"The field {key} must be a string with a maximum length of 100.";
@@ -315,7 +372,7 @@ namespace InSyncUnitTest.Controller
             var statusCodeResult = result as ObjectResult;
             statusCodeResult.Should().NotBeNull();
             statusCodeResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
-            statusCodeResult.Value.Should().Be("Error occurred while adding the private policy.");
+            statusCodeResult.Value.Should().Be("Error occurred while adding the privacy policy.");
         }
         [Fact]
         public async Task AddPrivacyPolicy_WhenOccurredException_ShouldReturnsInternalServerError()
@@ -324,8 +381,8 @@ namespace InSyncUnitTest.Controller
             var newPrivacyPolicy = new AddPrivacyPolicyDto { };
             var PrivacyPolicy = new PrivacyPolicy { };
             string messageException = "Privacy existed";
-            var message = "An error occurred while adding privacy policy into Database " + messageException;
-            
+            var message = "An error occurred while adding privacy policy into Database: " + messageException;
+
             A.CallTo(() => _mapper.Map<PrivacyPolicy>(newPrivacyPolicy)).Returns(PrivacyPolicy);
             A.CallTo(() => _privacyPolicyRepo.Add(PrivacyPolicy)).Throws(new Exception(messageException));
 
@@ -356,7 +413,7 @@ namespace InSyncUnitTest.Controller
             okResult.Should().NotBeNull();
             okResult.StatusCode.Should().Be(StatusCodes.Status200OK);
             var response = okResult.Value as ActionPrivacyPolicyResponse;
-            response.Message.Should().Be("Private policy added successfully.");
+            response.Message.Should().Be("Privacy policy added successfully.");
             response.Id.Should().Be(addedPrivacyPolicy.Id);
         }
 
@@ -370,7 +427,7 @@ namespace InSyncUnitTest.Controller
         public async Task UpdatPrivacyPolicyPrivacyPolicy_WhenDependenciesAreNull_ShouldReturnsInternalServerError()
         {
             // Arrange
-            var controller = new PrivacyPolicysController(null, null);
+            var controller = new PrivacyPolicysController(null, null, _logger);
             var updatePrivacyPolicy = new UpdatePrivacyPolicyDto();
 
             // Act
@@ -386,7 +443,7 @@ namespace InSyncUnitTest.Controller
         public async Task UpdatePrivacyPolicy_WhenPrivacyPolicyPropertyIdInvalidFomat_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new PrivacyPolicysController(_privacyPolicyRepo, _mapper);
+            var controller = new PrivacyPolicysController(_privacyPolicyRepo, _mapper, _logger);
             var updatePrivacyPolicy = new UpdatePrivacyPolicyDto();
             controller.ModelState.AddModelError("id", "The value 'e4d34798-4c18-4ca4-9014-191492e3b90' is not valid.");
 
@@ -407,7 +464,7 @@ namespace InSyncUnitTest.Controller
         public async Task UpdatePrivacyPolicy_WhenPrivacyPolicyPropertyTitleNull_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new PrivacyPolicysController(_privacyPolicyRepo, _mapper);
+            var controller = new PrivacyPolicysController(_privacyPolicyRepo, _mapper, _logger);
             var updatePrivacyPolicy = new UpdatePrivacyPolicyDto { };
             string key = "Title";
             string message = $"The {key} field is required.";
@@ -430,7 +487,7 @@ namespace InSyncUnitTest.Controller
         public async Task UpdatePrivacyPolicy_WhenPrivacyPolicyPropertyTitleLengthLonger300_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new PrivacyPolicysController(_privacyPolicyRepo, _mapper);
+            var controller = new PrivacyPolicysController(_privacyPolicyRepo, _mapper, _logger);
             var newPrivacyPolicy = new UpdatePrivacyPolicyDto { };
             string key = "Title";
             string messageError = $"The field {key} must be a string with a maximum length of 300.";
@@ -449,7 +506,7 @@ namespace InSyncUnitTest.Controller
             errorResponse.Errors.Should().ContainKey(key);
             errorResponse.Errors[key].Should().Contain(messageError);
         }
-       
+
 
 
         [Fact]
@@ -536,7 +593,7 @@ namespace InSyncUnitTest.Controller
         public async Task DeletePrivacyPolicy_WhenDependenciesAreNull_ShouldReturnsInternalServerError()
         {
             // Arrange
-            var controller = new PrivacyPolicysController(null, null);
+            var controller = new PrivacyPolicysController(null, null, _logger);
             var id = Guid.NewGuid();
 
             // Act
@@ -563,7 +620,7 @@ namespace InSyncUnitTest.Controller
             var notFoundResult = result as NotFoundObjectResult;
             notFoundResult.Should().NotBeNull();
             notFoundResult.StatusCode.Should().Be(StatusCodes.Status404NotFound);
-            notFoundResult.Value.Should().Be($"Dont exist privacy policy with id {id.ToString()} to delete");
+            notFoundResult.Value.Should().Be($"Don't exist privacy policy with ID {id} to delete");
 
         }
 
@@ -603,13 +660,13 @@ namespace InSyncUnitTest.Controller
             var statusCodeResult = result as ObjectResult;
             statusCodeResult.Should().NotBeNull();
             statusCodeResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
-            statusCodeResult.Value.Should().Be("Error delete term: Delete failed");
+            statusCodeResult.Value.Should().Be("Error deleting privacy policy: Delete failed");
         }
         [Fact]
         public async Task DeletePrivacyPolicy_WhenPrivacyPolicyPropertyIdInvalidFomat_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new PrivacyPolicysController(_privacyPolicyRepo, _mapper);
+            var controller = new PrivacyPolicysController(_privacyPolicyRepo, _mapper, _logger);
             string key = "id";
             string message = "The value 'e4d34798-4c18-4ca4-9014-191492e3b90' is not valid.";
             controller.ModelState.AddModelError(key, message);

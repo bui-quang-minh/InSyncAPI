@@ -34,7 +34,7 @@ namespace InSyncAPI.Controllers
             _userRepo = userRepo;
             _projectRepo = projectRepo;
             _mapper = mapper;
-            _logger = logger;   
+            _logger = logger;
         }
         [HttpGet()]
         [EnableQuery]
@@ -370,7 +370,7 @@ namespace InSyncAPI.Controllers
         [HttpGet("scenarios-user/{userId}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewScenarioDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
-        public async Task<IActionResult> GetAllScenarioByUserId(Guid userId, string? keySearch = "", int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
+        public async Task<IActionResult> GetAllScenarioByUserId(Guid userId, int? index, int? size, string? keySearch = "")
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received a request to retrieve all scenarios for user ID: {UserId} at {RequestTime}", userId, DateTime.UtcNow);

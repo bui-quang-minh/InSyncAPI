@@ -1,11 +1,13 @@
 ﻿using AutoMapper;
 using BusinessObjects.Models;
+using Castle.Core.Logging;
 using FakeItEasy;
 using FluentAssertions;
 using InSyncAPI.Controllers;
 using InSyncAPI.Dtos;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Repositorys;
 using System;
 using System.Collections.Generic;
@@ -13,6 +15,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
+using Xunit.Sdk;
 
 namespace InSyncUnitTest.Controller
 {
@@ -21,6 +24,7 @@ namespace InSyncUnitTest.Controller
         private IProjectRepository _projectRepo;
         private IUserRepository _userRepo;
         private IMapper _mapper;
+        private ILogger<ProjectsController> _logger;
         private ProjectsController _controller;
         public static readonly string[] includes = new string[]
           {
@@ -32,7 +36,8 @@ namespace InSyncUnitTest.Controller
             _projectRepo = A.Fake<IProjectRepository>();
             _userRepo = A.Fake<IUserRepository>();
             _mapper = A.Fake<IMapper>();
-            _controller = new ProjectsController(_projectRepo, _userRepo, _mapper);
+            _logger = A.Fake<ILogger<ProjectsController>>();
+            _controller = new ProjectsController(_projectRepo, _userRepo, _mapper, _logger);
         }
 
 
@@ -41,7 +46,7 @@ namespace InSyncUnitTest.Controller
         public async Task GetProjects_WhenDependenciesAreNull_ShouldReturnsInternalServerError()
         {
             // Arrange
-            var controller = new ProjectsController(null, null, null);
+            var controller = new ProjectsController(null, null, null, _logger);
 
             // Act
             var result = await controller.GetProjects();
@@ -73,14 +78,32 @@ namespace InSyncUnitTest.Controller
 
         }
 
+        [Fact]
+        public async Task GetProjects_WhenOccurredException_ShouldReturnsInternalServerError()
+        {
+            // Arrange
+            var message = "An error occurred while retrieving projects.";
+            var response = $"Error retrieving projects: {message}";
+
+            A.CallTo(() => _projectRepo.GetAll(A<string[]>._)).Throws(new Exception(message));
+
+            // Act
+            var result = await _controller.GetProjects();
+
+            // Assert
+            var statusCodeResult = result as ObjectResult;
+            statusCodeResult.Should().NotBeNull();
+            statusCodeResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+            statusCodeResult.Value.Should().Be(response);
+        }
         #endregion
 
         #region GetAllProject
         [Fact]
         public async Task GetAllProject_WhenDependencyAreNull_ShouldReturnInternalServerError()
         {
-            var controller = new ProjectsController(null, null, null);
-            var result = await controller.GetAllProject();
+            var controller = new ProjectsController(null, null, null, _logger);
+            var result = await controller.GetAllProject(0, 2, "");
 
 
             var statusCodeResult = result as ObjectResult;
@@ -102,7 +125,7 @@ namespace InSyncUnitTest.Controller
             A.CallTo(() => _mapper.Map<IEnumerable<ViewProjectDto>>(Projects)).Returns(viewProjects);
 
             // Act
-            var result = await _controller.GetAllProject("", index, size);
+            var result = await _controller.GetAllProject(index, size, "");
 
             // Assert
             var okResult = result as OkObjectResult;
@@ -126,7 +149,7 @@ namespace InSyncUnitTest.Controller
             A.CallTo(() => _mapper.Map<IEnumerable<ViewProjectDto>>(Projects)).Returns(viewProjects);
 
             // Act
-            var result = await _controller.GetAllProject("", index, size);
+            var result = await _controller.GetAllProject(index, size, "");
 
             // Assert
             var okResult = result as OkObjectResult;
@@ -146,12 +169,12 @@ namespace InSyncUnitTest.Controller
             IEnumerable<ViewProjectDto> viewProjects = new List<ViewProjectDto> { new ViewProjectDto(), new ViewProjectDto() };
             int total;
             string[] includes = new string[] { };
-            A.CallTo(() => _projectRepo.GetMultiPaging(A<Expression<Func<Project, bool>>>._, out total, A<int>._, A<int>._, A<string[]>._))
+            A.CallTo(() => _projectRepo.GetMulti(A<Expression<Func<Project, bool>>>._, A<string[]>._))
                 .Returns(Projects);
             A.CallTo(() => _mapper.Map<IEnumerable<ViewProjectDto>>(Projects)).Returns(viewProjects);
 
             // Act
-            var result = await _controller.GetAllProject();
+            var result = await _controller.GetAllProject(null, null, "");
 
             // Assert
             var okResult = result as OkObjectResult;
@@ -161,7 +184,24 @@ namespace InSyncUnitTest.Controller
             returnedProjects.Should().NotBeNull();
             returnedProjects.data.Should().BeEquivalentTo(viewProjects);
         }
+        [Fact]
+        public async Task GetAllProject_WhenOccurredException_ShouldReturnsInternalServerError()
+        {
+            // Arrange
+            var message = "An error occurred while retrieving projects.";
+            var response = $"Error retrieving projects: {message}";
 
+            A.CallTo(() => _projectRepo.GetMulti(A<Expression<Func<Project, bool>>>._, A<string[]>._)).Throws(new Exception(message));
+
+            // Act
+            var result = await _controller.GetAllProject(null, null, "");
+
+            // Assert
+            var statusCodeResult = result as ObjectResult;
+            statusCodeResult.Should().NotBeNull();
+            statusCodeResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+            statusCodeResult.Value.Should().Be(response);
+        }
 
         #endregion
 
@@ -169,8 +209,8 @@ namespace InSyncUnitTest.Controller
         [Fact]
         public async Task GetAllProjectIsPublishOfUser_WhenDependencyAreNull_ShouldReturnInternalServerError()
         {
-            var controller = new ProjectsController(null, null, null);
-            var result = await controller.GetAllProjectIsPublishOfUser(Guid.NewGuid(), null);
+            var controller = new ProjectsController(null, null, null, _logger);
+            var result = await controller.GetAllProjectIsPublishOfUser(Guid.NewGuid(), null, null, null);
 
             var statusCodeResult = result as ObjectResult;
             statusCodeResult.Should().NotBeNull();
@@ -191,7 +231,7 @@ namespace InSyncUnitTest.Controller
             A.CallTo(() => _mapper.Map<IEnumerable<ViewProjectDto>>(Projects)).Returns(viewProjects);
 
             // Act
-            var result = await _controller.GetAllProjectIsPublishOfUser(Guid.NewGuid(), null, "", index, size);
+            var result = await _controller.GetAllProjectIsPublishOfUser(Guid.NewGuid(), index, size, true, "");
 
             // Assert
             var okResult = result as OkObjectResult;
@@ -215,7 +255,7 @@ namespace InSyncUnitTest.Controller
             A.CallTo(() => _mapper.Map<IEnumerable<ViewProjectDto>>(Projects)).Returns(viewProjects);
 
             // Act
-            var result = await _controller.GetAllProjectIsPublishOfUser(Guid.NewGuid(), null, "", index, size);
+            var result = await _controller.GetAllProjectIsPublishOfUser(Guid.NewGuid(), index, size, true, "");
 
             // Assert
             var okResult = result as OkObjectResult;
@@ -235,12 +275,12 @@ namespace InSyncUnitTest.Controller
             IEnumerable<ViewProjectDto> viewProjects = new List<ViewProjectDto> { new ViewProjectDto(), new ViewProjectDto() };
             int total;
             string[] includes = new string[] { };
-            A.CallTo(() => _projectRepo.GetMultiPaging(A<Expression<Func<Project, bool>>>._, out total, A<int>._, A<int>._, A<string[]>._))
+            A.CallTo(() => _projectRepo.GetMulti(A<Expression<Func<Project, bool>>>._, A<string[]>._))
                 .Returns(Projects);
             A.CallTo(() => _mapper.Map<IEnumerable<ViewProjectDto>>(Projects)).Returns(viewProjects);
 
             // Act
-            var result = await _controller.GetAllProjectIsPublishOfUser(Guid.NewGuid(), null);
+            var result = await _controller.GetAllProjectIsPublishOfUser(Guid.NewGuid(), null, null, true, "");
 
             // Assert
             var okResult = result as OkObjectResult;
@@ -254,12 +294,12 @@ namespace InSyncUnitTest.Controller
         public async Task GetAllProjectIsPublishOfUser_WithUserIdInValidFomat_ReturnBadRequest()
         {
             // Arrange
-            var controller = new ProjectsController(_projectRepo, _userRepo, _mapper);
+            var controller = new ProjectsController(_projectRepo, _userRepo, _mapper, _logger);
             var invalidGuid = "e4d34798-4c18-4ca4-9014-191492e3b90"; // GUID sai định dạng
             controller.ModelState.AddModelError("id", $"The value '{invalidGuid}' is not valid.");
 
             // Act
-            var result = await controller.GetAllProjectIsPublishOfUser(Guid.Empty, null);
+            var result = await controller.GetAllProjectIsPublishOfUser(Guid.Empty, 0, 2, true, "");
 
             // Assert
             var badRequestResult = result as BadRequestObjectResult;
@@ -272,14 +312,32 @@ namespace InSyncUnitTest.Controller
             errorResponse.Errors["id"].Should().Contain($"The value '{invalidGuid}' is not valid.");
         }
 
+        [Fact]
+        public async Task GetAllProjectIsPublishOfUser_WhenOccurredException_ShouldReturnsInternalServerError()
+        {
+            // Arrange
+           
+            var response = $"An error occurred while retrieving projects.";
+
+            A.CallTo(() => _projectRepo.GetMulti(A<Expression<Func<Project, bool>>>._, A<string[]>._)).Throws(new Exception(""));
+
+            // Act
+            var result = await _controller.GetAllProjectIsPublishOfUser(Guid.NewGuid(), null, null, true, "");
+
+            // Assert
+            var statusCodeResult = result as ObjectResult;
+            statusCodeResult.Should().NotBeNull();
+            statusCodeResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+            statusCodeResult.Value.Should().Be(response);
+        }
         #endregion
 
         #region GetAllProjectIsPublishByUserIdClerk
         [Fact]
         public async Task GetAllProjectIsPublishByUserIdClerk_WhenDependencyAreNull_ShouldReturnInternalServerError()
         {
-            var controller = new ProjectsController(null, null, null);
-            var result = await controller.GetAllProjectIsPublishByUserIdClerk(userIdClerk, null);
+            var controller = new ProjectsController(null, null, null, _logger);
+            var result = await controller.GetAllProjectIsPublishByUserIdClerk(userIdClerk, null, null, null, "");
 
             var statusCodeResult = result as ObjectResult;
             statusCodeResult.Should().NotBeNull();
@@ -300,7 +358,7 @@ namespace InSyncUnitTest.Controller
             A.CallTo(() => _mapper.Map<IEnumerable<ViewProjectDto>>(Projects)).Returns(viewProjects);
 
             // Act
-            var result = await _controller.GetAllProjectIsPublishByUserIdClerk(userIdClerk, null, "", index, size);
+            var result = await _controller.GetAllProjectIsPublishByUserIdClerk(userIdClerk, true, index, size, "");
 
             // Assert
             var okResult = result as OkObjectResult;
@@ -324,7 +382,7 @@ namespace InSyncUnitTest.Controller
             A.CallTo(() => _mapper.Map<IEnumerable<ViewProjectDto>>(Projects)).Returns(viewProjects);
 
             // Act
-            var result = await _controller.GetAllProjectIsPublishByUserIdClerk(userIdClerk, null, "", index, size);
+            var result = await _controller.GetAllProjectIsPublishByUserIdClerk(userIdClerk, true, index, size, "");
 
             // Assert
             var okResult = result as OkObjectResult;
@@ -344,12 +402,12 @@ namespace InSyncUnitTest.Controller
             IEnumerable<ViewProjectDto> viewProjects = new List<ViewProjectDto> { new ViewProjectDto(), new ViewProjectDto() };
             int total;
             string[] includes = new string[] { };
-            A.CallTo(() => _projectRepo.GetMultiPaging(A<Expression<Func<Project, bool>>>._, out total, A<int>._, A<int>._, A<string[]>._))
+            A.CallTo(() => _projectRepo.GetMulti(A<Expression<Func<Project, bool>>>._, A<string[]>._))
                 .Returns(Projects);
             A.CallTo(() => _mapper.Map<IEnumerable<ViewProjectDto>>(Projects)).Returns(viewProjects);
 
             // Act
-            var result = await _controller.GetAllProjectIsPublishByUserIdClerk(userIdClerk, null);
+            var result = await _controller.GetAllProjectIsPublishByUserIdClerk(userIdClerk, true, null, null, null);
 
             // Assert
             var okResult = result as OkObjectResult;
@@ -359,7 +417,24 @@ namespace InSyncUnitTest.Controller
             returnedProjects.Should().NotBeNull();
             returnedProjects.data.Should().BeEquivalentTo(viewProjects);
         }
+        [Fact]
+        public async Task GetAllProjectOfUserClerk_WhenOccurredException_ShouldReturnsInternalServerError()
+        {
+            // Arrange
+          
+            var response = $"An error occurred while retrieving projects.";
 
+            A.CallTo(() => _projectRepo.GetMulti(A<Expression<Func<Project, bool>>>._, A<string[]>._)).Throws(new Exception(""));
+
+            // Act
+            var result = await _controller.GetAllProjectIsPublishByUserIdClerk(userIdClerk,true, null, null,"");
+
+            // Assert
+            var statusCodeResult = result as ObjectResult;
+            statusCodeResult.Should().NotBeNull();
+            statusCodeResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+            statusCodeResult.Value.Should().Be(response);
+        }
 
         #endregion
 
@@ -368,7 +443,7 @@ namespace InSyncUnitTest.Controller
         public async Task GetProjectById_WithDependencyNull_ShouldReturnInternalServer()
         {
             //Arrange
-            var controller = new ProjectsController(null, null, null);
+            var controller = new ProjectsController(null, null, null, _logger);
             //Act
             var result = await controller.GetProjectById(Guid.NewGuid());
             //Assert
@@ -391,14 +466,14 @@ namespace InSyncUnitTest.Controller
             var notFoundResult = result as NotFoundObjectResult;
             notFoundResult.Should().NotBeNull();
             notFoundResult.StatusCode.Should().Be(StatusCodes.Status404NotFound);
-            notFoundResult.Value.Should().Be($"No project has an ID : {ProjectId}");
+            notFoundResult.Value.Should().Be($"No project has an ID: {ProjectId}");
         }
 
         [Fact]
         public async Task GetProjectById_WithIdInValidFomat_ReturnBadRequest()
         {
             // Arrange
-            var controller = new ProjectsController(_projectRepo, _userRepo, _mapper);
+            var controller = new ProjectsController(_projectRepo, _userRepo, _mapper, _logger);
             var invalidGuid = "e4d34798-4c18-4ca4-9014-191492e3b90"; // GUID sai định dạng
             controller.ModelState.AddModelError("id", $"The value '{invalidGuid}' is not valid.");
 
@@ -437,6 +512,24 @@ namespace InSyncUnitTest.Controller
             returnedCR.Should().NotBeNull();
             returnedCR.Should().BeEquivalentTo(viewProject);
         }
+        [Fact]
+        public async Task GetProjectById_WhenOccurredException_ShouldReturnsInternalServerError()
+        {
+            // Arrange
+            
+            var response = $"An error occurred while retrieving the project.";
+
+            A.CallTo(() => _projectRepo.GetSingleByCondition(A<Expression<Func<Project, bool>>>._, A<string[]>._)).Throws(new Exception());
+
+            // Act
+            var result = await _controller.GetProjectById(Guid.NewGuid());
+
+            // Assert
+            var statusCodeResult = result as ObjectResult;
+            statusCodeResult.Should().NotBeNull();
+            statusCodeResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+            statusCodeResult.Value.Should().Be(response);
+        }
 
         #endregion
 
@@ -445,7 +538,7 @@ namespace InSyncUnitTest.Controller
         public async Task AddProject_WhenDependenciesAreNull_ShouldReturnsInternalServerError()
         {
             // Arrange
-            var controller = new ProjectsController(null, null, null);
+            var controller = new ProjectsController(null, null, null, _logger);
             var newProject = new AddProjectDto();
 
             // Act
@@ -462,7 +555,7 @@ namespace InSyncUnitTest.Controller
         public async Task AddProject_WhenProjectPropertyProjectNameNull_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new ProjectsController(_projectRepo, _userRepo, _mapper);
+            var controller = new ProjectsController(_projectRepo, _userRepo, _mapper, _logger);
             var newProject = new AddProjectDto { };
             string key = "ProjectName";
             string message = $"The {key} field is required.";
@@ -485,7 +578,7 @@ namespace InSyncUnitTest.Controller
         public async Task AddProject_WhenProjectPropertyNameLengthLonger255_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new ProjectsController(_projectRepo, _userRepo, _mapper);
+            var controller = new ProjectsController(_projectRepo, _userRepo, _mapper, _logger);
             var newProject = new AddProjectDto { };
             string key = "ProjectName";
             string messageError = $"The field {key} must be a string with a maximum length of 255.";
@@ -509,7 +602,7 @@ namespace InSyncUnitTest.Controller
         public async Task AddProject_WhenProjectPropertyUseridNull_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new ProjectsController(_projectRepo, _userRepo, _mapper);
+            var controller = new ProjectsController(_projectRepo, _userRepo, _mapper, _logger);
             var newProject = new AddProjectDto { };
             string key = "UserId";
             string message = $"The {key} field is required.";
@@ -533,7 +626,7 @@ namespace InSyncUnitTest.Controller
         public async Task AddProject_WithUserIdInValidFomat_ReturnBadRequest()
         {
             // Arrange
-            var controller = new ProjectsController(_projectRepo, _userRepo, _mapper);
+            var controller = new ProjectsController(_projectRepo, _userRepo, _mapper, _logger);
             var invalidGuid = "e4d34798-4c18-4ca4-9014-191492e3b90"; // GUID sai định dạng
             controller.ModelState.AddModelError("id", $"The value '{invalidGuid}' is not valid.");
 
@@ -568,7 +661,7 @@ namespace InSyncUnitTest.Controller
             var statusCodeResult = result as BadRequestObjectResult;
             statusCodeResult.Should().NotBeNull();
             statusCodeResult.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
-            statusCodeResult.Value.Should().Be("Information of user not correct . please check again! " + newProject.UserId.ToString());
+            statusCodeResult.Value.Should().Be("Information of user not correct. Please check again! " + newProject.UserId.ToString());
         }
 
         [Fact]
@@ -646,7 +739,7 @@ namespace InSyncUnitTest.Controller
         public async Task AddProjectUserClerk_WhenDependenciesAreNull_ShouldReturnsInternalServerError()
         {
             // Arrange
-            var controller = new ProjectsController(null, null, null);
+            var controller = new ProjectsController(null, null, null, _logger);
             var newProject = new AddProjectClerkDto();
 
             // Act
@@ -663,7 +756,7 @@ namespace InSyncUnitTest.Controller
         public async Task AddProjectUserClerk_WhenProjectPropertyProjectNameNull_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new ProjectsController(_projectRepo, _userRepo, _mapper);
+            var controller = new ProjectsController(_projectRepo, _userRepo, _mapper, _logger);
             var newProject = new AddProjectClerkDto { };
             string key = "ProjectName";
             string message = $"The {key} field is required.";
@@ -686,7 +779,7 @@ namespace InSyncUnitTest.Controller
         public async Task AddProjectUserClerk_WhenProjectPropertyNameLengthLonger255_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new ProjectsController(_projectRepo, _userRepo, _mapper);
+            var controller = new ProjectsController(_projectRepo, _userRepo, _mapper, _logger);
             var newProject = new AddProjectClerkDto { };
             string key = "ProjectName";
             string messageError = $"The field {key} must be a string with a maximum length of 255.";
@@ -710,7 +803,7 @@ namespace InSyncUnitTest.Controller
         public async Task AddProjectUserClerk_WhenProjectPropertyUseridNull_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new ProjectsController(_projectRepo, _userRepo, _mapper);
+            var controller = new ProjectsController(_projectRepo, _userRepo, _mapper, _logger);
             var newProject = new AddProjectClerkDto { };
             string key = "UserIdClerk";
             string message = $"The {key} field is required.";
@@ -747,14 +840,14 @@ namespace InSyncUnitTest.Controller
             var statusCodeResult = result as BadRequestObjectResult;
             statusCodeResult.Should().NotBeNull();
             statusCodeResult.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
-            statusCodeResult.Value.Should().Be("Information of user not correct . please check again! " + newProject.UserIdClerk.ToString());
+            statusCodeResult.Value.Should().Be("Information of user not correct. Please check again! " + newProject.UserIdClerk.ToString());
         }
 
         [Fact]
         public async Task AddProjectUserClerk_WhenAddFails_ShouldReturnsInternalServerError()
         {
             // Arrange
-            var newProject = new AddProjectClerkDto { UserIdClerk=""  };
+            var newProject = new AddProjectClerkDto { UserIdClerk = "" };
             var Project = new Project { };
             var userExist = new User();
             A.CallTo(() => _userRepo.GetSingleByCondition(A<Expression<Func<User, bool>>>._, A<string[]>._)).Returns(Task.FromResult<User>(userExist));
@@ -826,7 +919,7 @@ namespace InSyncUnitTest.Controller
         public async Task UpdatProjectProject_WhenDependenciesAreNull_ShouldReturnsInternalServerError()
         {
             // Arrange
-            var controller = new ProjectsController(null, null, null);
+            var controller = new ProjectsController(null, null, null, _logger);
             var UpdateProject = new UpdateProjectDto();
 
             // Act
@@ -842,7 +935,7 @@ namespace InSyncUnitTest.Controller
         public async Task UpdateProject_WhenProjectPropertyIdInvalidFomat_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new ProjectsController(_projectRepo,_userRepo, _mapper);
+            var controller = new ProjectsController(_projectRepo, _userRepo, _mapper, _logger);
             var UpdateProject = new UpdateProjectDto();
             controller.ModelState.AddModelError("id", "The value 'e4d34798-4c18-4ca4-9014-191492e3b90' is not valid.");
 
@@ -863,8 +956,8 @@ namespace InSyncUnitTest.Controller
         public async Task UpdateProject_WhenProjectPropertyProjectNameNull_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new ProjectsController(_projectRepo, _userRepo, _mapper);
-            var updateProject = new UpdateProjectDto {Id= Guid.NewGuid() };
+            var controller = new ProjectsController(_projectRepo, _userRepo, _mapper, _logger);
+            var updateProject = new UpdateProjectDto { Id = Guid.NewGuid() };
             string key = "ProjectName";
             string message = $"The {key} field is required.";
             controller.ModelState.AddModelError(key, message);
@@ -886,14 +979,14 @@ namespace InSyncUnitTest.Controller
         public async Task UpdateProject_WhenProjectPropertyNameLengthLonger255_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new ProjectsController(_projectRepo, _userRepo, _mapper);
-            var updateProject = new UpdateProjectDto {Id= Guid.NewGuid() };
+            var controller = new ProjectsController(_projectRepo, _userRepo, _mapper, _logger);
+            var updateProject = new UpdateProjectDto { Id = Guid.NewGuid() };
             string key = "ProjectName";
             string messageError = $"The field {key} must be a string with a maximum length of 255.";
             controller.ModelState.AddModelError(key, messageError);
 
             // Act
-            var result = await controller.UpdateProject( updateProject.Id,updateProject);
+            var result = await controller.UpdateProject(updateProject.Id, updateProject);
 
             // Assert
             var badRequestResult = result as BadRequestObjectResult;
@@ -992,7 +1085,7 @@ namespace InSyncUnitTest.Controller
         public async Task DeleteProject_WhenDependenciesAreNull_ShouldReturnsInternalServerError()
         {
             // Arrange
-            var controller = new ProjectsController(null, null, null);
+            var controller = new ProjectsController(null, null, null, _logger);
             var id = Guid.NewGuid();
 
             // Act
@@ -1019,7 +1112,7 @@ namespace InSyncUnitTest.Controller
             var notFoundResult = result as NotFoundObjectResult;
             notFoundResult.Should().NotBeNull();
             notFoundResult.StatusCode.Should().Be(StatusCodes.Status404NotFound);
-            notFoundResult.Value.Should().Be($"Dont exist project with id {id.ToString()} to delete");
+            notFoundResult.Value.Should().Be($"Don't exist project with ID {id} to delete");
 
         }
 
@@ -1065,7 +1158,7 @@ namespace InSyncUnitTest.Controller
         public async Task DeleteProject_WhenProjectPropertyIdInvalidFomat_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new ProjectsController(_projectRepo,_userRepo, _mapper);
+            var controller = new ProjectsController(_projectRepo, _userRepo, _mapper, _logger);
             string key = "id";
             string message = "The value 'e4d34798-4c18-4ca4-9014-191492e3b90' is not valid.";
             controller.ModelState.AddModelError(key, message);

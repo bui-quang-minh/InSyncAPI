@@ -49,13 +49,35 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         public async Task<IActionResult> GetUserSubscriptions()
         {
+            var stopwatch = Stopwatch.StartNew();
             if (_userRepo == null || _userSubRepo == null || _subRepo == null || _mapper == null)
             {
+                _logger.LogError(TAG + "User repository or UserSubscription repository or SubsciptionPlan repository or mapper is not initialized.");
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     value: "Application service has not been created");
             }
-            var response = _userSubRepo.GetAll().AsQueryable();
-            return Ok(response);
+
+            try
+            {
+                _logger.LogInformation(TAG + "Fetching user subsciptions from the database.");
+
+                var response = _userSubRepo.GetAll().AsQueryable();
+
+                stopwatch.Stop();
+                _logger.LogInformation(TAG + "Successfully retrieved {UserSubsciptionCount} user subscriptions from the database in {ElapsedMilliseconds}ms.",
+                    response.Count(), stopwatch.ElapsedMilliseconds);
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                stopwatch.Stop();
+                _logger.LogError(ex, TAG + "An error occurred while retrieving user subscriptions. Total time taken: {ElapsedMilliseconds}ms.",
+                    stopwatch.ElapsedMilliseconds);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    value: $"Error retrieving user subscriptions: {ex.Message}");
+            }
+            
         }
         [HttpGet("pagination")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewUserSubsciptionDto>>))]
@@ -116,7 +138,7 @@ namespace InSyncAPI.Controllers
         [HttpGet("user/{userId}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewUserSubsciptionDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
-        public async Task<IActionResult> GetAllUserSubsciptionOfUser(Guid userId, int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
+        public async Task<IActionResult> GetAllUserSubsciptionOfUser(Guid userId, int? index , int? size)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received request to get all subscriptions for user {UserId} at {RequestTime}", userId, DateTime.UtcNow);
@@ -171,14 +193,14 @@ namespace InSyncAPI.Controllers
             {
                 stopwatch.Stop();
                 _logger.LogError(ex, "Error retrieving subscriptions for user {UserId} in {ElapsedMilliseconds}ms.", userId, stopwatch.ElapsedMilliseconds);
-                return StatusCode(StatusCodes.Status500InternalServerError, $"Error retrieving subscriptions: {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError, $"Error retrieving user subscriptions: {ex.Message}");
             }
         }
 
         [HttpGet("user/{userIdClerk}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewUserSubsciptionDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
-        public async Task<IActionResult> GetAllUserSubsciptionOfUserClerk(string userIdClerk, int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
+        public async Task<IActionResult> GetAllUserSubsciptionOfUserClerk(string userIdClerk, int? index , int? size )
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received request to get all subscriptions for clerk {UserIdClerk} at {RequestTime}", userIdClerk, DateTime.UtcNow);
@@ -233,7 +255,7 @@ namespace InSyncAPI.Controllers
             {
                 stopwatch.Stop();
                 _logger.LogError(ex, "Error retrieving subscriptions for clerk {UserIdClerk} in {ElapsedMilliseconds}ms.", userIdClerk, stopwatch.ElapsedMilliseconds);
-                return StatusCode(StatusCodes.Status500InternalServerError, $"Error retrieving subscriptions: {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError, $"Error retrieving user subscriptions: {ex.Message}");
             }
         }
 

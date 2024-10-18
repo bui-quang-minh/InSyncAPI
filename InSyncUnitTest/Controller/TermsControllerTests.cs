@@ -1,11 +1,13 @@
 ﻿using AutoMapper;
 using BusinessObjects.Models;
+using Castle.Core.Logging;
 using FakeItEasy;
 using FluentAssertions;
 using InSyncAPI.Controllers;
 using InSyncAPI.Dtos;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Repositorys;
 using System.Linq.Expressions;
 namespace InSyncUnitTest.Controller
@@ -14,13 +16,16 @@ namespace InSyncUnitTest.Controller
     {
         private readonly ITermRepository _termRepo;
         private readonly IMapper _mapper;
+        private readonly ILogger<TermsController> _logger;
+
         private readonly TermsController _controller;
 
         public TermsControllerTests()
         {
             _termRepo = A.Fake<ITermRepository>();
             _mapper = A.Fake<IMapper>();
-            _controller = new TermsController(_termRepo, _mapper);
+            _logger = A.Fake<ILogger<TermsController>>();
+            _controller = new TermsController(_termRepo, _mapper, _logger);
         }
 
 
@@ -29,7 +34,7 @@ namespace InSyncUnitTest.Controller
         public async Task GetTerms_WhenDependenciesAreNull_ShouldReturnsInternalServerError()
         {
             // Arrange
-            var controller = new TermsController(null, null);
+            var controller = new TermsController(null, null, _logger);
 
             // Act
             var result = await controller.GetTerms();
@@ -64,14 +69,30 @@ namespace InSyncUnitTest.Controller
             returnedTerms.Should().NotBeNull();
             returnedTerms.Should().HaveCount(2);
         }
+        [Fact]
+        public async Task GetTerms_WhenOccurredException_ShouldReturnsInternalServerError()
+        {
+            // Arrange
+            var message = "An error occurred while retrieving terms.";
+            A.CallTo(() => _termRepo.GetAll(A<string[]>._)).Throws(new Exception(message));
+
+            // Act
+            var result = await _controller.GetTerms();
+
+            // Assert
+            var statusCodeResult = result as ObjectResult;
+            statusCodeResult.Should().NotBeNull();
+            statusCodeResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+            statusCodeResult.Value.Should().Be(message);
+        }
         #endregion
 
         #region GetAllTerms
         [Fact]
         public async Task GetAllTerms_WhenDependencyAreNull_ShouldReturnInternalServerError()
         {
-            var controller = new TermsController(null, null);
-            var result = await controller.GetAllTerms();
+            var controller = new TermsController(null, null, _logger);
+            var result = await controller.GetAllTerms(0,2);
 
 
             var statusCodeResult = result as ObjectResult;
@@ -97,7 +118,7 @@ namespace InSyncUnitTest.Controller
             A.CallTo(() => _mapper.Map<IEnumerable<ViewTermDto>>(terms)).Returns(viewTerms);
 
             // Act
-            var result = await _controller.GetAllTerms("",index, size);
+            var result = await _controller.GetAllTerms(index, size);
 
             // Assert
             var okResult = result as OkObjectResult;
@@ -126,7 +147,7 @@ namespace InSyncUnitTest.Controller
             A.CallTo(() => _mapper.Map<IEnumerable<ViewTermDto>>(terms)).Returns(viewTerms);
 
             // Act
-            var result = await _controller.GetAllTerms("",index, size);
+            var result = await _controller.GetAllTerms(index, size);
 
             // Assert
             var okResult = result as OkObjectResult;
@@ -149,12 +170,12 @@ namespace InSyncUnitTest.Controller
             IEnumerable<ViewTermDto> viewTerms = new List<ViewTermDto> { termView1, termView2 };
             int total;
             string[] includes = new string[] { };
-            A.CallTo(() => _termRepo.GetMultiPaging(A<Expression<Func<Term, bool>>>._, out total, A<int>._, A<int>._, A<string[]>._))
+            A.CallTo(() => _termRepo.GetMulti(A<Expression<Func<Term, bool>>>._,  A<string[]>._))
                 .Returns(terms);
             A.CallTo(() => _mapper.Map<IEnumerable<ViewTermDto>>(terms)).Returns(viewTerms);
 
             // Act
-            var result = await _controller.GetAllTerms();
+            var result = await _controller.GetAllTerms(null, null);
 
             // Assert
             var okResult = result as OkObjectResult;
@@ -165,7 +186,22 @@ namespace InSyncUnitTest.Controller
             returnedTerms.data.Should().BeEquivalentTo(viewTerms);
             
         }
+        [Fact]
+        public async Task GetAllTerms_WhenOccurredException_ShouldReturnsInternalServerError()
+        {
+            // Arrange
+            var message = "An error occurred while retrieving terms.";
+            A.CallTo(() => _termRepo.GetMulti(A<Expression<Func<Term, bool>>>._, A<string[]>._)).Throws(new Exception(message));
 
+            // Act
+            var result = await _controller.GetAllTerms(null, null);
+
+            // Assert
+            var statusCodeResult = result as ObjectResult;
+            statusCodeResult.Should().NotBeNull();
+            statusCodeResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+            statusCodeResult.Value.Should().Be(message);
+        }
 
         #endregion
 
@@ -174,7 +210,7 @@ namespace InSyncUnitTest.Controller
         public async Task GetTermById_WithDependencyNull_ShouldReturnInternalServer()
         {
             //Arrange
-            var controller = new TermsController(null, null);
+            var controller = new TermsController(null, null, _logger);
             //Act
             var result = await controller.GetTermById(Guid.NewGuid());
             //Assert
@@ -204,7 +240,7 @@ namespace InSyncUnitTest.Controller
         public async Task GetTermById_WithIdInValidFomat_ReturnBadRequest()
         {
             // Arrange
-            var controller = new TermsController(_termRepo, _mapper);
+            var controller = new TermsController(_termRepo, _mapper, _logger);
             var invalidGuid = "e4d34798-4c18-4ca4-9014-191492e3b90"; // GUID sai định dạng
             controller.ModelState.AddModelError("id", $"The value '{invalidGuid}' is not valid.");
 
@@ -244,6 +280,22 @@ namespace InSyncUnitTest.Controller
             returnedTerm.Should().BeEquivalentTo(viewTerm);
         }
 
+        [Fact]
+        public async Task GetTermById_WhenOccurredException_ShouldReturnsInternalServerError()
+        {
+            // Arrange
+            var message = "An error occurred while retrieving the term.";
+            A.CallTo(() => _termRepo.GetSingleByCondition(A<Expression<Func<Term, bool>>>._, A<string[]>._)).Throws(new Exception(message));
+
+            // Act
+            var result = await _controller.GetTermById(Guid.NewGuid());
+
+            // Assert
+            var statusCodeResult = result as ObjectResult;
+            statusCodeResult.Should().NotBeNull();
+            statusCodeResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+            statusCodeResult.Value.Should().Be(message);
+        }
         #endregion
 
         #region AddTerm
@@ -251,7 +303,7 @@ namespace InSyncUnitTest.Controller
         public async Task AddTerm_WhenDependenciesAreNull_ShouldReturnsInternalServerError()
         {
             // Arrange
-            var controller = new TermsController(null, null);
+            var controller = new TermsController(null, null, _logger);
             var newTerm = new AddTermsDto();
 
             // Act
@@ -268,7 +320,7 @@ namespace InSyncUnitTest.Controller
         public async Task AddTerm_WhenTermPropertyAnswerNull_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new TermsController(_termRepo, _mapper);
+            var controller = new TermsController(_termRepo, _mapper, _logger);
             var newTerm = new AddTermsDto { Question = "This is question." };
             controller.ModelState.AddModelError("Answer", "The Answer field is required.");
 
@@ -289,7 +341,7 @@ namespace InSyncUnitTest.Controller
         public async Task AddTerm_WhenTermPropertyQuestionNull_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new TermsController(_termRepo, _mapper);
+            var controller = new TermsController(_termRepo, _mapper, _logger);
             var newTerm = new AddTermsDto { Answer = "This is Answer" };
             controller.ModelState.AddModelError("Question", "The Question field is required.");
 
@@ -347,7 +399,7 @@ namespace InSyncUnitTest.Controller
             var statusCodeResult = result as ObjectResult;
             statusCodeResult.Should().NotBeNull();
             statusCodeResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
-            statusCodeResult.Value.Should().Be("An error occurred while adding Term into Database " + messageException);
+            statusCodeResult.Value.Should().Be("An error occurred while adding Term into Database: " + messageException);
         }
         [Fact]
         public async Task AddTerm_WhenAddSucceeds_ShouldReturnsOkResult()
@@ -382,7 +434,7 @@ namespace InSyncUnitTest.Controller
         public async Task UpdateTerm_WhenDependenciesAreNull_ShouldReturnsInternalServerError()
         {
             // Arrange
-            var controller = new TermsController(null, null);
+            var controller = new TermsController(null, null, _logger);
             var newTerm = new UpdateTermsDto();
 
             // Act
@@ -398,7 +450,7 @@ namespace InSyncUnitTest.Controller
         public async Task UpdateTerm_WhenTermPropertyIdInvalidFomat_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new TermsController(_termRepo, _mapper);
+            var controller = new TermsController(_termRepo, _mapper, _logger);
             var updateTerm = new UpdateTermsDto { Id = Guid.NewGuid(), Question = "This is question." };
             controller.ModelState.AddModelError("id", "The value 'e4d34798-4c18-4ca4-9014-191492e3b90' is not valid.");
 
@@ -419,7 +471,7 @@ namespace InSyncUnitTest.Controller
         public async Task UpdateTerm_WhenTermPropertyAnswerNull_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new TermsController(_termRepo, _mapper);
+            var controller = new TermsController(_termRepo, _mapper, _logger);
             var updateTerm = new UpdateTermsDto { Id = Guid.NewGuid(), Question = "This is question." };
             controller.ModelState.AddModelError("Answer", "The Answer field is required.");
 
@@ -440,7 +492,7 @@ namespace InSyncUnitTest.Controller
         public async Task UpdateTerm_WhenTermPropertyQuestionNull_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new TermsController(_termRepo, _mapper);
+            var controller = new TermsController(_termRepo, _mapper, _logger);
             var updateTerms = new UpdateTermsDto { Id = Guid.NewGuid(), Answer = "This is Answer" };
             controller.ModelState.AddModelError("Question", "The Question field is required.");
 
@@ -539,7 +591,7 @@ namespace InSyncUnitTest.Controller
         public async Task DeleteTerm_WhenDependenciesAreNull_ShouldReturnsInternalServerError()
         {
             // Arrange
-            var controller = new TermsController(null, null);
+            var controller = new TermsController(null, null, _logger);
             var id = Guid.NewGuid();
 
             // Act
@@ -609,13 +661,13 @@ namespace InSyncUnitTest.Controller
             var statusCodeResult = result as ObjectResult;
             statusCodeResult.Should().NotBeNull();
             statusCodeResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
-            statusCodeResult.Value.Should().Be("Error delete term: Delete failed");
+            statusCodeResult.Value.Should().Be("Error deleting term: Delete failed");
         }
         [Fact]
         public async Task DeleteTermTerm_WhenTermPropertyIdInvalidFomat_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new TermsController(_termRepo, _mapper);
+            var controller = new TermsController(_termRepo, _mapper, _logger);
             controller.ModelState.AddModelError("id", "The value 'e4d34798-4c18-4ca4-9014-191492e3b90' is not valid.");
 
             // Act

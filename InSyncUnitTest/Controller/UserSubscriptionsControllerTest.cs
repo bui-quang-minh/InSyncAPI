@@ -1,11 +1,13 @@
 ﻿using AutoMapper;
 using BusinessObjects.Models;
+using Castle.Core.Logging;
 using FakeItEasy;
 using FluentAssertions;
 using InSyncAPI.Controllers;
 using InSyncAPI.Dtos;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Repositorys;
 using System;
 using System.Collections.Generic;
@@ -21,6 +23,7 @@ namespace InSyncUnitTest.Controller
         private IUserSubscriptionRepository _userSubRepo;
         private IUserRepository _userRepo;
         private ISubscriptionPlanRepository _subRepo;
+        private ILogger<UserSubscriptionsController> _logger;
         private IMapper _mapper;
         private UserSubscriptionsController _controller;
         public UserSubscriptionsControllerTest()
@@ -29,7 +32,8 @@ namespace InSyncUnitTest.Controller
             _userRepo = A.Fake<IUserRepository>();
             _subRepo = A.Fake<ISubscriptionPlanRepository>();
             _mapper = A.Fake<IMapper>();
-            _controller = new UserSubscriptionsController(_userSubRepo, _userRepo, _subRepo, _mapper);
+            _logger = A.Fake<ILogger<UserSubscriptionsController>>();
+            _controller = new UserSubscriptionsController(_userSubRepo, _userRepo, _subRepo, _mapper, _logger);
         }
 
         #region GetUserSubscriptions
@@ -37,7 +41,7 @@ namespace InSyncUnitTest.Controller
         public async Task GetUserSubscriptions_WhenDependenciesAreNull_ShouldReturnsInternalServerError()
         {
             // Arrange
-            var controller = new UserSubscriptionsController(null, null, null, null);
+            var controller = new UserSubscriptionsController(null, null, null, null, _logger);
 
             // Act
             var result = await controller.GetUserSubscriptions();
@@ -68,6 +72,23 @@ namespace InSyncUnitTest.Controller
             response.Should().BeEquivalentTo(userSubscriptions);
             response.Should().HaveCount(2);
         }
+        [Fact]
+        public async Task GetUserSubscriptions_WhenOccurredException_ShouldReturnsInternalServerError()
+        {
+            // Arrange
+            var message = "An error occurred while retrieving user subscriptions.";
+            var response = $"Error retrieving user subscriptions: {message}";
+            A.CallTo(() => _userSubRepo.GetAll( A<string[]>._)).Throws(new Exception(message));
+
+            // Act
+            var result = await _controller.GetUserSubscriptions();
+
+            // Assert
+            var statusCodeResult = result as ObjectResult;
+            statusCodeResult.Should().NotBeNull();
+            statusCodeResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+            statusCodeResult.Value.Should().Be(response);
+        }
 
         #endregion
 
@@ -75,8 +96,8 @@ namespace InSyncUnitTest.Controller
         [Fact]
         public async Task GetAllUserSubscription_WhenDependencyAreNull_ShouldReturnInternalServerError()
         {
-            var controller = new UserSubscriptionsController(null, null, null, null);
-            var result = await controller.GetAllUserSubscription();
+            var controller = new UserSubscriptionsController(null, null, null, null, _logger);
+            var result = await controller.GetAllUserSubscription(0, 2);
 
 
             var statusCodeResult = result as ObjectResult;
@@ -142,12 +163,12 @@ namespace InSyncUnitTest.Controller
             IEnumerable<ViewUserSubsciptionDto> viewUserSubscriptions = new List<ViewUserSubsciptionDto> { new ViewUserSubsciptionDto(), new ViewUserSubsciptionDto() };
             int total;
             string[] includes = new string[] { };
-            A.CallTo(() => _userSubRepo.GetMultiPaging(A<Expression<Func<UserSubscription, bool>>>._, out total, A<int>._, A<int>._, A<string[]>._))
+            A.CallTo(() => _userSubRepo.GetMulti(A<Expression<Func<UserSubscription, bool>>>._, A<string[]>._))
                 .Returns(UserSubscriptions);
             A.CallTo(() => _mapper.Map<IEnumerable<ViewUserSubsciptionDto>>(UserSubscriptions)).Returns(viewUserSubscriptions);
 
             // Act
-            var result = await _controller.GetAllUserSubscription();
+            var result = await _controller.GetAllUserSubscription(null, null);
 
             // Assert
             var okResult = result as OkObjectResult;
@@ -157,14 +178,31 @@ namespace InSyncUnitTest.Controller
             returnedUserSubscriptions.Should().NotBeNull();
             returnedUserSubscriptions.data.Should().BeEquivalentTo(viewUserSubscriptions);
         }
+        [Fact]
+        public async Task GetAllUserSubscription_WhenOccurredException_ShouldReturnsInternalServerError()
+        {
+            // Arrange
+            var message = "An error occurred while retrieving user subscriptions.";
+            var response = $"Error retrieving user subscriptions: {message}";
+            A.CallTo(() => _userSubRepo.GetMulti(A<Expression<Func<UserSubscription, bool>>>._, A<string[]>._)).Throws(new Exception(message));
+
+            // Act
+            var result = await _controller.GetAllUserSubscription(null, null);
+
+            // Assert
+            var statusCodeResult = result as ObjectResult;
+            statusCodeResult.Should().NotBeNull();
+            statusCodeResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+            statusCodeResult.Value.Should().Be(response);
+        }
         #endregion
 
         #region GetAllUserSubsciptionOfUser
         [Fact]
         public async Task GetAllUserSubsciptionOfUser_WhenDependencyAreNull_ShouldReturnInternalServerError()
         {
-            var controller = new UserSubscriptionsController(null, null, null, null);
-            var result = await controller.GetAllUserSubsciptionOfUser(Guid.NewGuid());
+            var controller = new UserSubscriptionsController(null, null, null, null, _logger);
+            var result = await controller.GetAllUserSubsciptionOfUser(Guid.NewGuid(), null, null);
 
 
             var statusCodeResult = result as ObjectResult;
@@ -229,12 +267,12 @@ namespace InSyncUnitTest.Controller
             IEnumerable<ViewUserSubsciptionDto> viewUserSubscriptions = new List<ViewUserSubsciptionDto> { new ViewUserSubsciptionDto(), new ViewUserSubsciptionDto() };
             int total;
             string[] includes = new string[] { };
-            A.CallTo(() => _userSubRepo.GetMultiPaging(A<Expression<Func<UserSubscription, bool>>>._, out total, A<int>._, A<int>._, A<string[]>._))
+            A.CallTo(() => _userSubRepo.GetMulti(A<Expression<Func<UserSubscription, bool>>>._,  A<string[]>._))
                 .Returns(UserSubscriptions);
             A.CallTo(() => _mapper.Map<IEnumerable<ViewUserSubsciptionDto>>(UserSubscriptions)).Returns(viewUserSubscriptions);
 
             // Act
-            var result = await _controller.GetAllUserSubsciptionOfUser(Guid.NewGuid());
+            var result = await _controller.GetAllUserSubsciptionOfUser(Guid.NewGuid(), null, null);
 
             // Assert
             var okResult = result as OkObjectResult;
@@ -248,14 +286,14 @@ namespace InSyncUnitTest.Controller
         public async Task GetAllUserSubsciptionOfUser_WithIdInValidFomat_ReturnBadRequest()
         {
             // Arrange
-            var controller = new UserSubscriptionsController(_userSubRepo, _userRepo, _subRepo, _mapper);
+            var controller = new UserSubscriptionsController(_userSubRepo, _userRepo, _subRepo, _mapper, _logger);
             var invalidGuid = "e4d34798-4c18-4ca4-9014-191492e3b90"; // GUID sai định dạng
             string key = "id";
             string messageError = $"The value '{invalidGuid}' is not valid.";
             controller.ModelState.AddModelError(key, messageError);
 
             // Act
-            var result = await controller.GetAllUserSubsciptionOfUser(Guid.Empty);
+            var result = await controller.GetAllUserSubsciptionOfUser(Guid.Empty, null,null);
 
             // Assert
             var badRequestResult = result as BadRequestObjectResult;
@@ -267,15 +305,32 @@ namespace InSyncUnitTest.Controller
             errorResponse.Errors.Should().ContainKey(key);
             errorResponse.Errors[key].Should().Contain(messageError);
         }
+        [Fact]
+        public async Task GetAllUserSubscriptionsOfUser_WhenOccurredException_ShouldReturnsInternalServerError()
+        {
+            // Arrange
+            var message = "An error occurred while retrieving user subscriptions.";
+            var response = $"Error retrieving user subscriptions: {message}";
+            A.CallTo(() => _userSubRepo.GetMulti(A<Expression<Func<UserSubscription, bool>>>._, A<string[]>._)).Throws(new Exception(message));
+
+            // Act
+            var result = await _controller.GetAllUserSubsciptionOfUser(Guid.NewGuid(), null, null);
+
+            // Assert
+            var statusCodeResult = result as ObjectResult;
+            statusCodeResult.Should().NotBeNull();
+            statusCodeResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+            statusCodeResult.Value.Should().Be(response);
+        }
         #endregion
 
         #region GetAllUserSubsciptionOfUserClerk
         [Fact]
         public async Task GetAllUserSubsciptionOfUserClerk_WhenDependencyAreNull_ShouldReturnInternalServerError()
         {
-            var controller = new UserSubscriptionsController(null, null, null, null);
+            var controller = new UserSubscriptionsController(null, null, null, null, _logger);
             string userIdClerk = "user_id_clerk";
-            var result = await controller.GetAllUserSubsciptionOfUserClerk(userIdClerk);
+            var result = await controller.GetAllUserSubsciptionOfUserClerk(userIdClerk, null, null);
 
 
             var statusCodeResult = result as ObjectResult;
@@ -343,12 +398,12 @@ namespace InSyncUnitTest.Controller
             int total;
             string userIdClerk = "user_id_clerk";
             string[] includes = new string[] { };
-            A.CallTo(() => _userSubRepo.GetMultiPaging(A<Expression<Func<UserSubscription, bool>>>._, out total, A<int>._, A<int>._, A<string[]>._))
+            A.CallTo(() => _userSubRepo.GetMulti(A<Expression<Func<UserSubscription, bool>>>._,  A<string[]>._))
                 .Returns(UserSubscriptions);
             A.CallTo(() => _mapper.Map<IEnumerable<ViewUserSubsciptionDto>>(UserSubscriptions)).Returns(viewUserSubscriptions);
 
             // Act
-            var result = await _controller.GetAllUserSubsciptionOfUserClerk(userIdClerk);
+            var result = await _controller.GetAllUserSubsciptionOfUserClerk(userIdClerk, null, null);
 
             // Assert
             var okResult = result as OkObjectResult;
@@ -359,7 +414,24 @@ namespace InSyncUnitTest.Controller
             returnedUserSubscriptions.data.Should().BeEquivalentTo(viewUserSubscriptions);
         }
 
+        [Fact]
+        public async Task GetAllUserSubscriptionsOfUserClerk_WhenOccurredException_ShouldReturnsInternalServerError()
+        {
+            // Arrange
+            var message = "An error occurred while retrieving user subscriptions.";
+            var response = $"Error retrieving user subscriptions: {message}";
+            A.CallTo(() => _userSubRepo.GetMulti(A<Expression<Func<UserSubscription, bool>>>._, A<string[]>._)).Throws(new Exception(message));
 
+            // Act
+            var result = await _controller.GetAllUserSubsciptionOfUserClerk("userIdClerk", null, null);
+
+
+            // Assert
+            var statusCodeResult = result as ObjectResult;
+            statusCodeResult.Should().NotBeNull();
+            statusCodeResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+            statusCodeResult.Value.Should().Be(response);
+        }
         #endregion
 
         #region GetUserSubscriptionById
@@ -367,7 +439,7 @@ namespace InSyncUnitTest.Controller
         public async Task GetUserSubscriptionById_WithDependencyNull_ShouldReturnInternalServer()
         {
             //Arrange
-            var controller = new UserSubscriptionsController(null, null, null, null);
+            var controller = new UserSubscriptionsController(null, null, null, null, _logger);
             //Act
             var result = await controller.GetUserSubsciptionById(Guid.NewGuid());
             //Assert
@@ -390,14 +462,14 @@ namespace InSyncUnitTest.Controller
             var notFoundResult = result as NotFoundObjectResult;
             notFoundResult.Should().NotBeNull();
             notFoundResult.StatusCode.Should().Be(StatusCodes.Status404NotFound);
-            notFoundResult.Value.Should().Be($"No user subsciption has an ID : " + UserSubscriptionId.ToString());
+            notFoundResult.Value.Should().Be($"No user subscription has an ID: " + UserSubscriptionId.ToString());
         }
 
         [Fact]
         public async Task GetUserSubscriptionById_WithIdInValidFomat_ReturnBadRequest()
         {
             // Arrange
-            var controller = new UserSubscriptionsController(_userSubRepo, _userRepo, _subRepo, _mapper);
+            var controller = new UserSubscriptionsController(_userSubRepo, _userRepo, _subRepo, _mapper, _logger);
             var invalidGuid = "e4d34798-4c18-4ca4-9014-191492e3b90"; // GUID sai định dạng
             string key = "id";
             string messageError = $"The value '{invalidGuid}' is not valid.";
@@ -439,6 +511,23 @@ namespace InSyncUnitTest.Controller
             returnedCR.Should().BeEquivalentTo(viewUserSubscription);
         }
 
+        [Fact]
+        public async Task GetUserSubsciptionById_WhenOccurredException_ShouldReturnsInternalServerError()
+        {
+            // Arrange
+            var message = "An error occurred while retrieving user subscriptions.";
+            var response = $"Error retrieving user subscription: {message}";
+            A.CallTo(() => _userSubRepo.GetSingleByCondition(A<Expression<Func<UserSubscription, bool>>>._, A<string[]>._)).Throws(new Exception(message));
+
+            // Act
+            var result = await _controller.GetUserSubsciptionById(Guid.NewGuid());
+
+            // Assert
+            var statusCodeResult = result as ObjectResult;
+            statusCodeResult.Should().NotBeNull();
+            statusCodeResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+            statusCodeResult.Value.Should().Be(response);
+        }
         #endregion
 
         #region AddUserSubsciption
@@ -446,7 +535,7 @@ namespace InSyncUnitTest.Controller
         public async Task AddUserSubsciption_WhenDependenciesAreNull_ShouldReturnsInternalServerError()
         {
             // Arrange
-            var controller = new UserSubscriptionsController(null, null, null, null);
+            var controller = new UserSubscriptionsController(null, null, null, null, _logger);
             var newUserSubsciption = new AddUserSubsciptionDto();
 
             // Act
@@ -463,7 +552,7 @@ namespace InSyncUnitTest.Controller
         public async Task AddUserSubsciption_WhenUserSubscriptionPropertySubscriptionPlanIdNull_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new UserSubscriptionsController(_userSubRepo, _userRepo, _subRepo, _mapper);
+            var controller = new UserSubscriptionsController(_userSubRepo, _userRepo, _subRepo, _mapper, _logger);
             var newUserSubsciption = new AddUserSubsciptionDto { };
             string key = "SubscriptionPlanId";
             string message = $"The {key} field is required.";
@@ -486,7 +575,7 @@ namespace InSyncUnitTest.Controller
         public async Task AddUserSubsciption_WhenUserSubscriptionPropertySubscriptionPlanIdInvalidFormatGuid_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new UserSubscriptionsController(_userSubRepo, _userRepo, _subRepo, _mapper);
+            var controller = new UserSubscriptionsController(_userSubRepo, _userRepo, _subRepo, _mapper, _logger);
             var newPrivacyPolicy = new AddUserSubsciptionDto { };
             string key = "SubscriptionPlanId";
             var invalidGuid = "e4d34798-4c18-4ca4-9014-191492e3b90"; // GUID sai định dạng
@@ -510,7 +599,7 @@ namespace InSyncUnitTest.Controller
         public async Task AddUserSubsciption_WhenUserSubscriptionPropertyUserIdNull_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new UserSubscriptionsController(_userSubRepo, _userRepo, _subRepo, _mapper);
+            var controller = new UserSubscriptionsController(_userSubRepo, _userRepo, _subRepo, _mapper, _logger);
             var newUserSubsciption = new AddUserSubsciptionDto { };
             string key = "UserId";
             string message = $"The {key} field is required.";
@@ -533,7 +622,7 @@ namespace InSyncUnitTest.Controller
         public async Task AddUserSubsciption_WhenUserSubscriptionPropertyUserIdInvalidFormatGuid_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new UserSubscriptionsController(_userSubRepo, _userRepo, _subRepo, _mapper);
+            var controller = new UserSubscriptionsController(_userSubRepo, _userRepo, _subRepo, _mapper, _logger);
             var newPrivacyPolicy = new AddUserSubsciptionDto { };
             string key = "UserId";
             var invalidGuid = "e4d34798-4c18-4ca4-9014-191492e3b90"; // GUID sai định dạng
@@ -558,7 +647,7 @@ namespace InSyncUnitTest.Controller
         public async Task AddUserSubsciption_WhenUserSubscriptionPropertyStripeCurrentPeriodEndNull_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new UserSubscriptionsController(_userSubRepo, _userRepo, _subRepo, _mapper);
+            var controller = new UserSubscriptionsController(_userSubRepo, _userRepo, _subRepo, _mapper, _logger);
             var newUserSubsciption = new AddUserSubsciptionDto { };
             string key = "StripeCurrentPeriodEnd";
             string message = $"The {key} field is required.";
@@ -581,7 +670,7 @@ namespace InSyncUnitTest.Controller
         public async Task AddUserSubsciption_WhenUserSubscriptionPropertyStripeCurrentPeriodEndnvalidFormatGuid_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new UserSubscriptionsController(_userSubRepo, _userRepo, _subRepo, _mapper);
+            var controller = new UserSubscriptionsController(_userSubRepo, _userRepo, _subRepo, _mapper, _logger);
             var newPrivacyPolicy = new AddUserSubsciptionDto { };
             string key = "StripeCurrentPeriodEnd";
             var invalidGuid = "e4d34798-4c18-4ca4-9014-191492e3b90"; // GUID sai định dạng
@@ -605,7 +694,7 @@ namespace InSyncUnitTest.Controller
         public async Task AddUserSubsciption_WhenUserSubscriptionPropertyStripeCustomerIdNull_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new UserSubscriptionsController(_userSubRepo, _userRepo, _subRepo, _mapper);
+            var controller = new UserSubscriptionsController(_userSubRepo, _userRepo, _subRepo, _mapper, _logger);
             var newUserSubsciption = new AddUserSubsciptionDto { };
             string key = "StripeCustomerId";
             string message = $"The {key} field is required.";
@@ -628,7 +717,7 @@ namespace InSyncUnitTest.Controller
         public async Task AddUserSubsciption_WhenUserSubscriptionPropertyStripeSubscriptionIdNull_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new UserSubscriptionsController(_userSubRepo, _userRepo, _subRepo, _mapper);
+            var controller = new UserSubscriptionsController(_userSubRepo, _userRepo, _subRepo, _mapper, _logger);
             var newUserSubsciption = new AddUserSubsciptionDto { };
             string key = "StripeSubscriptionId";
             string message = $"The {key} field is required.";
@@ -652,7 +741,7 @@ namespace InSyncUnitTest.Controller
         public async Task AddUserSubsciption_WhenUserSubscriptionPropertyStripePriceIdNull_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new UserSubscriptionsController(_userSubRepo, _userRepo, _subRepo, _mapper);
+            var controller = new UserSubscriptionsController(_userSubRepo, _userRepo, _subRepo, _mapper, _logger);
             var newUserSubsciption = new AddUserSubsciptionDto { };
             string key = "StripePriceId";
             string message = $"The {key} field is required.";
@@ -690,7 +779,7 @@ namespace InSyncUnitTest.Controller
             var statusCodeResult = result as ObjectResult;
             statusCodeResult.Should().NotBeNull();
             statusCodeResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
-            statusCodeResult.Value.Should().Be("Error occurred while adding the user subsciption.");
+            statusCodeResult.Value.Should().Be("Error occurred while adding the user subscription.");
         }
         [Fact]
         public async Task AddUserSubsciption_WhenUserIdDontExist_ShouldReturnsBadREquest()
@@ -710,7 +799,7 @@ namespace InSyncUnitTest.Controller
             var statusCodeResult = result as BadRequestObjectResult;
             statusCodeResult.Should().NotBeNull();
             statusCodeResult.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
-            statusCodeResult.Value.Should().Be("Information of user provide invalid");
+            statusCodeResult.Value.Should().Be("Information of user provided is invalid");
         }
         [Fact]
         public async Task AddUserSubsciption_WhenSubsciptionPlanIdDontExist_ShouldReturnsBadREquest()
@@ -730,7 +819,7 @@ namespace InSyncUnitTest.Controller
             var statusCodeResult = result as BadRequestObjectResult;
             statusCodeResult.Should().NotBeNull();
             statusCodeResult.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
-            statusCodeResult.Value.Should().Be("Information of subsciption plan provide invalid");
+            statusCodeResult.Value.Should().Be("Information of subscription plan provided is invalid");
         }
 
         [Fact]
@@ -739,8 +828,8 @@ namespace InSyncUnitTest.Controller
             // Arrange
             var newUserSubsciption = new AddUserSubsciptionDto { };
             var userSubsciption = new UserSubscription { };
-            string messageException = "User SubSciption existed";
-            var message = "An error occurred while adding User Subsciption into Database " + messageException;
+            string messageException = "User SubScription existed";
+            var message = "An error occurred while adding User Subscription into Database: " + messageException;
 
             A.CallTo(() => _userRepo.CheckContainsAsync(A<Expression<Func<User, bool>>>._)).Returns(Task.FromResult(true));
             A.CallTo(() => _subRepo.CheckContainsAsync(A<Expression<Func<SubscriptionPlan, bool>>>._)).Returns(Task.FromResult(true));
@@ -776,7 +865,7 @@ namespace InSyncUnitTest.Controller
             okResult.Should().NotBeNull();
             okResult.StatusCode.Should().Be(StatusCodes.Status200OK);
             var response = okResult.Value as ActionUserSubsciptionResponse;
-            response.Message.Should().Be("User Subsciption added successfully.");
+            response.Message.Should().Be("User Subscription added successfully.");
             response.Id.Should().Be(addedUserSubsciption.Id);
         }
 
@@ -790,7 +879,7 @@ namespace InSyncUnitTest.Controller
         public async Task UpdateUserSubsciption_WhenDependenciesAreNull_ShouldReturnsInternalServerError()
         {
             // Arrange
-            var controller = new UserSubscriptionsController(null, null, null, null);
+            var controller = new UserSubscriptionsController(null, null, null, null, _logger);
             var updateUserSub = new UpdateUserSubsciptionDto();
 
             // Act
@@ -807,7 +896,7 @@ namespace InSyncUnitTest.Controller
         public async Task UpdateUserSubsciption_WhenUserSubscriptionPropertySubscriptionPlanIdNull_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new UserSubscriptionsController(_userSubRepo, _userRepo, _subRepo, _mapper);
+            var controller = new UserSubscriptionsController(_userSubRepo, _userRepo, _subRepo, _mapper, _logger);
             var updateUserSub = new UpdateUserSubsciptionDto { };
             var userSubId = Guid.NewGuid();
             string key = "SubscriptionPlanId";
@@ -831,7 +920,7 @@ namespace InSyncUnitTest.Controller
         public async Task UpdateUserSubsciption_WhenUserSubscriptionPropertySubscriptionPlanIdInvalidFormatGuid_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new UserSubscriptionsController(_userSubRepo, _userRepo, _subRepo, _mapper);
+            var controller = new UserSubscriptionsController(_userSubRepo, _userRepo, _subRepo, _mapper, _logger);
             var updateUserSub = new UpdateUserSubsciptionDto { };
             var userSubId = Guid.NewGuid();
             string key = "SubscriptionPlanId";
@@ -852,13 +941,13 @@ namespace InSyncUnitTest.Controller
             errorResponse.Errors.Should().ContainKey(key);
             errorResponse.Errors[key].Should().Contain(messageError);
         }
-       
-       
+
+
         [Fact]
         public async Task UpdateUserSubsciption_WhenUserSubscriptionPropertyStripeCurrentPeriodEndNull_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new UserSubscriptionsController(_userSubRepo, _userRepo, _subRepo, _mapper);
+            var controller = new UserSubscriptionsController(_userSubRepo, _userRepo, _subRepo, _mapper, _logger);
             var updateUserSub = new UpdateUserSubsciptionDto { };
             var userSubId = Guid.NewGuid();
             string key = "StripeCurrentPeriodEnd";
@@ -882,7 +971,7 @@ namespace InSyncUnitTest.Controller
         public async Task UpdateUserSubsciption_WhenUserSubscriptionPropertyStripeCurrentPeriodEndnvalidFormatGuid_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new UserSubscriptionsController(_userSubRepo, _userRepo, _subRepo, _mapper);
+            var controller = new UserSubscriptionsController(_userSubRepo, _userRepo, _subRepo, _mapper, _logger);
             var updateUserSub = new UpdateUserSubsciptionDto { };
             var userSubId = Guid.NewGuid();
             string key = "StripeCurrentPeriodEnd";
@@ -906,7 +995,7 @@ namespace InSyncUnitTest.Controller
         public async Task UpdateUserSubsciption_WhenUserSubscriptionPropertyStripeCustomerIdNull_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new UserSubscriptionsController(_userSubRepo, _userRepo, _subRepo, _mapper);
+            var controller = new UserSubscriptionsController(_userSubRepo, _userRepo, _subRepo, _mapper, _logger);
             var updateUserSub = new UpdateUserSubsciptionDto { };
             var userSubId = Guid.NewGuid();
             string key = "StripeCustomerId";
@@ -930,7 +1019,7 @@ namespace InSyncUnitTest.Controller
         public async Task UpdateUserSubsciption_WhenUserSubscriptionPropertyStripeSubscriptionIdNull_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new UserSubscriptionsController(_userSubRepo, _userRepo, _subRepo, _mapper);
+            var controller = new UserSubscriptionsController(_userSubRepo, _userRepo, _subRepo, _mapper, _logger);
             var updateUserSub = new UpdateUserSubsciptionDto { };
             var userSubId = Guid.NewGuid();
             string key = "StripeSubscriptionId";
@@ -955,7 +1044,7 @@ namespace InSyncUnitTest.Controller
         public async Task UpdateUserSubsciption_WhenUserSubscriptionPropertyStripePriceIdNull_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new UserSubscriptionsController(_userSubRepo, _userRepo, _subRepo, _mapper);
+            var controller = new UserSubscriptionsController(_userSubRepo, _userRepo, _subRepo, _mapper, _logger);
             var updateUserSub = new UpdateUserSubsciptionDto { };
             var userSubId = Guid.NewGuid();
             string key = "StripePriceId";
@@ -978,12 +1067,12 @@ namespace InSyncUnitTest.Controller
 
 
 
-        
+
         [Fact]
         public async Task UpdateUserSubsciption_WhenCustomerReviewPropertyIdInvalidFomat_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new UserSubscriptionsController(_userSubRepo, _userRepo, _subRepo, _mapper);
+            var controller = new UserSubscriptionsController(_userSubRepo, _userRepo, _subRepo, _mapper, _logger);
             var updateUserSub = new UpdateUserSubsciptionDto { };
             var userSubId = Guid.NewGuid();
             string key = "id";
@@ -1003,8 +1092,8 @@ namespace InSyncUnitTest.Controller
             errorResponse.Errors.Should().ContainKey(key);
             errorResponse.Errors[key].Should().Contain(messageError);
         }
-        
-      
+
+
 
         [Fact]
         public async Task UpdateUserSubsciption_WhenIdDoesNotMatch_ShouldReturnsBadRequest()
@@ -1020,7 +1109,7 @@ namespace InSyncUnitTest.Controller
             var badRequestResult = result as BadRequestObjectResult;
             badRequestResult.Should().NotBeNull();
             badRequestResult.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
-            badRequestResult.Value.Should().Be("User Subsciption ID information does not match");
+            badRequestResult.Value.Should().Be("User Subscription ID information does not match");
         }
 
         [Fact]
@@ -1037,7 +1126,7 @@ namespace InSyncUnitTest.Controller
             var notFoundResult = result as NotFoundObjectResult;
             notFoundResult.Should().NotBeNull();
             notFoundResult.StatusCode.Should().Be(StatusCodes.Status404NotFound);
-            notFoundResult.Value.Should().Be("User Subsciption not found.");
+            notFoundResult.Value.Should().Be("User Subscription not found.");
         }
         [Fact]
         public async Task UpdateUserSubsciption_WhenUpdateSucceeds_ShouldReturnsOkResult()
@@ -1058,7 +1147,7 @@ namespace InSyncUnitTest.Controller
             okResult.StatusCode.Should().Be(StatusCodes.Status200OK);
             var response = okResult.Value as ActionUserSubsciptionResponse;
             response.Should().NotBeNull();
-            response.Message.Should().Be("User Subsciption updated successfully.");
+            response.Message.Should().Be("User Subscription updated successfully.");
             response.Id.Should().Be(existUserSub.Id);
         }
         [Fact]
@@ -1079,7 +1168,7 @@ namespace InSyncUnitTest.Controller
             var statusCodeResult = result as ObjectResult;
             statusCodeResult.Should().NotBeNull();
             statusCodeResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
-            statusCodeResult.Value.Should().Be("Error updating user subsciption: Update failed");
+            statusCodeResult.Value.Should().Be("Error updating user subscription: Update failed");
         }
 
 
@@ -1091,7 +1180,7 @@ namespace InSyncUnitTest.Controller
         public async Task DeleteUserSubsciption_WhenDependenciesAreNull_ShouldReturnsInternalServerError()
         {
             // Arrange
-            var controller = new UserSubscriptionsController(null, null, null, null);
+            var controller = new UserSubscriptionsController(null, null, null, null, _logger);
             var id = Guid.NewGuid();
 
             // Act
@@ -1118,7 +1207,7 @@ namespace InSyncUnitTest.Controller
             var notFoundResult = result as NotFoundObjectResult;
             notFoundResult.Should().NotBeNull();
             notFoundResult.StatusCode.Should().Be(StatusCodes.Status404NotFound);
-            notFoundResult.Value.Should().Be($"Dont exist user subsciption with id {id.ToString()} to delete");
+            notFoundResult.Value.Should().Be($"Don't exist user subscription with id {id} to delete");
         }
 
         [Fact]
@@ -1138,7 +1227,7 @@ namespace InSyncUnitTest.Controller
             okResult.StatusCode.Should().Be(StatusCodes.Status200OK);
             var response = okResult.Value as ActionUserSubsciptionResponse;
             response.Should().NotBeNull();
-            response.Message.Should().Be("User subsciption deleted successfully.");
+            response.Message.Should().Be("User subscription deleted successfully.");
             response.Id.Should().Be(id);
         }
 
@@ -1157,13 +1246,13 @@ namespace InSyncUnitTest.Controller
             var statusCodeResult = result as ObjectResult;
             statusCodeResult.Should().NotBeNull();
             statusCodeResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
-            statusCodeResult.Value.Should().Be("Error delete user subsciption: Delete failed");
+            statusCodeResult.Value.Should().Be("Error deleting user subscription: Delete failed");
         }
         [Fact]
         public async Task DeleteUserSubsciption_WhenPropertyIdInvalidFomat_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new UserSubscriptionsController(_userSubRepo, _userRepo, _subRepo, _mapper);
+            var controller = new UserSubscriptionsController(_userSubRepo, _userRepo, _subRepo, _mapper, _logger);
             string key = "id";
             string message = "The value 'e4d34798-4c18-4ca4-9014-191492e3b90' is not valid.";
             controller.ModelState.AddModelError(key, message);

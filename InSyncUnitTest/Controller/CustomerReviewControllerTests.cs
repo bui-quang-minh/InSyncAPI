@@ -13,6 +13,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using InSyncAPI.Dtos;
 using System.Linq.Expressions;
+using Castle.Core.Logging;
+using Microsoft.Extensions.Logging;
 
 namespace InSyncUnitTest.Controller
 {
@@ -20,12 +22,14 @@ namespace InSyncUnitTest.Controller
     {
         private ICustomerReviewRepository _customerReviewRepo;
         private IMapper _mapper;
+        private ILogger<CustomerReviewsController> _logger;
         private CustomerReviewsController _controller;
         public CustomerReviewControllerTests()
         {
             _customerReviewRepo = A.Fake<ICustomerReviewRepository>();
             _mapper = A.Fake<IMapper>();
-            _controller = new CustomerReviewsController(_customerReviewRepo, _mapper);
+            _logger = A.Fake<ILogger<CustomerReviewsController>>();
+            _controller = new CustomerReviewsController(_customerReviewRepo, _mapper, _logger);
         }
 
         #region GetCustomerReviews
@@ -33,7 +37,7 @@ namespace InSyncUnitTest.Controller
         public async Task GetCustomerReviews_WhenDependenciesAreNull_ShouldReturnsInternalServerError()
         {
             // Arrange
-            var controller = new CustomerReviewsController(null, null);
+            var controller = new CustomerReviewsController(null, null, _logger);
 
             // Act
             var result = await controller.GetCustomerReviews();
@@ -65,14 +69,32 @@ namespace InSyncUnitTest.Controller
             response.Should().HaveCount(2);
         }
 
+        [Fact]
+        public async Task GetCustomerReviews_WhenOccurredException_ShouldReturnsInternalServerError()
+        {
+            // Arrange
+            var message = "An error occurred while retrieving customer review.";
+            var response = $"Error retrieving customer reviews: {message}";
+
+            A.CallTo(() => _customerReviewRepo.GetAll(A<string[]>._)).Throws(new Exception(message));
+
+            // Act
+            var result = await _controller.GetCustomerReviews();
+
+            // Assert
+            var statusCodeResult = result as ObjectResult;
+            statusCodeResult.Should().NotBeNull();
+            statusCodeResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+            statusCodeResult.Value.Should().Be(response);
+        }
         #endregion
 
         #region GetAllCustomerReview
         [Fact]
         public async Task GetAllCustomerReview_WhenDependencyAreNull_ShouldReturnInternalServerError()
         {
-            var controller = new CustomerReviewsController(null, null);
-            var result = await controller.GetAllCustomerReview();
+            var controller = new CustomerReviewsController(null, null, _logger);
+            var result = await controller.GetAllCustomerReview(0, 2, "");
 
 
             var statusCodeResult = result as ObjectResult;
@@ -94,7 +116,7 @@ namespace InSyncUnitTest.Controller
             A.CallTo(() => _mapper.Map<IEnumerable<ViewCustomerReviewDto>>(customerReviews)).Returns(viewCustomerReviews);
 
             // Act
-            var result = await _controller.GetAllCustomerReview("",index, size);
+            var result = await _controller.GetAllCustomerReview(index, size, "");
 
             // Assert
             var okResult = result as OkObjectResult;
@@ -118,7 +140,7 @@ namespace InSyncUnitTest.Controller
             A.CallTo(() => _mapper.Map<IEnumerable<ViewCustomerReviewDto>>(custoemrReviews)).Returns(viewCustomerReviews);
 
             // Act
-            var result = await _controller.GetAllCustomerReview("",index, size);
+            var result = await _controller.GetAllCustomerReview(index, size, "");
 
             // Assert
             var okResult = result as OkObjectResult;
@@ -138,22 +160,148 @@ namespace InSyncUnitTest.Controller
             IEnumerable<ViewCustomerReviewDto> viewCustomerReviews = new List<ViewCustomerReviewDto> { new ViewCustomerReviewDto(), new ViewCustomerReviewDto() };
             int total;
             string[] includes = new string[] { };
-            A.CallTo(() => _customerReviewRepo.GetMultiPaging(A<Expression<Func<CustomerReview, bool>>>._, out total, A<int>._, A<int>._, A<string[]>._))
+            A.CallTo(() => _customerReviewRepo.GetMulti(A<Expression<Func<CustomerReview, bool>>>._, A<string[]>._))
                 .Returns(custoemrReviews);
             A.CallTo(() => _mapper.Map<IEnumerable<ViewCustomerReviewDto>>(custoemrReviews)).Returns(viewCustomerReviews);
 
             // Act
-            var result = await _controller.GetAllCustomerReview();
+            var result = await _controller.GetAllCustomerReview(null, null, "");
 
             // Assert
             var okResult = result as OkObjectResult;
             okResult.Should().NotBeNull();
             okResult.StatusCode.Should().Be(StatusCodes.Status200OK);
-            var returnedCustomerReviews = okResult.Value as ResponsePaging< IEnumerable<ViewCustomerReviewDto>>;
+            var returnedCustomerReviews = okResult.Value as ResponsePaging<IEnumerable<ViewCustomerReviewDto>>;
             returnedCustomerReviews.Should().NotBeNull();
             returnedCustomerReviews.data.Should().BeEquivalentTo(viewCustomerReviews);
         }
 
+        [Fact]
+        public async Task GetAllCustomerReview_WhenOccurredException_ShouldReturnsInternalServerError()
+        {
+            // Arrange
+            var message = "An error occurred while retrieving customerreview.";
+            var response = $"Error retrieving customer reviews: {message}";
+
+            A.CallTo(() => _customerReviewRepo.GetMulti(A<Expression<Func<CustomerReview, bool>>>._, A<string[]>._)).Throws(new Exception(message));
+
+            // Act
+            var result = await _controller.GetAllCustomerReview(null, null, "");
+
+            // Assert
+            var statusCodeResult = result as ObjectResult;
+            statusCodeResult.Should().NotBeNull();
+            statusCodeResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+            statusCodeResult.Value.Should().Be(response);
+        }
+
+        #endregion
+
+        #region GetAllCustomerReviewIsPublish
+        [Fact]
+        public async Task GetAllCustomerReviewIsPublish_WhenDependencyAreNull_ShouldReturnInternalServerError()
+        {
+            var controller = new CustomerReviewsController(null, null, _logger);
+            var result = await controller.GetAllCustomerReviewIsPublish(0, 2, null, "");
+
+
+            var statusCodeResult = result as ObjectResult;
+            statusCodeResult.Should().NotBeNull();
+            statusCodeResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+            statusCodeResult.Value.Should().Be("Application service has not been created");
+        }
+        [Fact]
+        public async Task GetAllCustomerReviewIsPublish_WithValidInput_ShouldReturnOkResultWithCustomerReviews()
+        {
+            // Arrange
+
+            IEnumerable<CustomerReview> customerReviews = new List<CustomerReview> { new CustomerReview(), new CustomerReview() };
+            IEnumerable<ViewCustomerReviewDto> viewCustomerReviews = new List<ViewCustomerReviewDto> { new ViewCustomerReviewDto(), new ViewCustomerReviewDto() };
+            int total;
+            int index = 0, size = 2;
+            A.CallTo(() => _customerReviewRepo.GetMultiPaging(A<Expression<Func<CustomerReview, bool>>>._, out total, A<int>._, A<int>._, A<string[]>._))
+                .Returns(customerReviews);
+            A.CallTo(() => _mapper.Map<IEnumerable<ViewCustomerReviewDto>>(customerReviews)).Returns(viewCustomerReviews);
+
+            // Act
+            var result = await _controller.GetAllCustomerReviewIsPublish(index, size, true, "");
+
+            // Assert
+            var okResult = result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be(StatusCodes.Status200OK);
+            var returnedCustomerReviews = okResult.Value as ResponsePaging<IEnumerable<ViewCustomerReviewDto>>;
+            returnedCustomerReviews.Should().NotBeNull();
+            returnedCustomerReviews.data.Should().BeEquivalentTo(viewCustomerReviews);
+        }
+        [Fact]
+        public async Task GetAllCustomerReviewIsPublish_WithSizeOrIndexIsNegativeInteger_ShouldReturnOkResultWithCustomerReviews()
+        {
+            // Arrange
+
+            IEnumerable<CustomerReview> custoemrReviews = new List<CustomerReview> { new CustomerReview(), new CustomerReview() };
+            IEnumerable<ViewCustomerReviewDto> viewCustomerReviews = new List<ViewCustomerReviewDto> { new ViewCustomerReviewDto(), new ViewCustomerReviewDto() };
+            int total;
+            int index = -1, size = -3;
+            A.CallTo(() => _customerReviewRepo.GetMultiPaging(A<Expression<Func<CustomerReview, bool>>>._, out total, A<int>._, A<int>._, A<string[]>._))
+                .Returns(custoemrReviews);
+            A.CallTo(() => _mapper.Map<IEnumerable<ViewCustomerReviewDto>>(custoemrReviews)).Returns(viewCustomerReviews);
+
+            // Act
+            var result = await _controller.GetAllCustomerReviewIsPublish(index, size, true, "");
+
+            // Assert
+            var okResult = result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be(StatusCodes.Status200OK);
+            var returnedCustomerReviews = okResult.Value as ResponsePaging<IEnumerable<ViewCustomerReviewDto>>;
+            returnedCustomerReviews.Should().NotBeNull();
+            returnedCustomerReviews.data.Should().BeEquivalentTo(viewCustomerReviews);
+        }
+
+        [Fact]
+        public async Task GetAllCustomerReviewIsPublish_WithSizeOrIndexNoParameterInApi_ShouldReturnOkResultWithCustomerReviews()
+        {
+            // Arrange
+
+            IEnumerable<CustomerReview> custoemrReviews = new List<CustomerReview> { new CustomerReview(), new CustomerReview() };
+            IEnumerable<ViewCustomerReviewDto> viewCustomerReviews = new List<ViewCustomerReviewDto> { new ViewCustomerReviewDto(), new ViewCustomerReviewDto() };
+            int total;
+            string[] includes = new string[] { };
+            A.CallTo(() => _customerReviewRepo.GetMulti(A<Expression<Func<CustomerReview, bool>>>._, A<string[]>._))
+                .Returns(custoemrReviews);
+            A.CallTo(() => _mapper.Map<IEnumerable<ViewCustomerReviewDto>>(custoemrReviews)).Returns(viewCustomerReviews);
+
+            // Act
+            var result = await _controller.GetAllCustomerReviewIsPublish(null, null, null, "");
+
+            // Assert
+            var okResult = result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            okResult.StatusCode.Should().Be(StatusCodes.Status200OK);
+            var returnedCustomerReviews = okResult.Value as ResponsePaging<IEnumerable<ViewCustomerReviewDto>>;
+            returnedCustomerReviews.Should().NotBeNull();
+            returnedCustomerReviews.data.Should().BeEquivalentTo(viewCustomerReviews);
+        }
+
+        [Fact]
+        public async Task GetAllCustomerReviewIsPublish_WhenOccurredException_ShouldReturnsInternalServerError()
+        {
+            // Arrange
+            var message = "An error occurred while retrieving customer review.";
+            var response = $"Error retrieving customer reviews: {message}";
+
+            A.CallTo(() => _customerReviewRepo.GetMulti(A<Expression<Func<CustomerReview, bool>>>._, A<string[]>._)).Throws(new Exception(message));
+
+            // Act
+            var result = await _controller.GetAllCustomerReviewIsPublish(null, null, true, "");
+
+            // Assert
+            var statusCodeResult = result as ObjectResult;
+            statusCodeResult.Should().NotBeNull();
+            statusCodeResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+            statusCodeResult.Value.Should().Be(response);
+        }
 
         #endregion
 
@@ -162,7 +310,7 @@ namespace InSyncUnitTest.Controller
         public async Task GetCustomerReviewById_WithDependencyNull_ShouldReturnInternalServer()
         {
             //Arrange
-            var controller = new CustomerReviewsController(null, null);
+            var controller = new CustomerReviewsController(null, null, _logger);
             //Act
             var result = await controller.GetCustomerReviewById(Guid.NewGuid());
             //Assert
@@ -185,14 +333,14 @@ namespace InSyncUnitTest.Controller
             var notFoundResult = result as NotFoundObjectResult;
             notFoundResult.Should().NotBeNull();
             notFoundResult.StatusCode.Should().Be(StatusCodes.Status404NotFound);
-            notFoundResult.Value.Should().Be($"No review has an ID : {customerReviewId}");
+            notFoundResult.Value.Should().Be($"No review has an ID: {customerReviewId}");
         }
 
         [Fact]
         public async Task GetCustomerReviewById_WithIdInValidFomat_ReturnBadRequest()
         {
             // Arrange
-            var controller = new CustomerReviewsController(_customerReviewRepo, _mapper);
+            var controller = new CustomerReviewsController(_customerReviewRepo, _mapper, _logger);
             var invalidGuid = "e4d34798-4c18-4ca4-9014-191492e3b90"; // GUID sai định dạng
             controller.ModelState.AddModelError("id", $"The value '{invalidGuid}' is not valid.");
 
@@ -232,6 +380,24 @@ namespace InSyncUnitTest.Controller
             returnedCR.Should().BeEquivalentTo(viewCustomerReview);
         }
 
+        [Fact]
+        public async Task GetCustomerReviewById_WhenOccurredException_ShouldReturnsInternalServerError()
+        {
+            // Arrange
+            var message = "An error occurred while retrieving customerreview.";
+            var response = $"Error retrieving customer review: {message}";
+
+            A.CallTo(() => _customerReviewRepo.GetSingleByCondition(A<Expression<Func<CustomerReview, bool>>>._, A<string[]>._)).Throws(new Exception(message));
+
+            // Act
+            var result = await _controller.GetCustomerReviewById(Guid.NewGuid());
+
+            // Assert
+            var statusCodeResult = result as ObjectResult;
+            statusCodeResult.Should().NotBeNull();
+            statusCodeResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+            statusCodeResult.Value.Should().Be(response);
+        }
         #endregion
 
         #region AddCustomerReview
@@ -239,7 +405,7 @@ namespace InSyncUnitTest.Controller
         public async Task AddCustomerReview_WhenDependenciesAreNull_ShouldReturnsInternalServerError()
         {
             // Arrange
-            var controller = new CustomerReviewsController(null, null);
+            var controller = new CustomerReviewsController(null, null, _logger);
             var newCustomerReview = new AddCustomerReviewDto();
 
             // Act
@@ -256,7 +422,7 @@ namespace InSyncUnitTest.Controller
         public async Task AddCustomerReview_WhenCustomerReviewPropertyNameNull_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new CustomerReviewsController(_customerReviewRepo, _mapper);
+            var controller = new CustomerReviewsController(_customerReviewRepo, _mapper, _logger);
             var newCustomerReview = new AddCustomerReviewDto { };
             controller.ModelState.AddModelError("Name", "The Name field is required.");
 
@@ -276,7 +442,7 @@ namespace InSyncUnitTest.Controller
         public async Task AddCustomerReview_WhenCustomerReviewPropertyNameLengthLonger100_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new CustomerReviewsController(_customerReviewRepo, _mapper);
+            var controller = new CustomerReviewsController(_customerReviewRepo, _mapper, _logger);
             var newCustomerReview = new AddCustomerReviewDto { };
             string messageError = "The field Name must be a string with a maximum length of 100.";
             controller.ModelState.AddModelError("Name", messageError);
@@ -298,7 +464,7 @@ namespace InSyncUnitTest.Controller
         public async Task AddCustomerReview_WhenCustomerReviewPropertyJobTitleNull_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new CustomerReviewsController(_customerReviewRepo, _mapper);
+            var controller = new CustomerReviewsController(_customerReviewRepo, _mapper, _logger);
             var newCustomerReview = new AddCustomerReviewDto { };
             string message = "The JobTitle field is required.";
             string property = "JobTitle";
@@ -321,7 +487,7 @@ namespace InSyncUnitTest.Controller
         public async Task AddCustomerReview_WhenCustomerReviewPropertyJobTitleLengthLonger100_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new CustomerReviewsController(_customerReviewRepo, _mapper);
+            var controller = new CustomerReviewsController(_customerReviewRepo, _mapper, _logger);
             var newCustomerReview = new AddCustomerReviewDto { };
             string property = "JobTitle";
             string messageError = "The field JobTitle must be a string with a maximum length of 150.";
@@ -345,7 +511,7 @@ namespace InSyncUnitTest.Controller
         public async Task AddCustomerReview_WhenCustomerReviewPropertyReviewNull_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new CustomerReviewsController(_customerReviewRepo, _mapper);
+            var controller = new CustomerReviewsController(_customerReviewRepo, _mapper, _logger);
             var newCustomerReview = new AddCustomerReviewDto { };
             string message = "The Review field is required.";
             string property = "Review";
@@ -368,7 +534,7 @@ namespace InSyncUnitTest.Controller
         public async Task AddCustomerReview_WhenCustomerReviewPropertyReviewLengthLonger200_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new CustomerReviewsController(_customerReviewRepo, _mapper);
+            var controller = new CustomerReviewsController(_customerReviewRepo, _mapper, _logger);
             var newCustomerReview = new AddCustomerReviewDto { };
             string property = "Review";
             string messageError = "The field Review must be a string with a maximum length of 200.";
@@ -413,7 +579,8 @@ namespace InSyncUnitTest.Controller
             // Arrange
             var newCustomerReview = new AddCustomerReviewDto { };
             var customerReview = new CustomerReview { };
-            var message = "An error occurred while adding Customer Review into Database";
+            
+            var message = $"An error occurred while adding Customer Review into Database: ";
             A.CallTo(() => _mapper.Map<CustomerReview>(newCustomerReview)).Returns(customerReview);
             A.CallTo(() => _customerReviewRepo.Add(customerReview)).Throws(new Exception(""));
 
@@ -458,7 +625,7 @@ namespace InSyncUnitTest.Controller
         public async Task UpdatCustomerReviewCustomerReview_WhenDependenciesAreNull_ShouldReturnsInternalServerError()
         {
             // Arrange
-            var controller = new CustomerReviewsController(null, null);
+            var controller = new CustomerReviewsController(null, null, _logger);
             var updateCustomerReview = new UpdateCustomerReviewDto();
 
             // Act
@@ -474,7 +641,7 @@ namespace InSyncUnitTest.Controller
         public async Task UpdateCustomerReview_WhenCustomerReviewPropertyIdInvalidFomat_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new CustomerReviewsController(_customerReviewRepo, _mapper);
+            var controller = new CustomerReviewsController(_customerReviewRepo, _mapper, _logger);
             var updateCustomerReview = new UpdateCustomerReviewDto();
             controller.ModelState.AddModelError("id", "The value 'e4d34798-4c18-4ca4-9014-191492e3b90' is not valid.");
 
@@ -495,7 +662,7 @@ namespace InSyncUnitTest.Controller
         public async Task UpdateCustomerReview_WhenCustomerReviewPropertyNameNull_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new CustomerReviewsController(_customerReviewRepo, _mapper);
+            var controller = new CustomerReviewsController(_customerReviewRepo, _mapper, _logger);
             var updateCustomerReview = new UpdateCustomerReviewDto { };
             controller.ModelState.AddModelError("Name", "The Name field is required.");
 
@@ -516,7 +683,7 @@ namespace InSyncUnitTest.Controller
         public async Task UpdateCustomerReview_WhenCustomerReviewPropertyNameLengthLonger100_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new CustomerReviewsController(_customerReviewRepo, _mapper);
+            var controller = new CustomerReviewsController(_customerReviewRepo, _mapper, _logger);
             var newCustomerReview = new UpdateCustomerReviewDto { };
             string messageError = "The field Name must be a string with a maximum length of 100.";
             controller.ModelState.AddModelError("Name", messageError);
@@ -538,7 +705,7 @@ namespace InSyncUnitTest.Controller
         public async Task UpdateCustomerReview_WhenCustomerReviewPropertyJobTitleNull_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new CustomerReviewsController(_customerReviewRepo, _mapper);
+            var controller = new CustomerReviewsController(_customerReviewRepo, _mapper, _logger);
             var newCustomerReview = new UpdateCustomerReviewDto { };
             string message = "The JobTitle field is required.";
             string property = "JobTitle";
@@ -561,7 +728,7 @@ namespace InSyncUnitTest.Controller
         public async Task UpdateCustomerReview_WhenCustomerReviewPropertyJobTitleLengthLonger100_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new CustomerReviewsController(_customerReviewRepo, _mapper);
+            var controller = new CustomerReviewsController(_customerReviewRepo, _mapper, _logger);
             var newCustomerReview = new UpdateCustomerReviewDto { };
             string property = "JobTitle";
             string messageError = "The field JobTitle must be a string with a maximum length of 150.";
@@ -581,12 +748,12 @@ namespace InSyncUnitTest.Controller
             errorResponse.Errors[property].Should().Contain(messageError);
         }
 
-        
+
         [Fact]
         public async Task UpdateCustomerReview_WhenCustomerReviewPropertyReviewNull_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new CustomerReviewsController(_customerReviewRepo, _mapper);
+            var controller = new CustomerReviewsController(_customerReviewRepo, _mapper, _logger);
             var newCustomerReview = new UpdateCustomerReviewDto { };
             string message = "The Review field is required.";
             string property = "Review";
@@ -609,7 +776,7 @@ namespace InSyncUnitTest.Controller
         public async Task UpdateCustomerReview_WhenCustomerReviewPropertyReviewLengthLonger200_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new CustomerReviewsController(_customerReviewRepo, _mapper);
+            var controller = new CustomerReviewsController(_customerReviewRepo, _mapper, _logger);
             var newCustomerReview = new UpdateCustomerReviewDto { };
             string property = "Review";
             string messageError = "The field Review must be a string with a maximum length of 200.";
@@ -715,7 +882,7 @@ namespace InSyncUnitTest.Controller
         public async Task DeleteCustomerReview_WhenDependenciesAreNull_ShouldReturnsInternalServerError()
         {
             // Arrange
-            var controller = new CustomerReviewsController(null, null);
+            var controller = new CustomerReviewsController(null, null, _logger);
             var id = Guid.NewGuid();
 
             // Act
@@ -742,7 +909,7 @@ namespace InSyncUnitTest.Controller
             var notFoundResult = result as NotFoundObjectResult;
             notFoundResult.Should().NotBeNull();
             notFoundResult.StatusCode.Should().Be(StatusCodes.Status404NotFound);
-            notFoundResult.Value.Should().Be($"Dont exist review with id {id.ToString()} to delete");
+            notFoundResult.Value.Should().Be($"Don't exist review with id {id} to delete");
 
         }
 
@@ -773,7 +940,7 @@ namespace InSyncUnitTest.Controller
             // Arrange
             var id = Guid.NewGuid();
             A.CallTo(() => _customerReviewRepo.CheckContainsAsync(A<Expression<Func<CustomerReview, bool>>>._)).Returns(Task.FromResult(true));
-            A.CallTo(() => _customerReviewRepo.DeleteMulti(A<Expression<Func<CustomerReview, bool>>>._)).Throws(new Exception("Delete failed"));
+            A.CallTo(() => _customerReviewRepo.DeleteMulti(A<Expression<Func<CustomerReview, bool>>>._)).Throws(new Exception(""));
 
             // Act
             var result = await _controller.DeleteCustomerReview(id);
@@ -782,13 +949,13 @@ namespace InSyncUnitTest.Controller
             var statusCodeResult = result as ObjectResult;
             statusCodeResult.Should().NotBeNull();
             statusCodeResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
-            statusCodeResult.Value.Should().Be("Error delete Customer Review: Delete failed");
+            statusCodeResult.Value.Should().Be("Error deleting Customer Review: ");
         }
         [Fact]
         public async Task DeleteCustomerReview_WhenCustomerReviewPropertyIdInvalidFomat_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new CustomerReviewsController(_customerReviewRepo, _mapper);
+            var controller = new CustomerReviewsController(_customerReviewRepo, _mapper, _logger);
             string key = "id";
             string message = "The value 'e4d34798-4c18-4ca4-9014-191492e3b90' is not valid.";
             controller.ModelState.AddModelError(key, message);

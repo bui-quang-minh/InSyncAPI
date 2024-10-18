@@ -1,11 +1,13 @@
 ﻿using AutoMapper;
 using BusinessObjects.Models;
+using Castle.Core.Logging;
 using FakeItEasy;
 using FluentAssertions;
 using InSyncAPI.Controllers;
 using InSyncAPI.Dtos;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Repositorys;
 using System;
 using System.Collections.Generic;
@@ -21,6 +23,7 @@ namespace InSyncUnitTest.Controller
         private IScenarioRepository _scenarioRepo;
         private IProjectRepository _projectRepo;
         private IUserRepository _userRepo;
+        private ILogger<ScenariosController> _logger;
         private ScenariosController _controller;
         private IMapper _mapper;
         string userIdClerk = "userIdClerk";
@@ -30,7 +33,8 @@ namespace InSyncUnitTest.Controller
             _projectRepo = A.Fake<IProjectRepository>();
             _userRepo = A.Fake<IUserRepository>();
             _mapper = A.Fake<IMapper>();
-            _controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper);
+            _logger = A.Fake<ILogger<ScenariosController>>();
+            _controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper, _logger);
 
         }
         #region GetScenarios
@@ -38,7 +42,7 @@ namespace InSyncUnitTest.Controller
         public async Task GetScenarios_WhenDependenciesAreNull_ShouldReturnsInternalServerError()
         {
             // Arrange
-            var controller = new ScenariosController(null, null, null, null);
+            var controller = new ScenariosController(null, null, null, null, _logger);
 
             // Act
             var result = await controller.GetScenarios();
@@ -68,14 +72,30 @@ namespace InSyncUnitTest.Controller
             response.Should().HaveCount(1);
         }
 
+        [Fact]
+        public async Task GetScenarios_WhenOccurredException_ShouldReturnsInternalServerError()
+        {
+            // Arrange
+            var message = "An error occurred while retrieving scenarios.";
+            A.CallTo(() => _scenarioRepo.GetAll(A<string[]>._)).Throws(new Exception(message));
+
+            // Act
+            var result = await _controller.GetScenarios();
+
+            // Assert
+            var statusCodeResult = result as ObjectResult;
+            statusCodeResult.Should().NotBeNull();
+            statusCodeResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+            statusCodeResult.Value.Should().Be(message);
+        }
         #endregion
 
         #region GetAllScenarios
         [Fact]
         public async Task GetAllScenarios_WhenDependencyAreNull_ShouldReturnInternalServerError()
         {
-            var controller = new ScenariosController(null,null, null, null);
-            var result = await controller.GetAllScenarios();
+            var controller = new ScenariosController(null, null, null, null, _logger);
+            var result = await controller.GetAllScenarios(0, 2, "");
 
 
             var statusCodeResult = result as ObjectResult;
@@ -97,7 +117,7 @@ namespace InSyncUnitTest.Controller
             A.CallTo(() => _mapper.Map<IEnumerable<ViewScenarioDto>>(Scenarios)).Returns(viewScenarios);
 
             // Act
-            var result = await _controller.GetAllScenarios("", index, size);
+            var result = await _controller.GetAllScenarios(index, size, "");
 
             // Assert
             var okResult = result as OkObjectResult;
@@ -121,7 +141,7 @@ namespace InSyncUnitTest.Controller
             A.CallTo(() => _mapper.Map<IEnumerable<ViewScenarioDto>>(Scenarios)).Returns(viewScenarios);
 
             // Act
-            var result = await _controller.GetAllScenarios("", index, size);
+            var result = await _controller.GetAllScenarios(index, size, "");
 
             // Assert
             var okResult = result as OkObjectResult;
@@ -141,12 +161,12 @@ namespace InSyncUnitTest.Controller
             IEnumerable<ViewScenarioDto> viewScenarios = new List<ViewScenarioDto> { new ViewScenarioDto(), new ViewScenarioDto() };
             int total;
             string[] includes = new string[] { };
-            A.CallTo(() => _scenarioRepo.GetMultiPaging(A<Expression<Func<Scenario, bool>>>._, out total, A<int>._, A<int>._, A<string[]>._))
+            A.CallTo(() => _scenarioRepo.GetMulti(A<Expression<Func<Scenario, bool>>>._, A<string[]>._))
                 .Returns(Scenarios);
             A.CallTo(() => _mapper.Map<IEnumerable<ViewScenarioDto>>(Scenarios)).Returns(viewScenarios);
 
             // Act
-            var result = await _controller.GetAllScenarios();
+            var result = await _controller.GetAllScenarios(null, null, "");
 
             // Assert
             var okResult = result as OkObjectResult;
@@ -156,7 +176,22 @@ namespace InSyncUnitTest.Controller
             returnedScenarios.Should().NotBeNull();
             returnedScenarios.data.Should().BeEquivalentTo(viewScenarios);
         }
+        [Fact]
+        public async Task GetAllScenario_WhenOccurredException_ShouldReturnsInternalServerError()
+        {
+            // Arrange
+            var message = "An error occurred while retrieving scenarios.";
+            A.CallTo(() => _scenarioRepo.GetMulti(A<Expression<Func<Scenario, bool>>>._, A<string[]>._)).Throws(new Exception(message));
 
+            // Act
+            var result = await _controller.GetAllScenarios(null, null, "");
+
+            // Assert
+            var statusCodeResult = result as ObjectResult;
+            statusCodeResult.Should().NotBeNull();
+            statusCodeResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+            statusCodeResult.Value.Should().Be(message);
+        }
 
         #endregion
 
@@ -165,7 +200,7 @@ namespace InSyncUnitTest.Controller
         public async Task GetScenarioId_WithDependencyNull_ShouldReturnInternalServer()
         {
             //Arrange
-            var controller = new ScenariosController(null, null, null, null);
+            var controller = new ScenariosController(null, null, null, null, _logger);
             //Act
             var result = await controller.GetScenarioById(Guid.NewGuid());
             //Assert
@@ -195,7 +230,7 @@ namespace InSyncUnitTest.Controller
         public async Task GetScenarioId_WithIdInValidFomat_ReturnBadRequest()
         {
             // Arrange
-            var controller = new ScenariosController(_scenarioRepo,_userRepo,_projectRepo, _mapper);
+            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper, _logger);
             var invalidGuid = "e4d34798-4c18-4ca4-9014-191492e3b90"; // GUID sai định dạng
             controller.ModelState.AddModelError("id", $"The value '{invalidGuid}' is not valid.");
 
@@ -234,6 +269,22 @@ namespace InSyncUnitTest.Controller
             returnedCR.Should().NotBeNull();
             returnedCR.Should().BeEquivalentTo(viewScenario);
         }
+        [Fact]
+        public async Task GetScenarioById_WhenOccurredException_ShouldReturnsInternalServerError()
+        {
+            // Arrange
+            var message = "An error occurred while retrieving the scenario.";
+            A.CallTo(() => _scenarioRepo.GetSingleByCondition(A<Expression<Func<Scenario, bool>>>._, A<string[]>._)).Throws(new Exception(message));
+
+            // Act
+            var result = await _controller.GetScenarioById(Guid.NewGuid());
+
+            // Assert
+            var statusCodeResult = result as ObjectResult;
+            statusCodeResult.Should().NotBeNull();
+            statusCodeResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+            statusCodeResult.Value.Should().Be(message);
+        }
 
         #endregion
 
@@ -241,8 +292,8 @@ namespace InSyncUnitTest.Controller
         [Fact]
         public async Task GetScenarioOfProject_WhenDependencyAreNull_ShouldReturnInternalServerError()
         {
-            var controller = new ScenariosController(null, null, null, null);
-            var result = await controller.GetScenarioOfProject(Guid.Empty, Guid.Empty);
+            var controller = new ScenariosController(null, null, null, null, _logger);
+            var result = await controller.GetScenarioOfProject(Guid.Empty, Guid.Empty, 0, 2, "");
 
 
             var statusCodeResult = result as ObjectResult;
@@ -264,7 +315,7 @@ namespace InSyncUnitTest.Controller
             A.CallTo(() => _mapper.Map<IEnumerable<ViewScenarioDto>>(Scenarios)).Returns(viewScenarios);
 
             // Act
-            var result = await _controller.GetScenarioOfProject(Guid.NewGuid(), Guid.NewGuid(),"", index, size);
+            var result = await _controller.GetScenarioOfProject(Guid.NewGuid(), Guid.NewGuid(), index, size, "");
 
             // Assert
             var okResult = result as OkObjectResult;
@@ -288,7 +339,7 @@ namespace InSyncUnitTest.Controller
             A.CallTo(() => _mapper.Map<IEnumerable<ViewScenarioDto>>(Scenarios)).Returns(viewScenarios);
 
             // Act
-            var result = await _controller.GetScenarioOfProject(Guid.NewGuid(), Guid.NewGuid(), "", index, size);
+            var result = await _controller.GetScenarioOfProject(Guid.NewGuid(), Guid.NewGuid(), index, size, "");
 
             // Assert
             var okResult = result as OkObjectResult;
@@ -308,12 +359,12 @@ namespace InSyncUnitTest.Controller
             IEnumerable<ViewScenarioDto> viewScenarios = new List<ViewScenarioDto> { new ViewScenarioDto(), new ViewScenarioDto() };
             int total;
             string[] includes = new string[] { };
-            A.CallTo(() => _scenarioRepo.GetMultiPaging(A<Expression<Func<Scenario, bool>>>._, out total, A<int>._, A<int>._, A<string[]>._))
+            A.CallTo(() => _scenarioRepo.GetMulti(A<Expression<Func<Scenario, bool>>>._, A<string[]>._))
                 .Returns(Scenarios);
             A.CallTo(() => _mapper.Map<IEnumerable<ViewScenarioDto>>(Scenarios)).Returns(viewScenarios);
 
             // Act
-            var result = await _controller.GetScenarioOfProject(Guid.NewGuid(), Guid.NewGuid());
+            var result = await _controller.GetScenarioOfProject(Guid.NewGuid(), Guid.NewGuid(), null, null, "");
 
             // Assert
             var okResult = result as OkObjectResult;
@@ -327,12 +378,12 @@ namespace InSyncUnitTest.Controller
         public async Task GetScenarioOfProject_WithIdProjectInValidFomat_ReturnBadRequest()
         {
             // Arrange
-            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper);
+            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper, _logger);
             var invalidGuid = "e4d34798-4c18-4ca4-9014-191492e3b90"; // GUID sai định dạng
             controller.ModelState.AddModelError("id", $"The value '{invalidGuid}' is not valid.");
 
             // Act
-            var result = await controller.GetScenarioOfProject(Guid.Empty, Guid.Empty);
+            var result = await controller.GetScenarioOfProject(Guid.Empty, Guid.Empty, 0, 2, "");
 
             // Assert
             var badRequestResult = result as BadRequestObjectResult;
@@ -348,12 +399,12 @@ namespace InSyncUnitTest.Controller
         public async Task GetScenarioOfProject_WithCreateByIdInValidFomat_ReturnBadRequest()
         {
             // Arrange
-            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper);
+            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper, _logger);
             var invalidGuid = "e4d34798-4c18-4ca4-9014-191492e3b90"; // GUID sai định dạng
             controller.ModelState.AddModelError("id", $"The value '{invalidGuid}' is not valid.");
 
             // Act
-            var result = await controller.GetScenarioOfProject(Guid.Empty, Guid.Empty);
+            var result = await controller.GetScenarioOfProject(Guid.Empty, Guid.Empty, 0, 2, "");
 
             // Assert
             var badRequestResult = result as BadRequestObjectResult;
@@ -369,11 +420,11 @@ namespace InSyncUnitTest.Controller
         public async Task GetScenarioOfProject_WithCreateByIdNull_ReturnBadRequest()
         {
             // Arrange
-            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper);
+            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper, _logger);
             controller.ModelState.AddModelError("userIdClerk", $"The userIdClerk field is required.");
 
             // Act
-            var result = await controller.GetScenarioOfProject(Guid.Empty, Guid.Empty);
+            var result = await controller.GetScenarioOfProject(Guid.Empty, Guid.Empty, 0, 2, "");
 
             // Assert
             var badRequestResult = result as BadRequestObjectResult;
@@ -385,6 +436,22 @@ namespace InSyncUnitTest.Controller
             errorResponse.Errors.Should().ContainKey("userIdClerk");
             errorResponse.Errors["userIdClerk"].Should().Contain($"The userIdClerk field is required.");
         }
+        [Fact]
+        public async Task GetScenarioOfProject_WhenOccurredException_ShouldReturnsInternalServerError()
+        {
+            // Arrange
+            var message = "An error occurred while retrieving scenarios.";
+            A.CallTo(() => _scenarioRepo.GetMulti(A<Expression<Func<Scenario, bool>>>._, A<string[]>._)).Throws(new Exception(message));
+
+            // Act
+            var result = await _controller.GetScenarioOfProject(Guid.NewGuid(), Guid.NewGuid(), null, null, "");
+
+            // Assert
+            var statusCodeResult = result as ObjectResult;
+            statusCodeResult.Should().NotBeNull();
+            statusCodeResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+            statusCodeResult.Value.Should().Be(message);
+        }
 
         #endregion
 
@@ -392,8 +459,8 @@ namespace InSyncUnitTest.Controller
         [Fact]
         public async Task GetScenarioOfProjectByUserClerk_WhenDependencyAreNull_ShouldReturnInternalServerError()
         {
-            var controller = new ScenariosController(null, null, null, null);
-            var result = await controller.GetScenarioOfProjectByUserClerk(Guid.NewGuid(), "");
+            var controller = new ScenariosController(null, null, null, null, _logger);
+            var result = await controller.GetScenarioOfProjectByUserClerk(Guid.NewGuid(), "", 0, 2, "");
 
 
             var statusCodeResult = result as ObjectResult;
@@ -415,7 +482,7 @@ namespace InSyncUnitTest.Controller
             A.CallTo(() => _mapper.Map<IEnumerable<ViewScenarioDto>>(Scenarios)).Returns(viewScenarios);
 
             // Act
-            var result = await _controller.GetScenarioOfProjectByUserClerk(Guid.NewGuid(), userIdClerk);
+            var result = await _controller.GetScenarioOfProjectByUserClerk(Guid.NewGuid(), userIdClerk, 0, 2, "");
 
             // Assert
             var okResult = result as OkObjectResult;
@@ -439,7 +506,7 @@ namespace InSyncUnitTest.Controller
             A.CallTo(() => _mapper.Map<IEnumerable<ViewScenarioDto>>(Scenarios)).Returns(viewScenarios);
 
             // Act
-            var result = await _controller.GetScenarioOfProjectByUserClerk(Guid.NewGuid(), userIdClerk);
+            var result = await _controller.GetScenarioOfProjectByUserClerk(Guid.NewGuid(), userIdClerk, index, size, "");
 
             // Assert
             var okResult = result as OkObjectResult;
@@ -459,12 +526,12 @@ namespace InSyncUnitTest.Controller
             IEnumerable<ViewScenarioDto> viewScenarios = new List<ViewScenarioDto> { new ViewScenarioDto(), new ViewScenarioDto() };
             int total;
             string[] includes = new string[] { };
-            A.CallTo(() => _scenarioRepo.GetMultiPaging(A<Expression<Func<Scenario, bool>>>._, out total, A<int>._, A<int>._, A<string[]>._))
+            A.CallTo(() => _scenarioRepo.GetMulti(A<Expression<Func<Scenario, bool>>>._, A<string[]>._))
                 .Returns(Scenarios);
             A.CallTo(() => _mapper.Map<IEnumerable<ViewScenarioDto>>(Scenarios)).Returns(viewScenarios);
 
             // Act
-            var result = await _controller.GetScenarioOfProjectByUserClerk(Guid.NewGuid(),userIdClerk);
+            var result = await _controller.GetScenarioOfProjectByUserClerk(Guid.NewGuid(), userIdClerk, null, null);
 
             // Assert
             var okResult = result as OkObjectResult;
@@ -478,7 +545,7 @@ namespace InSyncUnitTest.Controller
         public async Task GetScenarioOfProjectByUserClerk_WithIdProjectInValidFomat_ReturnBadRequest()
         {
             // Arrange
-            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper);
+            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper, _logger);
             var invalidGuid = "e4d34798-4c18-4ca4-9014-191492e3b90"; // GUID sai định dạng
             controller.ModelState.AddModelError("id", $"The value '{invalidGuid}' is not valid.");
 
@@ -495,16 +562,16 @@ namespace InSyncUnitTest.Controller
             errorResponse.Errors.Should().ContainKey("id");
             errorResponse.Errors["id"].Should().Contain($"The value '{invalidGuid}' is not valid.");
         }
-        
+
         [Fact]
         public async Task GetScenarioOfProjectByUserClerk_WithUserIdClerkNull_ReturnBadRequest()
         {
             // Arrange
-            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper);
+            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper, _logger);
             controller.ModelState.AddModelError("userIdClerk", $"The userIdClerk field is required.");
 
             // Act
-            var result = await controller.GetScenarioOfProjectByUserClerk(Guid.Empty, userIdClerk);
+            var result = await controller.GetScenarioOfProjectByUserClerk(Guid.Empty, "", 0, 2, "");
 
             // Assert
             var badRequestResult = result as BadRequestObjectResult;
@@ -517,6 +584,23 @@ namespace InSyncUnitTest.Controller
             errorResponse.Errors["userIdClerk"].Should().Contain($"The userIdClerk field is required.");
         }
 
+        [Fact]
+        public async Task GetScenarioOfProjectByUserClerk_WhenOccurredException_ShouldReturnsInternalServerError()
+        {
+            // Arrange
+            var message = "An error occurred while retrieving scenarios.";
+            A.CallTo(() => _scenarioRepo.GetMulti(A<Expression<Func<Scenario, bool>>>._, A<string[]>._)).Throws(new Exception(message));
+
+            // Act
+            var result = await _controller.GetScenarioOfProjectByUserClerk(Guid.NewGuid(), userIdClerk,null, null, "");
+
+            // Assert
+            var statusCodeResult = result as ObjectResult;
+            statusCodeResult.Should().NotBeNull();
+            statusCodeResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+            statusCodeResult.Value.Should().Be(message);
+        }
+
         #endregion
 
 
@@ -524,8 +608,8 @@ namespace InSyncUnitTest.Controller
         [Fact]
         public async Task GetAllScenarioByUserId_WhenDependencyAreNull_ShouldReturnInternalServerError()
         {
-            var controller = new ScenariosController(null, null, null, null);
-            var result = await controller.GetAllScenarioByUserId(Guid.Empty);
+            var controller = new ScenariosController(null, null, null, null, _logger);
+            var result = await controller.GetAllScenarioByUserId(Guid.Empty, 0,2);
 
 
             var statusCodeResult = result as ObjectResult;
@@ -547,7 +631,7 @@ namespace InSyncUnitTest.Controller
             A.CallTo(() => _mapper.Map<IEnumerable<ViewScenarioDto>>(Scenarios)).Returns(viewScenarios);
 
             // Act
-            var result = await _controller.GetAllScenarioByUserId(Guid.NewGuid(), "", index, size);
+            var result = await _controller.GetAllScenarioByUserId(Guid.NewGuid(),  index, size,"");
 
             // Assert
             var okResult = result as OkObjectResult;
@@ -571,7 +655,7 @@ namespace InSyncUnitTest.Controller
             A.CallTo(() => _mapper.Map<IEnumerable<ViewScenarioDto>>(Scenarios)).Returns(viewScenarios);
 
             // Act
-            var result = await _controller.GetAllScenarioByUserId(Guid.NewGuid(),  "", index, size);
+            var result = await _controller.GetAllScenarioByUserId(Guid.NewGuid(),  index, size,"");
 
             // Assert
             var okResult = result as OkObjectResult;
@@ -591,12 +675,12 @@ namespace InSyncUnitTest.Controller
             IEnumerable<ViewScenarioDto> viewScenarios = new List<ViewScenarioDto> { new ViewScenarioDto(), new ViewScenarioDto() };
             int total;
             string[] includes = new string[] { };
-            A.CallTo(() => _scenarioRepo.GetMultiPaging(A<Expression<Func<Scenario, bool>>>._, out total, A<int>._, A<int>._, A<string[]>._))
+            A.CallTo(() => _scenarioRepo.GetMulti(A<Expression<Func<Scenario, bool>>>._, A<string[]>._))
                 .Returns(Scenarios);
             A.CallTo(() => _mapper.Map<IEnumerable<ViewScenarioDto>>(Scenarios)).Returns(viewScenarios);
 
             // Act
-            var result = await _controller.GetAllScenarioByUserId(Guid.NewGuid());
+            var result = await _controller.GetAllScenarioByUserId(Guid.NewGuid(), null, null);
 
             // Assert
             var okResult = result as OkObjectResult;
@@ -610,12 +694,12 @@ namespace InSyncUnitTest.Controller
         public async Task GetAllScenarioByUserId_WithIdUserInValidFomat_ReturnBadRequest()
         {
             // Arrange
-            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper);
+            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper, _logger);
             var invalidGuid = "e4d34798-4c18-4ca4-9014-191492e3b90"; // GUID sai định dạng
             controller.ModelState.AddModelError("id", $"The value '{invalidGuid}' is not valid.");
 
             // Act
-            var result = await controller.GetAllScenarioByUserId(Guid.Empty, "");
+            var result = await controller.GetAllScenarioByUserId(Guid.Empty,0,2);
 
             // Assert
             var badRequestResult = result as BadRequestObjectResult;
@@ -627,16 +711,16 @@ namespace InSyncUnitTest.Controller
             errorResponse.Errors.Should().ContainKey("id");
             errorResponse.Errors["id"].Should().Contain($"The value '{invalidGuid}' is not valid.");
         }
-        
+
         [Fact]
         public async Task GetAllScenarioByUserId_WithUserIdNull_ReturnBadRequest()
         {
             // Arrange
-            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper);
+            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper, _logger);
             controller.ModelState.AddModelError("id", $"The value 'scenarios-user' is not valid.");
 
             // Act
-            var result = await controller.GetAllScenarioByUserId(Guid.Empty);
+            var result = await controller.GetAllScenarioByUserId(Guid.Empty, 0,2);
 
             // Assert
             var badRequestResult = result as BadRequestObjectResult;
@@ -648,6 +732,22 @@ namespace InSyncUnitTest.Controller
             errorResponse.Errors.Should().ContainKey("id");
             errorResponse.Errors["id"].Should().Contain($"The value 'scenarios-user' is not valid.");
         }
+        [Fact]
+        public async Task GetAllScenarioByUserId_WhenOccurredException_ShouldReturnsInternalServerError()
+        {
+            // Arrange
+            var message = "An error occurred while retrieving scenarios.";
+            A.CallTo(() => _scenarioRepo.GetMulti(A<Expression<Func<Scenario, bool>>>._, A<string[]>._)).Throws(new Exception(message));
+
+            // Act
+            var result = await _controller.GetAllScenarioByUserId(Guid.NewGuid(), null, null, "");
+
+            // Assert
+            var statusCodeResult = result as ObjectResult;
+            statusCodeResult.Should().NotBeNull();
+            statusCodeResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+            statusCodeResult.Value.Should().Be(message);
+        }
 
         #endregion
 
@@ -655,8 +755,8 @@ namespace InSyncUnitTest.Controller
         [Fact]
         public async Task GetAllScenarioByUserIdClerk_WhenDependencyAreNull_ShouldReturnInternalServerError()
         {
-            var controller = new ScenariosController(null, null, null, null);
-            var result = await controller.GetAllScenarioByUserIdClerk(userIdClerk);
+            var controller = new ScenariosController(null, null, null, null, _logger);
+            var result = await controller.GetAllScenarioByUserIdClerk(userIdClerk, 0, 2, "");
 
 
             var statusCodeResult = result as ObjectResult;
@@ -678,7 +778,7 @@ namespace InSyncUnitTest.Controller
             A.CallTo(() => _mapper.Map<IEnumerable<ViewScenarioDto>>(Scenarios)).Returns(viewScenarios);
 
             // Act
-            var result = await _controller.GetAllScenarioByUserIdClerk(userIdClerk, "", index, size);
+            var result = await _controller.GetAllScenarioByUserIdClerk(userIdClerk, index, size, "");
 
             // Assert
             var okResult = result as OkObjectResult;
@@ -702,7 +802,7 @@ namespace InSyncUnitTest.Controller
             A.CallTo(() => _mapper.Map<IEnumerable<ViewScenarioDto>>(Scenarios)).Returns(viewScenarios);
 
             // Act
-            var result = await _controller.GetAllScenarioByUserIdClerk(userIdClerk, "", index, size);
+            var result = await _controller.GetAllScenarioByUserIdClerk(userIdClerk, index, size, "");
 
             // Assert
             var okResult = result as OkObjectResult;
@@ -722,12 +822,12 @@ namespace InSyncUnitTest.Controller
             IEnumerable<ViewScenarioDto> viewScenarios = new List<ViewScenarioDto> { new ViewScenarioDto(), new ViewScenarioDto() };
             int total;
             string[] includes = new string[] { };
-            A.CallTo(() => _scenarioRepo.GetMultiPaging(A<Expression<Func<Scenario, bool>>>._, out total, A<int>._, A<int>._, A<string[]>._))
+            A.CallTo(() => _scenarioRepo.GetMulti(A<Expression<Func<Scenario, bool>>>._,  A<string[]>._))
                 .Returns(Scenarios);
             A.CallTo(() => _mapper.Map<IEnumerable<ViewScenarioDto>>(Scenarios)).Returns(viewScenarios);
 
             // Act
-            var result = await _controller.GetAllScenarioByUserIdClerk(userIdClerk);
+            var result = await _controller.GetAllScenarioByUserIdClerk(userIdClerk, null, null);
 
             // Assert
             var okResult = result as OkObjectResult;
@@ -741,12 +841,12 @@ namespace InSyncUnitTest.Controller
         public async Task GetAllScenarioByUserIdClerk_WithIdUserInValidFomat_ReturnBadRequest()
         {
             // Arrange
-            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper);
+            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper, _logger);
             var invalidGuid = "e4d34798-4c18-4ca4-9014-191492e3b90"; // GUID sai định dạng
             controller.ModelState.AddModelError("id", $"The value '{invalidGuid}' is not valid.");
 
             // Act
-            var result = await controller.GetAllScenarioByUserIdClerk(userIdClerk);
+            var result = await controller.GetAllScenarioByUserIdClerk(userIdClerk, 0, 2, "");
 
             // Assert
             var badRequestResult = result as BadRequestObjectResult;
@@ -763,11 +863,11 @@ namespace InSyncUnitTest.Controller
         public async Task GetAllScenarioByUserIdClerk_WithUserIdNull_ReturnBadRequest()
         {
             // Arrange
-            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper);
+            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper, _logger);
             controller.ModelState.AddModelError("id", $"The value 'scenarios-user-clerk' is not valid.");
 
             // Act
-            var result = await controller.GetAllScenarioByUserId(Guid.Empty);
+            var result = await controller.GetAllScenarioByUserId(Guid.Empty, 0,2);
 
             // Assert
             var badRequestResult = result as BadRequestObjectResult;
@@ -780,6 +880,22 @@ namespace InSyncUnitTest.Controller
             errorResponse.Errors["id"].Should().Contain($"The value 'scenarios-user-clerk' is not valid.");
         }
 
+        [Fact]
+        public async Task GetAllScenarioByUserIdClerk_WhenOccurredException_ShouldReturnsInternalServerError()
+        {
+            // Arrange
+            var message = "An error occurred while retrieving scenarios.";
+            A.CallTo(() => _scenarioRepo.GetMulti(A<Expression<Func<Scenario, bool>>>._, A<string[]>._)).Throws(new Exception(message));
+
+            // Act
+            var result = await _controller.GetAllScenarioByUserIdClerk(userIdClerk,null, null, "");
+
+            // Assert
+            var statusCodeResult = result as ObjectResult;
+            statusCodeResult.Should().NotBeNull();
+            statusCodeResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+            statusCodeResult.Value.Should().Be(message);
+        }
         #endregion
 
         #region AddScenario
@@ -787,7 +903,7 @@ namespace InSyncUnitTest.Controller
         public async Task AddScenario_WhenDependenciesAreNull_ShouldReturnsInternalServerError()
         {
             // Arrange
-            var controller = new ScenariosController(null, null, null, null);
+            var controller = new ScenariosController(null, null, null, null, _logger);
             var newScenario = new AddScenarioDto();
 
             // Act
@@ -804,7 +920,7 @@ namespace InSyncUnitTest.Controller
         public async Task AddScenario_WhenScenarioPropertyIdNull_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper);
+            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper, _logger);
             var newScenario = new AddScenarioDto { };
             string key = "id";
             string message = $"The {key} field is required.";
@@ -828,7 +944,7 @@ namespace InSyncUnitTest.Controller
         public async Task AddScenario_WithIdInValidFomat_ReturnBadRequest()
         {
             // Arrange
-            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper);
+            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper, _logger);
             var invalidGuid = "e4d34798-4c18-4ca4-9014-191492e3b90"; // GUID sai định dạng
             controller.ModelState.AddModelError("id", $"The value '{invalidGuid}' is not valid.");
             var newScenarioDto = new AddScenarioDto();
@@ -851,7 +967,7 @@ namespace InSyncUnitTest.Controller
         public async Task AddScenario_WhenScenarioPropertyScenarioNameNull_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper);
+            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper, _logger);
             var newScenario = new AddScenarioDto { };
             string key = "ScenarioName";
             string message = $"The {key} field is required.";
@@ -874,7 +990,7 @@ namespace InSyncUnitTest.Controller
         public async Task AddScenario_WhenScenarioPropertyScenarioNameLengthLonger255_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper);
+            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper, _logger);
             var newScenario = new AddScenarioDto { };
             string key = "ScenarioName";
             string messageError = $"The field {key} must be a string with a maximum length of 255.";
@@ -898,7 +1014,7 @@ namespace InSyncUnitTest.Controller
         public async Task AddScenario_WhenScenarioPropertyCreateByNull_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper);
+            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper, _logger);
             var newScenario = new AddScenarioDto { };
             string key = "CreatedBy";
             string message = $"The {key} field is required.";
@@ -922,7 +1038,7 @@ namespace InSyncUnitTest.Controller
         public async Task AddScenario_WithIdInValidCreateByFormat_ReturnBadRequest()
         {
             // Arrange
-            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper);
+            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper, _logger);
             var invalidGuid = "e4d34798-4c18-4ca4-9014-191492e3b90"; // GUID sai định dạng
             controller.ModelState.AddModelError("CreatedBy", $"The value '{invalidGuid}' is not valid.");
 
@@ -966,8 +1082,8 @@ namespace InSyncUnitTest.Controller
             // Arrange
             var newScenario = new AddScenarioDto { };
             var Scenario = new Scenario { };
-            string messageException = "Privacy existed";
-            var message = "An error occurred while adding scenario into Database " + messageException;
+            string messageException = "Scenario existed";
+            var message = "An error occurred while adding scenario into Database: " + messageException;
 
             A.CallTo(() => _userRepo.CheckContainsAsync(A<Expression<Func<User, bool>>>._)).Returns(Task.FromResult(true));
             A.CallTo(() => _projectRepo.CheckContainsAsync(A<Expression<Func<Project, bool>>>._)).Returns(Task.FromResult(true));
@@ -1003,7 +1119,7 @@ namespace InSyncUnitTest.Controller
             okResult.Should().NotBeNull();
             var response = okResult.Value as string;
             response.Should().Be("Don't exist user has id by : " + newScenario.CreatedBy.ToString());
-           
+
         }
         [Fact]
         public async Task AddScenario_WhenInformationProjectDontExist_ShouldReturnsOkResult()
@@ -1025,7 +1141,7 @@ namespace InSyncUnitTest.Controller
             okResult.Should().NotBeNull();
             var response = okResult.Value as string;
             response.Should().Be("Don't exist project has id by : " + newScenario.ProjectId.ToString());
-            
+
         }
         [Fact]
         public async Task AddScenario_WhenAddSucceeds_ShouldReturnsOkResult()
@@ -1057,7 +1173,7 @@ namespace InSyncUnitTest.Controller
         public async Task AddScenarioByUserClerk_WhenDependenciesAreNull_ShouldReturnsInternalServerError()
         {
             // Arrange
-            var controller = new ScenariosController(null, null, null, null);
+            var controller = new ScenariosController(null, null, null, null, _logger);
             var newScenario = new AddScenarioUserClerkDto();
 
             // Act
@@ -1074,7 +1190,7 @@ namespace InSyncUnitTest.Controller
         public async Task AddScenarioByUserClerk_WhenScenarioPropertyIdNull_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper);
+            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper, _logger);
             var newScenario = new AddScenarioUserClerkDto { };
             string key = "id";
             string message = $"The {key} field is required.";
@@ -1098,7 +1214,7 @@ namespace InSyncUnitTest.Controller
         public async Task AddScenarioByUserClerk_WithIdInValidFomat_ReturnBadRequest()
         {
             // Arrange
-            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper);
+            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper, _logger);
             var invalidGuid = "e4d34798-4c18-4ca4-9014-191492e3b90"; // GUID sai định dạng
             controller.ModelState.AddModelError("id", $"The value '{invalidGuid}' is not valid.");
             var newScenarioClerk = new AddScenarioUserClerkDto();
@@ -1122,7 +1238,7 @@ namespace InSyncUnitTest.Controller
         public async Task AddScenarioByUserClerk_WhenScenarioPropertyScenarioNameNull_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper);
+            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper, _logger);
             var newScenario = new AddScenarioUserClerkDto { };
             string key = "ScenarioName";
             string message = $"The {key} field is required.";
@@ -1145,7 +1261,7 @@ namespace InSyncUnitTest.Controller
         public async Task AddScenarioByUserClerk_WhenScenarioPropertyScenarioNameLengthLonger255_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper);
+            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper, _logger);
             var newScenario = new AddScenarioUserClerkDto { };
             string key = "ScenarioName";
             string messageError = $"The field {key} must be a string with a maximum length of 255.";
@@ -1169,7 +1285,7 @@ namespace InSyncUnitTest.Controller
         public async Task AddScenarioByUserClerk_WhenScenarioPropertyUserIdClerkNull_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper);
+            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper, _logger);
             var newScenario = new AddScenarioUserClerkDto { };
             string key = "UserIdClerk";
             string message = $"The {key} field is required.";
@@ -1203,7 +1319,7 @@ namespace InSyncUnitTest.Controller
             A.CallTo(() => _scenarioRepo.Add(Scenario)).Returns(Task.FromResult<Scenario>(null));
 
             // Act
-            var result = await _controller.AddScenarioByUserClerk (newScenario);
+            var result = await _controller.AddScenarioByUserClerk(newScenario);
 
             // Assert
             var statusCodeResult = result as ObjectResult;
@@ -1218,7 +1334,7 @@ namespace InSyncUnitTest.Controller
             var newScenario = new AddScenarioUserClerkDto { };
             var Scenario = new Scenario { };
             string messageException = "Scenario existed";
-            var message = "An error occurred while adding scenario into Database " + messageException;
+            var message = "An error occurred while adding scenario into Database: " + messageException;
             var existUser = new User();
 
             A.CallTo(() => _userRepo.GetSingleByCondition(A<Expression<Func<User, bool>>>._, A<string[]>._)).Returns(Task.FromResult(existUser));
@@ -1243,7 +1359,7 @@ namespace InSyncUnitTest.Controller
             var Scenario = new Scenario { };
             var addedScenario = new Scenario { };
 
-           
+
             A.CallTo(() => _userRepo.GetSingleByCondition(A<Expression<Func<User, bool>>>._, A<string[]>._)).Returns(Task.FromResult<User>(null));
             A.CallTo(() => _projectRepo.CheckContainsAsync(A<Expression<Func<Project, bool>>>._)).Returns(Task.FromResult(true));
             A.CallTo(() => _mapper.Map<Scenario>(newScenario)).Returns(Scenario);
@@ -1312,7 +1428,7 @@ namespace InSyncUnitTest.Controller
         public async Task UpdatScenario_WhenDependenciesAreNull_ShouldReturnsInternalServerError()
         {
             // Arrange
-            var controller = new ScenariosController(null,null, null, null);
+            var controller = new ScenariosController(null, null, null, null, _logger);
             var UpdateScenario = new UpdateScenarioDto();
 
             // Act
@@ -1328,7 +1444,7 @@ namespace InSyncUnitTest.Controller
         public async Task UpdateScenario_WhenScenarioPropertyIdInvalidFomat_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new ScenariosController(_scenarioRepo,_userRepo, _projectRepo, _mapper);
+            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper, _logger);
             var UpdateScenario = new UpdateScenarioDto();
             controller.ModelState.AddModelError("id", "The value 'e4d34798-4c18-4ca4-9014-191492e3b90' is not valid.");
 
@@ -1350,7 +1466,7 @@ namespace InSyncUnitTest.Controller
         public async Task UpdateScenario_WhenScenarioPropertyIdNull_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper);
+            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper, _logger);
             var newScenario = new AddScenarioDto { };
             string key = "Id";
             string message = $"The {key} field is required.";
@@ -1374,7 +1490,7 @@ namespace InSyncUnitTest.Controller
         public async Task UpdateScenario_WithIdInValidFomat_ReturnBadRequest()
         {
             // Arrange
-            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper);
+            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper, _logger);
             var invalidGuid = "e4d34798-4c18-4ca4-9014-191492e3b90"; // GUID sai định dạng
             controller.ModelState.AddModelError("id", $"The value '{invalidGuid}' is not valid.");
             var newScenarioDto = new AddScenarioDto();
@@ -1397,7 +1513,7 @@ namespace InSyncUnitTest.Controller
         public async Task UpdateScenario_WhenScenarioPropertyScenarioNameNull_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper);
+            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper, _logger);
             var newScenario = new AddScenarioDto { };
             string key = "ScenarioName";
             string message = $"The {key} field is required.";
@@ -1420,7 +1536,7 @@ namespace InSyncUnitTest.Controller
         public async Task UpdateScenario_WhenScenarioPropertyScenarioNameLengthLonger255_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper);
+            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper, _logger);
             var newScenario = new AddScenarioDto { };
             string key = "ScenarioName";
             string messageError = $"The field {key} must be a string with a maximum length of 255.";
@@ -1525,7 +1641,7 @@ namespace InSyncUnitTest.Controller
         public async Task DeleteScenario_WhenDependenciesAreNull_ShouldReturnsInternalServerError()
         {
             // Arrange
-            var controller = new ScenariosController(null, null, null, null);
+            var controller = new ScenariosController(null, null, null, null, _logger);
             var id = Guid.NewGuid();
 
             // Act
@@ -1552,7 +1668,7 @@ namespace InSyncUnitTest.Controller
             var notFoundResult = result as NotFoundObjectResult;
             notFoundResult.Should().NotBeNull();
             notFoundResult.StatusCode.Should().Be(StatusCodes.Status404NotFound);
-            notFoundResult.Value.Should().Be($"Dont exist scenario with id {id.ToString()} to delete");
+            notFoundResult.Value.Should().Be($"Don't exist scenario with id {id} to delete");
 
         }
 
@@ -1598,7 +1714,7 @@ namespace InSyncUnitTest.Controller
         public async Task DeleteScenario_WhenScenarioPropertyIdInvalidFomat_ShouldReturnsBadRequest()
         {
             // Arrange
-            var controller = new ScenariosController(_scenarioRepo,_userRepo, _projectRepo, _mapper);
+            var controller = new ScenariosController(_scenarioRepo, _userRepo, _projectRepo, _mapper, _logger);
             string key = "id";
             string message = "The value 'e4d34798-4c18-4ca4-9014-191492e3b90' is not valid.";
             controller.ModelState.AddModelError(key, message);

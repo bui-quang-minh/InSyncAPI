@@ -25,11 +25,13 @@ namespace InSyncAPI.Controllers
                 nameof(Project.User)
            };
 
-        public ProjectsController(IProjectRepository projectRepo, IUserRepository userRepo, IMapper mapper)
+        public ProjectsController(IProjectRepository projectRepo, IUserRepository userRepo
+            , IMapper mapper, ILogger<ProjectsController> logger)
         {
             _projectRepo = projectRepo;
             _userRepo = userRepo;
             _mapper = mapper;
+            _logger = logger;
         }
         [HttpGet()]
         [EnableQuery]
