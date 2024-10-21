@@ -46,9 +46,9 @@ namespace InSyncAPI.Controllers
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received a request to get subscription plans at {RequestTime}", DateTime.UtcNow);
 
-            if (_subscriptionPlanRepo == null)
+            if (_subscriptionPlanRepo == null|| _userRepository == null || _mapper == null)
             {
-                _logger.LogError("Subscription plan repository is not initialized.");
+                _logger.LogError("Subscription plan repository or User repository or mapper is not initialized.");
                 return StatusCode(StatusCodes.Status500InternalServerError, "Application service has not been created");
             }
 
@@ -76,9 +76,9 @@ namespace InSyncAPI.Controllers
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received a request to get all subscription plans at {RequestTime}", DateTime.UtcNow);
 
-            if (_subscriptionPlanRepo == null || _mapper == null)
+            if (_subscriptionPlanRepo == null || _userRepository == null || _mapper == null)
             {
-                _logger.LogError("Subscription plan repository or mapper is not initialized.");
+                _logger.LogError("Subscription plan repository or User repository or mapper is not initialized.");
                 return StatusCode(StatusCodes.Status500InternalServerError, "Application service has not been created");
             }
 
@@ -133,9 +133,9 @@ namespace InSyncAPI.Controllers
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received a request to get subscription plan by ID: {Id} at {RequestTime}", id, DateTime.UtcNow);
 
-            if (_subscriptionPlanRepo == null || _mapper == null)
+            if (_subscriptionPlanRepo == null || _userRepository == null || _mapper == null)
             {
-                _logger.LogError("Subscription plan repository or mapper is not initialized.");
+                _logger.LogError("Subscription plan repository or User repository or mapper is not initialized.");
                 return StatusCode(StatusCodes.Status500InternalServerError, "Application service has not been created");
             }
 
@@ -179,9 +179,9 @@ namespace InSyncAPI.Controllers
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received a request to add a new subscription plan at {RequestTime}", DateTime.UtcNow);
 
-            if (_subscriptionPlanRepo == null || _mapper == null)
+            if (_subscriptionPlanRepo == null || _userRepository == null || _mapper == null)
             {
-                _logger.LogError("Subscription plan repository or mapper is not initialized.");
+                _logger.LogError("Subscription plan repository or User repository or mapper is not initialized.");
                 return StatusCode(StatusCodes.Status500InternalServerError, "Application service has not been created");
             }
 
@@ -232,9 +232,9 @@ namespace InSyncAPI.Controllers
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received a request to add a new subscription plan for user clerk at {RequestTime}", DateTime.UtcNow);
 
-            if (_subscriptionPlanRepo == null || _mapper == null)
+            if (_subscriptionPlanRepo == null || _userRepository == null || _mapper == null)
             {
-                _logger.LogError("Subscription plan repository or mapper is not initialized.");
+                _logger.LogError("Subscription plan repository or User repository or mapper is not initialized.");
                 return StatusCode(StatusCodes.Status500InternalServerError, "Application service has not been created");
             }
 
@@ -288,9 +288,9 @@ namespace InSyncAPI.Controllers
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received a request to update subscription plan with ID: {Id} at {RequestTime}", id, DateTime.UtcNow);
 
-            if (_subscriptionPlanRepo == null || _mapper == null)
+            if (_subscriptionPlanRepo == null || _userRepository == null || _mapper == null)
             {
-                _logger.LogError("Subscription plan repository or mapper is not initialized.");
+                _logger.LogError("Subscription plan repository or User repository or mapper is not initialized.");
                 return StatusCode(StatusCodes.Status500InternalServerError, "Application service has not been created");
             }
 
@@ -344,9 +344,9 @@ namespace InSyncAPI.Controllers
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received a request to delete subscription plan with ID: {Id} at {RequestTime}", id, DateTime.UtcNow);
 
-            if (_subscriptionPlanRepo == null || _mapper == null)
+            if (_subscriptionPlanRepo == null || _userRepository == null || _mapper == null)
             {
-                _logger.LogError("Subscription plan repository or mapper is not initialized.");
+                _logger.LogError("Subscription plan repository or User repository or mapper is not initialized.");
                 return StatusCode(StatusCodes.Status500InternalServerError, "Application service has not been created");
             }
 

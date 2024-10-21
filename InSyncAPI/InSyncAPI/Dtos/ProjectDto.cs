@@ -22,6 +22,7 @@ namespace InSyncAPI.Dtos
         public string? Description { get; set; }
         [Required]
         public Guid UserId { get; set; }
+        [Required]
         public bool IsPublish { get; set; }
     }
     public class AddProjectClerkDto
@@ -32,6 +33,7 @@ namespace InSyncAPI.Dtos
         public string? Description { get; set; }
         [Required]
         public string  UserIdClerk { get; set; }
+        [Required]
         public bool IsPublish { get; set; }
     }
     public class UpdateProjectDto
@@ -41,6 +43,7 @@ namespace InSyncAPI.Dtos
         [StringLength(255)]
         public string ProjectName { get; set; } = null!;
         public string? Description { get; set; }
+        [Required]
         public bool IsPublish { get; set; }
     }
     public class ActionProjectResponse

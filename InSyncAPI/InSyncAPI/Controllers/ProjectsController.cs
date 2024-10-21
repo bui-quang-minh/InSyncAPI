@@ -42,9 +42,9 @@ namespace InSyncAPI.Controllers
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received request to get all projects at {RequestTime}.", DateTime.UtcNow);
 
-            if (_projectRepo == null || _mapper == null)
+            if (_projectRepo == null|| _userRepo == null || _mapper == null)
             {
-                _logger.LogError("Project repository or mapper is not initialized.");
+                _logger.LogError("Project repository or User repository or mapper is not initialized.");
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     value: "Application service has not been created");
             }
@@ -77,10 +77,11 @@ namespace InSyncAPI.Controllers
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received request to get all projects at {RequestTime}.", DateTime.UtcNow);
 
-            if (_projectRepo == null || _mapper == null)
+            if (_projectRepo == null || _userRepo == null || _mapper == null)
             {
-                _logger.LogError("Project repository or mapper is not initialized.");
-                return StatusCode(StatusCodes.Status500InternalServerError, "Application service has not been created");
+                _logger.LogError("Project repository or User repository or mapper is not initialized.");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    value: "Application service has not been created");
             }
 
             IEnumerable<Project> listProject =  new List<Project>(); ;
@@ -132,10 +133,11 @@ namespace InSyncAPI.Controllers
             _logger.LogInformation("Received a request to retrieve projects for user {UserId} with index {Index}, size {Size}, isPublish {IsPublish}, keySearch '{KeySearch}' at {RequestTime}",
                 userId, index, size, isPublish, keySearch, DateTime.UtcNow);
 
-            if (_projectRepo == null || _mapper == null)
+            if (_projectRepo == null || _userRepo == null || _mapper == null)
             {
-                _logger.LogError("Project repository or mapper is not initialized.");
-                return StatusCode(StatusCodes.Status500InternalServerError, "Application service has not been created");
+                _logger.LogError("Project repository or User repository or mapper is not initialized.");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    value: "Application service has not been created");
             }
 
             if (!ModelState.IsValid)
@@ -205,10 +207,11 @@ namespace InSyncAPI.Controllers
             _logger.LogInformation("Received a request to retrieve projects for clerk {UserIdClerk} with index {Index}, size {Size}, isPublish {IsPublish}, keySearch '{KeySearch}' at {RequestTime}",
                 userIdClerk, index, size, isPublish, keySearch, DateTime.UtcNow);
 
-            if (_projectRepo == null || _mapper == null)
+            if (_projectRepo == null || _userRepo == null || _mapper == null)
             {
-                _logger.LogError("Project repository or mapper is not initialized.");
-                return StatusCode(StatusCodes.Status500InternalServerError, "Application service has not been created");
+                _logger.LogError("Project repository or User repository or mapper is not initialized.");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    value: "Application service has not been created");
             }
 
             if (!ModelState.IsValid)
@@ -282,10 +285,11 @@ namespace InSyncAPI.Controllers
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received a request to retrieve project with ID {ProjectId} at {RequestTime}", id, DateTime.UtcNow);
 
-            if (_projectRepo == null || _mapper == null)
+            if (_projectRepo == null || _userRepo == null || _mapper == null)
             {
-                _logger.LogError("Project repository or mapper is not initialized.");
-                return StatusCode(StatusCodes.Status500InternalServerError, "Application service has not been created");
+                _logger.LogError("Project repository or User repository or mapper is not initialized.");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    value: "Application service has not been created");
             }
 
             if (!ModelState.IsValid)
@@ -329,10 +333,11 @@ namespace InSyncAPI.Controllers
             _logger.LogInformation("Received a request to add a new project with UserId {UserId} at {RequestTime}",
                 newProject.UserId, DateTime.UtcNow);
 
-            if (_projectRepo == null || _mapper == null)
+            if (_projectRepo == null || _userRepo == null || _mapper == null)
             {
-                _logger.LogError("Project repository or mapper is not initialized.");
-                return StatusCode(StatusCodes.Status500InternalServerError, "Application service has not been created");
+                _logger.LogError("Project repository or User repository or mapper is not initialized.");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    value: "Application service has not been created");
             }
 
             if (!ModelState.IsValid)
@@ -387,10 +392,11 @@ namespace InSyncAPI.Controllers
             _logger.LogInformation("Received a request to add a new project for clerk with UserIdClerk {UserIdClerk} at {RequestTime}",
                 newProject.UserIdClerk, DateTime.UtcNow);
 
-            if (_projectRepo == null || _mapper == null)
+            if (_projectRepo == null || _userRepo == null || _mapper == null)
             {
-                _logger.LogError("Project repository or mapper is not initialized.");
-                return StatusCode(StatusCodes.Status500InternalServerError, "Application service has not been created");
+                _logger.LogError("Project repository or User repository or mapper is not initialized.");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    value: "Application service has not been created");
             }
 
             if (!ModelState.IsValid)
@@ -448,10 +454,11 @@ namespace InSyncAPI.Controllers
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received a request to update project with ID {ProjectId} at {RequestTime}", id, DateTime.UtcNow);
 
-            if (_projectRepo == null || _mapper == null)
+            if (_projectRepo == null || _userRepo == null || _mapper == null)
             {
-                _logger.LogError("Project repository or mapper is not initialized.");
-                return StatusCode(StatusCodes.Status500InternalServerError, "Application service has not been created");
+                _logger.LogError("Project repository or User repository or mapper is not initialized.");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    value: "Application service has not been created");
             }
 
             if (!ModelState.IsValid)
@@ -507,10 +514,11 @@ namespace InSyncAPI.Controllers
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received a request to delete project with ID {ProjectId} at {RequestTime}", id, DateTime.UtcNow);
 
-            if (_projectRepo == null || _mapper == null)
+            if (_projectRepo == null || _userRepo == null || _mapper == null)
             {
-                _logger.LogError("Project repository or mapper is not initialized.");
-                return StatusCode(StatusCodes.Status500InternalServerError, "Application service has not been created");
+                _logger.LogError("Project repository or User repository or mapper is not initialized.");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    value: "Application service has not been created");
             }
 
             if (!ModelState.IsValid)

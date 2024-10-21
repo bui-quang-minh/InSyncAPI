@@ -37,9 +37,9 @@ namespace InSyncAPI.Controllers
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received request to get privacy policies at {RequestTime}.", DateTime.UtcNow);
 
-            if (_privacyPolicyRepo == null)
+            if (_privacyPolicyRepo == null || _mapper == null)
             {
-                _logger.LogError("Privacy policy repository is not initialized.");
+                _logger.LogError("Privacy policy repository or mapper is not initialized.");
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     value: "Application service has not been created");
             }
