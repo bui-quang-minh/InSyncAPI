@@ -33,28 +33,41 @@ namespace InSyncAPI.Dtos
         [Required]
         [MaxLength(255)]
         public string SubscriptionsName { get; set; } = null!;
+
         [Required]
         public bool Status { get; set; }
+
         [Required]
-        [Range(0.01, double.MaxValue, ErrorMessage = "Price must be greater than 0")]
+        [Range(0, double.MaxValue, ErrorMessage = "Price must be greater than 0")]
         public decimal Price { get; set; }
+
         [Required]
         public Guid UserId { get; set; }
+
         [Required]
         public string Content { get; set; } = null!;
-        [Range(0, Int16.MaxValue)]
+
+        [Range(0, int.MaxValue)]
         public int? MaxProjects { get; set; }
-        [Range(0, Int16.MaxValue)]
+
+        [Range(0, int.MaxValue)]
         public long? MaxAssets { get; set; }
-        [Range(0, Int16.MaxValue)]
+
+        [Range(0, int.MaxValue)]
         public int? MaxScenarios { get; set; }
-        [Range(0, Int16.MaxValue)]
+
+        [Range(0, int.MaxValue)]
         public int? MaxUsersAccess { get; set; }
+
         [Range(0, long.MaxValue)]
         public long? StorageLimit { get; set; }
+
         public string? SupportLevel { get; set; }
+
         public string? CustomFeaturesDescription { get; set; }
+
         [Required]
+        [Range(0, long.MaxValue)]
         public long DataRetentionPeriod { get; set; }
         public bool? PrioritySupport { get; set; }
         public bool? MonthlyReporting { get; set; }
@@ -67,26 +80,38 @@ namespace InSyncAPI.Dtos
         public string SubscriptionsName { get; set; } = null!;
         [Required]
         public bool Status { get; set; }
+
         [Required]
-        [Range(0.01, double.MaxValue, ErrorMessage = "Price must be greater than 0")]
+        [Range(0, double.MaxValue, ErrorMessage = "Price must be greater than 0")]
         public decimal Price { get; set; }
+
         [Required]
         public String UserIdClerk { get; set; }
+
         [Required]
         public string Content { get; set; } = null!;
-        [Range(0, Int16.MaxValue)]
+
+        [Range(0, int.MaxValue)]
         public int? MaxProjects { get; set; }
-        [Range(0, Int16.MaxValue)]
+
+        [Range(0, long.MaxValue)]
         public long? MaxAssets { get; set; }
-        [Range(0, Int16.MaxValue)]
+
+        [Range(0, int.MaxValue)]
         public int? MaxScenarios { get; set; }
-        [Range(0, Int16.MaxValue)]
+
+        [Range(0, int.MaxValue)]
         public int? MaxUsersAccess { get; set; }
+
         [Range(0, long.MaxValue)]
         public long? StorageLimit { get; set; }
+
         public string? SupportLevel { get; set; }
+
         public string? CustomFeaturesDescription { get; set; }
+
         [Required]
+        [Range(0, long.MaxValue)]
         public long DataRetentionPeriod { get; set; }
         public bool? PrioritySupport { get; set; }
         public bool? MonthlyReporting { get; set; }
@@ -96,28 +121,41 @@ namespace InSyncAPI.Dtos
     {
         [Required]
         public Guid Id { get; set; }
+
         [Required]
         [MaxLength(255)]
         public string SubscriptionsName { get; set; } = null!;
+
         [Required]
         public bool Status { get; set; }
+
         [Required]
-        [Range(0.01, double.MaxValue, ErrorMessage = "Price must be greater than 0")]
+        [Range(0, double.MaxValue, ErrorMessage = "Price must be greater than 0")]
         public decimal Price { get; set; }
+
         [Required]
         public string Content { get; set; } = null!;
-        [Range(0, Int16.MaxValue)]
+
+        [Range(0, int.MaxValue)]
         public int? MaxProjects { get; set; }
-        [Range(0, Int16.MaxValue)]
+
+        [Range(0, int.MaxValue)]
         public long? MaxAssets { get; set; }
-        [Range(0, Int16.MaxValue)]
+
+        [Range(0, int.MaxValue)]
         public int? MaxScenarios { get; set; }
-        [Range(0, Int16.MaxValue)]
+
+        [Range(0, int.MaxValue)]
         public int? MaxUsersAccess { get; set; }
+
         [Range(0, long.MaxValue)]
         public long? StorageLimit { get; set; }
+
         public string? SupportLevel { get; set; }
+
         public string? CustomFeaturesDescription { get; set; }
+
+        [Range(0, long.MaxValue)]
         [Required]
         public long DataRetentionPeriod { get; set; }
         public bool? PrioritySupport { get; set; }
