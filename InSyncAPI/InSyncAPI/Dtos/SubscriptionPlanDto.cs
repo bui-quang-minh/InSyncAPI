@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Numerics;
 
 namespace InSyncAPI.Dtos
 {
@@ -10,7 +11,7 @@ namespace InSyncAPI.Dtos
         public decimal Price { get; set; }
         public string UserId { get; set; }
         public string UserIdGuid { get; set; }
-        public string DisplayName { get;set; }
+        public string DisplayName { get; set; }
         public string Content { get; set; } = null!;
         public DateTime DateCreated { get; set; }
         public DateTime? DateUpdated { get; set; }
@@ -41,10 +42,15 @@ namespace InSyncAPI.Dtos
         public Guid UserId { get; set; }
         [Required]
         public string Content { get; set; } = null!;
+        [Range(0, Int16.MaxValue)]
         public int? MaxProjects { get; set; }
+        [Range(0, Int16.MaxValue)]
         public long? MaxAssets { get; set; }
+        [Range(0, Int16.MaxValue)]
         public int? MaxScenarios { get; set; }
+        [Range(0, Int16.MaxValue)]
         public int? MaxUsersAccess { get; set; }
+        [Range(0, long.MaxValue)]
         public long? StorageLimit { get; set; }
         public string? SupportLevel { get; set; }
         public string? CustomFeaturesDescription { get; set; }
@@ -68,10 +74,15 @@ namespace InSyncAPI.Dtos
         public String UserIdClerk { get; set; }
         [Required]
         public string Content { get; set; } = null!;
+        [Range(0, Int16.MaxValue)]
         public int? MaxProjects { get; set; }
+        [Range(0, Int16.MaxValue)]
         public long? MaxAssets { get; set; }
+        [Range(0, Int16.MaxValue)]
         public int? MaxScenarios { get; set; }
+        [Range(0, Int16.MaxValue)]
         public int? MaxUsersAccess { get; set; }
+        [Range(0, long.MaxValue)]
         public long? StorageLimit { get; set; }
         public string? SupportLevel { get; set; }
         public string? CustomFeaturesDescription { get; set; }
@@ -95,10 +106,15 @@ namespace InSyncAPI.Dtos
         public decimal Price { get; set; }
         [Required]
         public string Content { get; set; } = null!;
+        [Range(0, Int16.MaxValue)]
         public int? MaxProjects { get; set; }
+        [Range(0, Int16.MaxValue)]
         public long? MaxAssets { get; set; }
+        [Range(0, Int16.MaxValue)]
         public int? MaxScenarios { get; set; }
+        [Range(0, Int16.MaxValue)]
         public int? MaxUsersAccess { get; set; }
+        [Range(0, long.MaxValue)]
         public long? StorageLimit { get; set; }
         public string? SupportLevel { get; set; }
         public string? CustomFeaturesDescription { get; set; }
