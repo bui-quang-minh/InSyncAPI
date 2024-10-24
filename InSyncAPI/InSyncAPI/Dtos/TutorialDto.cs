@@ -20,6 +20,7 @@ namespace InSyncAPI.Dtos
         public string Title { get; set; } = null!;
         public string? Content { get; set; }
         public bool IsShow { get; set; } = false;
+        [Range(0,long.MaxValue)]
         public long Order { get; set; } = 0;
     }
     public class UpdateTutorialDto
@@ -30,6 +31,7 @@ namespace InSyncAPI.Dtos
         public string Title { get; set; } = null!;
         public string? Content { get; set; }
         public bool IsShow { get; set; }
+        [Range(0, long.MaxValue)]
         public long Order { get; set; }
     }
     public class ActionTutorialResponse

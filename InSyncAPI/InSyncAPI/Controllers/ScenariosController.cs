@@ -204,7 +204,7 @@ namespace InSyncAPI.Controllers
                 if (index == null || size == null)
                 {
                     listScenario = _scenarioRepo.GetMulti
-                        (c => c.ProjectId.Equals(projectId) && c.CreatedBy.Equals(createdBy) && c.ScenarioName.ToLower().Contains(keySearch), includes
+                        (c => c.ProjectId.Equals(projectId) &&  c.CreatedBy.Equals(createdBy) && c.ScenarioName.ToLower().Contains(keySearch), includes
                         );
                     total = listScenario.Count();
                 }
@@ -213,7 +213,7 @@ namespace InSyncAPI.Controllers
                     index = index.Value < 0 ? INDEX_DEFAULT : index;
                     size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
                     listScenario = _scenarioRepo.GetMultiPaging
-                        (c => c.ProjectId.Equals(projectId) && c.CreatedBy.Equals(createdBy) && c.ScenarioName.ToLower().Contains(keySearch)
+                        (c => c.ProjectId.Equals(projectId) &&  c.CreatedBy.Equals(createdBy) && c.ScenarioName.ToLower().Contains(keySearch)
                         , out total, index.Value, size.Value, includes
                      );
                 }
@@ -612,7 +612,6 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
-
         public async Task<IActionResult> ToggleFavoriteScenario(Guid id)
         {
             var stopwatch = Stopwatch.StartNew();
@@ -661,7 +660,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
 
-        public async Task<IActionResult> UpdateWebJsonScenario(Guid id, string webjson)
+        public async Task<IActionResult> UpdateWebJsonScenario(Guid id, [FromBody] string webjson)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received a request to update web JSON steps for scenario with ID {ScenarioId} at {RequestTime}", id, DateTime.UtcNow);
@@ -709,7 +708,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
 
-        public async Task<IActionResult> UpdateAndroidJsonScenario(Guid id, string androidjson)
+        public async Task<IActionResult> UpdateAndroidJsonScenario(Guid id, [FromBody] string androidjson)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received a request to update Android JSON steps for scenario with ID {ScenarioId} at {RequestTime}", id, DateTime.UtcNow);
@@ -772,6 +771,11 @@ namespace InSyncAPI.Controllers
             {
                 _logger.LogWarning("Invalid model state when trying to rename scenario ID {ScenarioId}.", id);
                 return BadRequest(new ValidationProblemDetails(ModelState));
+            }
+            if (id != renameScenario.Id)
+            {
+                _logger.LogWarning("Scenario ID mismatch: expected {ExpectedId}, received {ReceivedId}.", id, renameScenario.Id);
+                return BadRequest("Scenario ID information does not match");
             }
 
             var existingScenario = await _scenarioRepo.GetSingleByCondition(c => c.Id.Equals(id));

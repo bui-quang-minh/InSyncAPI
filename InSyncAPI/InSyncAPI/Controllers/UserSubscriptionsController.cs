@@ -356,7 +356,7 @@ namespace InSyncAPI.Controllers
         [HttpGet("subsciption/{subId}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewUserSubsciptionDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
-        public async Task<IActionResult> GetAllUserSubsciptionOfSubsciption(Guid subId, int? index = INDEX_DEFAULT, int? size = ITEM_PAGES_DEFAULT)
+        public async Task<IActionResult> GetAllUserSubsciptionOfSubsciption(Guid subId, int? index, int? size)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received request to get all user subscriptions for subscription ID {SubId} at {RequestTime}", subId, DateTime.UtcNow);

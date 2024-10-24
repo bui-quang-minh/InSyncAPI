@@ -26,6 +26,7 @@ namespace InSyncUnitTest.Controller
         private ILogger<UserSubscriptionsController> _logger;
         private IMapper _mapper;
         private UserSubscriptionsController _controller;
+        
         public UserSubscriptionsControllerTest()
         {
             _userSubRepo = A.Fake<IUserSubscriptionRepository>();
