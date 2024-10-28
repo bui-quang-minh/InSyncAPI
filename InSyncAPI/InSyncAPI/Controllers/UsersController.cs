@@ -25,6 +25,9 @@ namespace InSyncAPI.Controllers
             _logger = logger;
         }
         [HttpPost("clerk-web-hook-create")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(User))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         public async Task<IActionResult> CreateUser([FromBody] CreateUserDto userDto)
         {
             var stopwatch = Stopwatch.StartNew();
@@ -66,6 +69,9 @@ namespace InSyncAPI.Controllers
         }
 
         [HttpPost("clerk-web-hook-update")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionUserResponse))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         public async Task<IActionResult> UpdateUser([FromBody] UpdateUserDto userDto)
         {
             var stopwatch = Stopwatch.StartNew();
@@ -107,7 +113,7 @@ namespace InSyncAPI.Controllers
 
                 stopwatch.Stop();
                 _logger.LogInformation("Successfully updated user with email: {Email} in {ElapsedMilliseconds}ms.", user.Email, stopwatch.ElapsedMilliseconds);
-                return Ok(new { message = "User updated successfully.", Id = existingUser.DisplayName });
+                return Ok(new ActionUserResponse { Message = "User updated successfully.", Id = existingUser.Id });
             }
             catch (Exception ex)
             {

@@ -46,7 +46,7 @@ namespace InSyncAPI.Controllers
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received a request to get subscription plans at {RequestTime}", DateTime.UtcNow);
 
-            if (_subscriptionPlanRepo == null|| _userRepository == null || _mapper == null)
+            if (_subscriptionPlanRepo == null || _userRepository == null || _mapper == null)
             {
                 _logger.LogError("Subscription plan repository or User repository or mapper is not initialized.");
                 return StatusCode(StatusCodes.Status500InternalServerError, "Application service has not been created");
@@ -128,7 +128,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
 
-        public async Task<IActionResult> GetSubsciptionPlanById(Guid id)
+        public async Task<IActionResult> GetSubsciptionPlanById([FromRoute] Guid id)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received a request to get subscription plan by ID: {Id} at {RequestTime}", id, DateTime.UtcNow);
@@ -174,7 +174,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
 
-        public async Task<IActionResult> AddSubsciptionPlan(AddSubscriptionPlanDto newSubscription)
+        public async Task<IActionResult> AddSubsciptionPlan([FromBody] AddSubscriptionPlanDto newSubscription)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received a request to add a new subscription plan at {RequestTime}", DateTime.UtcNow);
@@ -195,7 +195,7 @@ namespace InSyncAPI.Controllers
             if (!checkUserExist)
             {
                 _logger.LogWarning("User with ID: {UserId} does not exist when attempting to add subscription plan.", newSubscription.UserId);
-                return NotFound($"Don't exist user with id {newSubscription.UserId.ToString()} to add Subscription Plan");
+                return BadRequest($"Don't exist user with id {newSubscription.UserId.ToString()} to add Subscription Plan");
             }
 
             SubscriptionPlan subscriptionPlan = _mapper.Map<SubscriptionPlan>(newSubscription);
@@ -227,7 +227,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
 
-        public async Task<IActionResult> AddSubsciptionPlanUserClerk(AddSubscriptionPlanUserClerkDto newSubscription)
+        public async Task<IActionResult> AddSubsciptionPlanUserClerk([FromBody] AddSubscriptionPlanUserClerkDto newSubscription)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received a request to add a new subscription plan for user clerk at {RequestTime}", DateTime.UtcNow);
@@ -283,7 +283,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
 
-        public async Task<IActionResult> UpdateSubscriptionPlan(Guid id, UpdateSubscriptionPlanDto updateSubsciption)
+        public async Task<IActionResult> UpdateSubscriptionPlan([FromRoute] Guid id, [FromBody] UpdateSubscriptionPlanDto updateSubsciption)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received a request to update subscription plan with ID: {Id} at {RequestTime}", id, DateTime.UtcNow);
@@ -339,7 +339,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
 
-        public async Task<IActionResult> DeleteSubsciptionPlan(Guid id)
+        public async Task<IActionResult> DeleteSubsciptionPlan([FromRoute] Guid id)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received a request to delete subscription plan with ID: {Id} at {RequestTime}", id, DateTime.UtcNow);

@@ -55,4 +55,9 @@ namespace InSyncAPI.Dtos
         public string Object { get; set; }
         public string Type { get; set; }
     }
+    public class ActionUserResponse
+    {
+        public string Message { get; set; }
+        public Guid Id { get; set; }
+    }
 }

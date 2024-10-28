@@ -26,7 +26,7 @@ namespace InSyncAPI.Controllers
             _tutorialRepo = tutorialRepo;
             _mapper = mapper;
             _logger = logger;
-           
+
         }
         [HttpGet()]
         [EnableQuery]
@@ -118,7 +118,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
-        public async Task<IActionResult> GetTutorialById(Guid id)
+        public async Task<IActionResult> GetTutorialById([FromRoute] Guid id)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received a request to get tutorial by ID: {TutorialId} at {RequestTime}", id, DateTime.UtcNow);
@@ -163,7 +163,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
 
-        public async Task<IActionResult> AddTutorial(AddTutorialDto newTutorial)
+        public async Task<IActionResult> AddTutorial([FromBody] AddTutorialDto newTutorial)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received request to add a new tutorial at {RequestTime}", DateTime.UtcNow);
@@ -210,7 +210,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
 
-        public async Task<IActionResult> UpdateTutorial(Guid id, UpdateTutorialDto updateTutorial)
+        public async Task<IActionResult> UpdateTutorial([FromRoute] Guid id, [FromBody] UpdateTutorialDto updateTutorial)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received request to update tutorial with ID: {TutorialId} at {RequestTime}", id, DateTime.UtcNow);
@@ -265,7 +265,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
-        public async Task<IActionResult> DeleteTutorial(Guid id)
+        public async Task<IActionResult> DeleteTutorial([FromRoute] Guid id)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received request to delete tutorial with ID: {TutorialId} at {RequestTime}", id, DateTime.UtcNow);

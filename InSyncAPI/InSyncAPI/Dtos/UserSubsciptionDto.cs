@@ -52,7 +52,6 @@ namespace InSyncAPI.Dtos
     public class UpdateUserSubsciptionDto
     {
         public Guid Id { get; set; }
-        public Guid SubscriptionPlanId { get; set; }
         [Required]
         public DateTime StripeCurrentPeriodEnd { get; set; }
         [Required]

@@ -138,7 +138,7 @@ namespace InSyncAPI.Controllers
         [HttpGet("user/{userId}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewUserSubsciptionDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
-        public async Task<IActionResult> GetAllUserSubsciptionOfUser(Guid userId, int? index , int? size)
+        public async Task<IActionResult> GetAllUserSubsciptionOfUser([FromRoute]Guid userId, int? index , int? size)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received request to get all subscriptions for user {UserId} at {RequestTime}", userId, DateTime.UtcNow);
@@ -172,11 +172,6 @@ namespace InSyncAPI.Controllers
                     listUserSubsciption = _userSubRepo.GetMultiPaging(c => c.UserId.Equals(userId), out total, index.Value, size.Value, includes);
                 }
 
-                if (listUserSubsciption == null || !listUserSubsciption.Any())
-                {
-                    _logger.LogWarning("No subscriptions found for user {UserId}.", userId);
-                    return NotFound($"No subscriptions found for user with ID {userId}.");
-                }
 
                 var response = _mapper.Map<IEnumerable<ViewUserSubsciptionDto>>(listUserSubsciption);
                 var responsePaging = new ResponsePaging<IEnumerable<ViewUserSubsciptionDto>>
@@ -197,10 +192,10 @@ namespace InSyncAPI.Controllers
             }
         }
 
-        [HttpGet("user/{userIdClerk}")]
+        [HttpGet("user-clerk/{userIdClerk}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewUserSubsciptionDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
-        public async Task<IActionResult> GetAllUserSubsciptionOfUserClerk(string userIdClerk, int? index , int? size )
+        public async Task<IActionResult> GetAllUserSubsciptionOfUserClerk([FromRoute]string userIdClerk, int? index , int? size )
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received request to get all subscriptions for clerk {UserIdClerk} at {RequestTime}", userIdClerk, DateTime.UtcNow);
@@ -234,12 +229,6 @@ namespace InSyncAPI.Controllers
                     listUserSubsciption = _userSubRepo.GetMultiPaging(c => c.User.UserIdClerk.Equals(userIdClerk), out total, index.Value, size.Value, includes);
                 }
 
-                if (listUserSubsciption == null || !listUserSubsciption.Any())
-                {
-                    _logger.LogWarning("No subscriptions found for clerk {UserIdClerk}.", userIdClerk);
-                    return NotFound($"No subscriptions found for clerk with ID {userIdClerk}.");
-                }
-
                 var response = _mapper.Map<IEnumerable<ViewUserSubsciptionDto>>(listUserSubsciption);
                 var responsePaging = new ResponsePaging<IEnumerable<ViewUserSubsciptionDto>>
                 {
@@ -264,7 +253,7 @@ namespace InSyncAPI.Controllers
         [HttpGet("user-no-expired/{userId}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<ViewUserSubsciptionDto>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
-        public async Task<IActionResult> GetUserSubsciptionOfUserNoExpired(Guid userId)
+        public async Task<IActionResult> GetUserSubsciptionOfUserNoExpired([FromRoute] Guid userId)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received request to get non-expired subscriptions for user {UserId} at {RequestTime}", userId, DateTime.UtcNow);
@@ -286,11 +275,6 @@ namespace InSyncAPI.Controllers
                 var now = DateTime.Now;
                 var listUserSubsciption = _userSubRepo.GetMulti(c => c.UserId.Equals(userId) && c.StripeCurrentPeriodEnd >= now);
 
-                if (listUserSubsciption == null || !listUserSubsciption.Any())
-                {
-                    _logger.LogWarning("No non-expired subscriptions found for user {UserId}.", userId);
-                    return NotFound($"No non-expired subscriptions found for user with ID {userId}.");
-                }
 
                 var response = _mapper.Map<IEnumerable<ViewUserSubsciptionDto>>(listUserSubsciption);
                 stopwatch.Stop();
@@ -309,7 +293,7 @@ namespace InSyncAPI.Controllers
         [HttpGet("user-clerk-no-expired/{userIdClerk}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<ViewUserSubsciptionDto>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
-        public async Task<IActionResult> GetUserSubsciptionOfUserClerkNoExpired(string userIdClerk)
+        public async Task<IActionResult> GetUserSubsciptionOfUserClerkNoExpired([FromRoute] string userIdClerk)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received request to get non-expired subscriptions for clerk {UserIdClerk} at {RequestTime}", userIdClerk, DateTime.UtcNow);
@@ -331,11 +315,7 @@ namespace InSyncAPI.Controllers
                 var now = DateTime.Now;
                 var listUserSubsciption = _userSubRepo.GetMulti(c => c.User.UserIdClerk.Equals(userIdClerk) && c.StripeCurrentPeriodEnd >= now);
 
-                if (listUserSubsciption == null || !listUserSubsciption.Any())
-                {
-                    _logger.LogWarning("No non-expired subscriptions found for clerk {UserIdClerk}.", userIdClerk);
-                    return NotFound($"No non-expired subscriptions found for clerk with ID {userIdClerk}.");
-                }
+                
 
                 var response = _mapper.Map<IEnumerable<ViewUserSubsciptionDto>>(listUserSubsciption);
                 stopwatch.Stop();
@@ -356,7 +336,7 @@ namespace InSyncAPI.Controllers
         [HttpGet("subsciption/{subId}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewUserSubsciptionDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
-        public async Task<IActionResult> GetAllUserSubsciptionOfSubsciption(Guid subId, int? index, int? size)
+        public async Task<IActionResult> GetAllUserSubsciptionOfSubsciption([FromRoute] Guid subId, int? index, int? size)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received request to get all user subscriptions for subscription ID {SubId} at {RequestTime}", subId, DateTime.UtcNow);
@@ -422,7 +402,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
-        public async Task<IActionResult> GetUserSubsciptionById(Guid id)
+        public async Task<IActionResult> GetUserSubsciptionById([FromRoute] Guid id)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received request to get user subscription by ID {Id} at {RequestTime}", id, DateTime.UtcNow);
@@ -469,7 +449,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionUserSubsciptionResponse))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
-        public async Task<IActionResult> AddUserSubsciption(AddUserSubsciptionDto newUserSub)
+        public async Task<IActionResult> AddUserSubsciption([FromBody]AddUserSubsciptionDto newUserSub)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received request to add user subscription at {RequestTime}", DateTime.UtcNow);
@@ -529,7 +509,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionUserSubsciptionResponse))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
-        public async Task<IActionResult> AddUserSubsciptionUserClerk(AddUserSubsciptionUserClerkDto newUserSub)
+        public async Task<IActionResult> AddUserSubsciptionUserClerk([FromBody]AddUserSubsciptionUserClerkDto newUserSub)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received request to add user subscription for clerk at {RequestTime}", DateTime.UtcNow);
@@ -591,7 +571,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
-        public async Task<IActionResult> UpdateUserSubsciption(Guid id, UpdateUserSubsciptionDto updateUserSub)
+        public async Task<IActionResult> UpdateUserSubsciption([FromRoute] Guid id, [FromBody]UpdateUserSubsciptionDto updateUserSub)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received request to update user subscription with ID {UserSubscriptionId} at {RequestTime}", id, DateTime.UtcNow);
@@ -648,7 +628,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
-        public async Task<IActionResult> DeleteUserSubsciption(Guid id)
+        public async Task<IActionResult> DeleteUserSubsciption([FromRoute] Guid id)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received request to delete user subscription with ID {UserSubscriptionId} at {RequestTime}", id, DateTime.UtcNow);

@@ -130,7 +130,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
-        public async Task<IActionResult> GetTermById(Guid id)
+        public async Task<IActionResult> GetTermById([FromRoute]Guid id)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation(TAG + "Received a request to retrieve term with ID {TermId} at {RequestTime}", id, DateTime.UtcNow);
@@ -177,7 +177,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionTermResponse))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
-        public async Task<IActionResult> AddTerm(AddTermsDto newTerm)
+        public async Task<IActionResult> AddTerm([FromBody] AddTermsDto newTerm)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation(TAG + "Received a request to add a new term at {RequestTime}", DateTime.UtcNow);
@@ -227,7 +227,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
-        public async Task<IActionResult> UpdateTerm(Guid id, UpdateTermsDto updateTerm)
+        public async Task<IActionResult> UpdateTerm([FromRoute] Guid id,[FromBody] UpdateTermsDto updateTerm)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation(TAG + "Received a request to update term with ID {TermId} at {RequestTime}", id, DateTime.UtcNow);
@@ -289,7 +289,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
 
-        public async Task<IActionResult> DeleteTerm(Guid id)
+        public async Task<IActionResult> DeleteTerm([FromRoute] Guid id)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation(TAG + "Received a request to delete term with ID {TermId} at {RequestTime}", id, DateTime.UtcNow);
