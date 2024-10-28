@@ -662,7 +662,7 @@ namespace InSyncAPI.Controllers
 
         public async Task<IActionResult> UpdateWebJsonScenario(Guid id, [FromBody] string webjson)
         {
-            return NotFound("HUy Test");
+            
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received a request to update web JSON steps for scenario with ID {ScenarioId} at {RequestTime}", id, DateTime.UtcNow);
 
