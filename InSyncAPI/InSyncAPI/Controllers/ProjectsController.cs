@@ -42,7 +42,7 @@ namespace InSyncAPI.Controllers
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received request to get all projects at {RequestTime}.", DateTime.UtcNow);
 
-            if (_projectRepo == null|| _userRepo == null || _mapper == null)
+            if (_projectRepo == null || _userRepo == null || _mapper == null)
             {
                 _logger.LogError("Project repository or User repository or mapper is not initialized.");
                 return StatusCode(StatusCodes.Status500InternalServerError,
@@ -84,7 +84,7 @@ namespace InSyncAPI.Controllers
                     value: "Application service has not been created");
             }
 
-            IEnumerable<Project> listProject =  new List<Project>(); ;
+            IEnumerable<Project> listProject = new List<Project>(); ;
             int total = 0;
             keySearch = string.IsNullOrEmpty(keySearch) ? "" : keySearch.ToLower();
 
@@ -92,7 +92,7 @@ namespace InSyncAPI.Controllers
             {
                 if (index == null || size == null)
                 {
-                    listProject =  _projectRepo.GetMulti(c => c.ProjectName.ToLower().Contains(keySearch), includes);
+                    listProject = _projectRepo.GetMulti(c => c.ProjectName.ToLower().Contains(keySearch), includes);
                     total = listProject.Count();
                 }
                 else
@@ -100,7 +100,7 @@ namespace InSyncAPI.Controllers
                     index = index.Value < 0 ? INDEX_DEFAULT : index;
                     size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
 
-                    listProject =  _projectRepo.GetMultiPaging(c => c.ProjectName.ToLower().Contains(keySearch), out total, index.Value, size.Value, includes);
+                    listProject = _projectRepo.GetMultiPaging(c => c.ProjectName.ToLower().Contains(keySearch), out total, index.Value, size.Value, includes);
                 }
 
                 var response = _mapper.Map<IEnumerable<ViewProjectDto>>(listProject);
@@ -127,7 +127,7 @@ namespace InSyncAPI.Controllers
         [HttpGet("project-user-is-publish/{userId}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewProjectDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
-        public async Task<IActionResult> GetAllProjectIsPublishOfUser(Guid userId, int? index, int? size, bool? isPublish, string? keySearch = "")
+        public async Task<IActionResult> GetAllProjectIsPublishOfUser([FromRoute] Guid userId, int? index, int? size, bool? isPublish, string? keySearch = "")
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received a request to retrieve projects for user {UserId} with index {Index}, size {Size}, isPublish {IsPublish}, keySearch '{KeySearch}' at {RequestTime}",
@@ -201,7 +201,7 @@ namespace InSyncAPI.Controllers
         [HttpGet("project-user-clerk-is-publish/{userIdClerk}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewProjectDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
-        public async Task<IActionResult> GetAllProjectIsPublishByUserIdClerk(string userIdClerk, bool? isPublish, int? index, int? size, string? keySearch = "")
+        public async Task<IActionResult> GetAllProjectIsPublishByUserIdClerk([FromRoute] string userIdClerk, bool? isPublish, int? index, int? size, string? keySearch = "")
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received a request to retrieve projects for clerk {UserIdClerk} with index {Index}, size {Size}, isPublish {IsPublish}, keySearch '{KeySearch}' at {RequestTime}",
@@ -280,7 +280,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
 
-        public async Task<IActionResult> GetProjectById(Guid id)
+        public async Task<IActionResult> GetProjectById([FromRoute] Guid id)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received a request to retrieve project with ID {ProjectId} at {RequestTime}", id, DateTime.UtcNow);
@@ -386,7 +386,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
 
-        public async Task<IActionResult> AddProjectUserClerk(AddProjectClerkDto newProject)
+        public async Task<IActionResult> AddProjectUserClerk([FromBody] AddProjectClerkDto newProject)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received a request to add a new project for clerk with UserIdClerk {UserIdClerk} at {RequestTime}",
@@ -449,7 +449,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
 
-        public async Task<IActionResult> UpdateProject(Guid id, UpdateProjectDto updateProject)
+        public async Task<IActionResult> UpdateProject([FromRoute] Guid id, [FromBody] UpdateProjectDto updateProject)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received a request to update project with ID {ProjectId} at {RequestTime}", id, DateTime.UtcNow);
@@ -509,7 +509,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
 
-        public async Task<IActionResult> DeleteProject(Guid id)
+        public async Task<IActionResult> DeleteProject([FromRoute] Guid id)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received a request to delete project with ID {ProjectId} at {RequestTime}", id, DateTime.UtcNow);

@@ -190,7 +190,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
-        public async Task<IActionResult> GetCustomerReviewById(Guid id)
+        public async Task<IActionResult> GetCustomerReviewById([FromRoute] Guid id)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received request to get customer review by ID: {Id} at {RequestTime}.", id, DateTime.UtcNow);
@@ -236,7 +236,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionCustomerReviewResponse))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
-        public async Task<IActionResult> AddCustomerReview(AddCustomerReviewDto newReview)
+        public async Task<IActionResult> AddCustomerReview([FromBody] AddCustomerReviewDto newReview)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received request to add a new customer review at {RequestTime}.", DateTime.UtcNow);
@@ -288,7 +288,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
-        public async Task<IActionResult> UpdateCustomerReview(Guid id, UpdateCustomerReviewDto updateReview)
+        public async Task<IActionResult> UpdateCustomerReview([FromRoute] Guid id, [FromBody] UpdateCustomerReviewDto updateReview)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received request to update customer review with ID: {ReviewId} at {RequestTime}.", id, DateTime.UtcNow);
@@ -347,7 +347,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
-        public async Task<IActionResult> DeleteCustomerReview(Guid id)
+        public async Task<IActionResult> DeleteCustomerReview([FromRoute] Guid id)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received request to delete customer review with ID: {ReviewId} at {RequestTime}.", id, DateTime.UtcNow);

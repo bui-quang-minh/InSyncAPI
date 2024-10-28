@@ -178,7 +178,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
 
-        public async Task<IActionResult> GetScenarioOfProject(Guid projectId, Guid createdBy, int? index, int? size, string? keySearch = "")
+        public async Task<IActionResult> GetScenarioOfProject([FromRoute] Guid projectId, Guid createdBy, int? index, int? size, string? keySearch = "")
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received a request to retrieve scenarios for project ID: {ProjectId} created by: {CreatedBy} at {RequestTime}", projectId, createdBy, DateTime.UtcNow);
@@ -204,7 +204,7 @@ namespace InSyncAPI.Controllers
                 if (index == null || size == null)
                 {
                     listScenario = _scenarioRepo.GetMulti
-                        (c => c.ProjectId.Equals(projectId) &&  c.CreatedBy.Equals(createdBy) && c.ScenarioName.ToLower().Contains(keySearch), includes
+                        (c => c.ProjectId.Equals(projectId) && c.CreatedBy.Equals(createdBy) && c.ScenarioName.ToLower().Contains(keySearch), includes
                         );
                     total = listScenario.Count();
                 }
@@ -213,7 +213,7 @@ namespace InSyncAPI.Controllers
                     index = index.Value < 0 ? INDEX_DEFAULT : index;
                     size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
                     listScenario = _scenarioRepo.GetMultiPaging
-                        (c => c.ProjectId.Equals(projectId) &&  c.CreatedBy.Equals(createdBy) && c.ScenarioName.ToLower().Contains(keySearch)
+                        (c => c.ProjectId.Equals(projectId) && c.CreatedBy.Equals(createdBy) && c.ScenarioName.ToLower().Contains(keySearch)
                         , out total, index.Value, size.Value, includes
                      );
                 }
@@ -244,7 +244,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
 
-        public async Task<IActionResult> GetScenarioOfProjectByUserClerk(Guid projectId, string userIdClerk, int? index, int? size, string? keySearch = "")
+        public async Task<IActionResult> GetScenarioOfProjectByUserClerk([FromRoute] Guid projectId, string userIdClerk, int? index, int? size, string? keySearch = "")
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received a request to retrieve scenarios for project ID: {ProjectId} created by clerk ID: {UserIdClerk} at {RequestTime}", projectId, userIdClerk, DateTime.UtcNow);
@@ -308,7 +308,7 @@ namespace InSyncAPI.Controllers
         [HttpGet("scenarios-user-clerk/{userIdClerk}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewScenarioDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
-        public async Task<IActionResult> GetAllScenarioByUserIdClerk(string userIdClerk, int? index, int? size, string? keySearch = "")
+        public async Task<IActionResult> GetAllScenarioByUserIdClerk([FromRoute]string userIdClerk, int? index, int? size, string? keySearch = "")
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received a request to retrieve all scenarios for clerk ID: {UserIdClerk} at {RequestTime}", userIdClerk, DateTime.UtcNow);
@@ -370,7 +370,7 @@ namespace InSyncAPI.Controllers
         [HttpGet("scenarios-user/{userId}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewScenarioDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
-        public async Task<IActionResult> GetAllScenarioByUserId(Guid userId, int? index, int? size, string? keySearch = "")
+        public async Task<IActionResult> GetAllScenarioByUserId([FromRoute]Guid userId, int? index, int? size, string? keySearch = "")
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received a request to retrieve all scenarios for user ID: {UserId} at {RequestTime}", userId, DateTime.UtcNow);
@@ -434,7 +434,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
 
-        public async Task<IActionResult> AddScenario(AddScenarioDto newScenario)
+        public async Task<IActionResult> AddScenario([FromBody] AddScenarioDto newScenario)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received a request to add a new scenario at {RequestTime}", DateTime.UtcNow);
@@ -494,7 +494,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
 
-        public async Task<IActionResult> AddScenarioByUserClerk(AddScenarioUserClerkDto newScenario)
+        public async Task<IActionResult> AddScenarioByUserClerk([FromBody] AddScenarioUserClerkDto newScenario)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received a request to add a new scenario by user clerk at {RequestTime}", DateTime.UtcNow);
@@ -557,7 +557,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
 
-        public async Task<IActionResult> UpdateScenario(Guid id, UpdateScenarioDto updateScenario)
+        public async Task<IActionResult> UpdateScenario([FromRoute] Guid id, [FromBody] UpdateScenarioDto updateScenario)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received a request to update scenario with ID {ScenarioId} at {RequestTime}", id, DateTime.UtcNow);
@@ -612,7 +612,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
-        public async Task<IActionResult> ToggleFavoriteScenario(Guid id)
+        public async Task<IActionResult> ToggleFavoriteScenario([FromRoute] Guid id)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received a request to toggle favorite status for scenario with ID {ScenarioId} at {RequestTime}", id, DateTime.UtcNow);
@@ -708,7 +708,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
 
-        public async Task<IActionResult> UpdateAndroidJsonScenario(Guid id, [FromBody] string androidjson)
+        public async Task<IActionResult> UpdateAndroidJsonScenario([FromRoute] Guid id, [FromBody] string androidjson)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received a request to update Android JSON steps for scenario with ID {ScenarioId} at {RequestTime}", id, DateTime.UtcNow);
@@ -756,7 +756,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
 
-        public async Task<IActionResult> RenameScenario(Guid id, UpdateRenameScenarioDto renameScenario)
+        public async Task<IActionResult> RenameScenario([FromRoute] Guid id, [FromBody] UpdateRenameScenarioDto renameScenario)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received a request to rename scenario with ID {ScenarioId} at {RequestTime}", id, DateTime.UtcNow);
@@ -810,7 +810,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
 
-        public async Task<IActionResult> DeleteScenario(Guid id)
+        public async Task<IActionResult> DeleteScenario([FromRoute] Guid id)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received a request to delete scenario with ID {ScenarioId} at {RequestTime}", id, DateTime.UtcNow);

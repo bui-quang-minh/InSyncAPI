@@ -26,7 +26,7 @@ namespace InSyncAPI.Controllers
             _privacyPolicyRepo = privacyPolicyRepo;
             _mapper = mapper;
             _logger = logger;
-           
+
         }
         [HttpGet()]
         [EnableQuery]
@@ -127,7 +127,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
 
-        public async Task<IActionResult> GetPrivacyPolicyById(Guid id)
+        public async Task<IActionResult> GetPrivacyPolicyById([FromRoute] Guid id)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received request to get privacy policy by ID: {Id} at {RequestTime}.", id, DateTime.UtcNow);
@@ -174,7 +174,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
 
-        public async Task<IActionResult> AddPrivacyPolicy(AddPrivacyPolicyDto newPrivacy)
+        public async Task<IActionResult> AddPrivacyPolicy([FromBody] AddPrivacyPolicyDto newPrivacy)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received request to add a new privacy policy at {RequestTime}.", DateTime.UtcNow);
@@ -223,7 +223,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
 
-        public async Task<IActionResult> UpdatePrivacyPolicy(Guid id, UpdatePrivacyPolicyDto updatePrivacy)
+        public async Task<IActionResult> UpdatePrivacyPolicy([FromRoute] Guid id, [FromBody] UpdatePrivacyPolicyDto updatePrivacy)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received request to update privacy policy with ID: {Id} at {RequestTime}.", id, DateTime.UtcNow);
@@ -283,7 +283,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
 
-        public async Task<IActionResult> DeletePrivacyPolicy(Guid id)
+        public async Task<IActionResult> DeletePrivacyPolicy([FromRoute] Guid id)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received request to delete privacy policy with ID: {Id} at {RequestTime}.", id, DateTime.UtcNow);

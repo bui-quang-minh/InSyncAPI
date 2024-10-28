@@ -45,7 +45,7 @@ namespace InSyncAPI.Controllers
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation(TAG + "Received a request to retrieve all assets at {RequestTime}", DateTime.UtcNow);
-            
+
             if (_assestRepo == null || _mapper == null)
             {
                 _logger.LogError(TAG + "Asset repository or mapper is not initialized.");
@@ -77,7 +77,7 @@ namespace InSyncAPI.Controllers
         [HttpGet("pagination")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewAssetDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
-        public async Task<IActionResult> GetAllAsset(int? index, int? size, string? keySearch = "")
+        public async Task<IActionResult> GetAllAsset([FromQuery] int? index, [FromQuery] int? size, [FromQuery] string? keySearch = "")
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation(TAG + "Received a request to get all assets at {RequestTime}", DateTime.UtcNow);
@@ -138,7 +138,7 @@ namespace InSyncAPI.Controllers
         [HttpGet("asset-project/{idProject}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewAssetDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
-        public async Task<IActionResult> GetAllAssetOfProject(Guid idProject, int? index, int? size, string? keySearch = "")
+        public async Task<IActionResult> GetAllAssetOfProject([FromRoute] Guid idProject, [FromQuery] int? index, [FromQuery] int? size, [FromQuery] string? keySearch = "")
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation(TAG + "Received a request to get all assets for project ID: {IdProject} at {RequestTime}", idProject, DateTime.UtcNow);
@@ -207,7 +207,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
-        public async Task<IActionResult> GetAssetById(Guid id)
+        public async Task<IActionResult> GetAssetById([FromRoute] Guid id)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation(TAG + "Received a request to get asset by ID: {IdAsset} at {RequestTime}", id, DateTime.UtcNow);
@@ -256,7 +256,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionAssetResponse))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
-        public async Task<IActionResult> AddAsset(AddAssetDto newAsset)
+        public async Task<IActionResult> AddAsset([FromBody] AddAssetDto newAsset)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation(TAG + "Received a request to add a new asset at {RequestTime}.", DateTime.UtcNow);
