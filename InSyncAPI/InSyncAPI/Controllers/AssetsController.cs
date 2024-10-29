@@ -98,7 +98,7 @@ namespace InSyncAPI.Controllers
                 if (index == null || size == null)
                 {
                     _logger.LogInformation(TAG + "Fetching all assets with search key: {KeySearch}.", keySearch);
-                    listAssets = _assestRepo.GetMulti(c => c.AssestName.ToLower().Contains(keySearch));
+                    listAssets = _assestRepo.GetMulti(c => c.AssetName.ToLower().Contains(keySearch));
                     total = listAssets.Count();
                 }
                 else
@@ -108,7 +108,7 @@ namespace InSyncAPI.Controllers
 
                     _logger.LogInformation(TAG + "Fetching assets with pagination. Index: {Index}, Size: {Size}, KeySearch: {KeySearch}.",
                         index, size, keySearch);
-                    listAssets = _assestRepo.GetMultiPaging(c => c.AssestName.ToLower().Contains(keySearch),
+                    listAssets = _assestRepo.GetMultiPaging(c => c.AssetName.ToLower().Contains(keySearch),
                         out total, index.Value, size.Value);
                 }
 
@@ -165,7 +165,7 @@ namespace InSyncAPI.Controllers
                 if (index == null || size == null)
                 {
                     _logger.LogInformation(TAG + "Fetching all assets for project ID: {IdProject} with search key: {KeySearch}.", idProject, keySearch);
-                    listAssets = _assestRepo.GetMulti(c => c.ProjectId.Equals(idProject) && c.AssestName.ToLower().Contains(keySearch));
+                    listAssets = _assestRepo.GetMulti(c => c.ProjectId.Equals(idProject) && c.AssetName.ToLower().Contains(keySearch));
                     total = listAssets.Count();
                 }
                 else
@@ -175,7 +175,7 @@ namespace InSyncAPI.Controllers
 
                     _logger.LogInformation(TAG + "Fetching assets for project ID: {IdProject} with pagination. Index: {Index}, Size: {Size}, KeySearch: {KeySearch}.",
                         idProject, index, size, keySearch);
-                    listAssets = _assestRepo.GetMultiPaging(c => c.ProjectId.Equals(idProject) && c.AssestName.ToLower().Contains(keySearch),
+                    listAssets = _assestRepo.GetMultiPaging(c => c.ProjectId.Equals(idProject) && c.AssetName.ToLower().Contains(keySearch),
                         out total, index.Value, size.Value);
                 }
 
@@ -282,7 +282,8 @@ namespace InSyncAPI.Controllers
             }
 
             var asset = _mapper.Map<Asset>(newAsset);
-            asset.DateCreated = DateTime.UtcNow.ToLocalTime();
+            asset.DateCreated = DateTime.Now;
+
 
             try
             {

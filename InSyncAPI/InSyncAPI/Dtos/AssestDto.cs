@@ -7,7 +7,7 @@ namespace InSyncAPI.Dtos
         public Guid Id { get; set; }
         public Guid ProjectId { get; set; }
         public string ProjectName { get; set; }
-        public string AssestName { get; set; } = null!;
+        public string AssetName { get; set; } = null!;
         public string? Type { get; set; }
         public string FilePath { get; set; } = null!;
         public DateTime DateCreated { get; set; }
@@ -19,7 +19,7 @@ namespace InSyncAPI.Dtos
         public Guid Id { get; set; }
         [Required]
         [StringLength(255)]
-        public string AssestName { get; set; } = null!;
+        public string AssetName { get; set; } = null!;
         [StringLength(50)]
         public string? Type { get; set; }
     }
@@ -29,7 +29,7 @@ namespace InSyncAPI.Dtos
         public Guid ProjectId { get; set; }
         [Required]
         [StringLength(255)]
-        public string AssestName { get; set; } = null!;
+        public string AssetName { get; set; } = null!;
         [StringLength(50)]
         public string? Type { get; set; }
         [Required]

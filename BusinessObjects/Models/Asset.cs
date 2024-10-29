@@ -7,7 +7,7 @@ namespace BusinessObjects.Models
     {
         public Guid Id { get; set; }
         public Guid ProjectId { get; set; }
-        public string AssestName { get; set; } = null!;
+        public string AssetName { get; set; } = null!;
         public string? Type { get; set; }
         public string FilePath { get; set; } = null!;
         public DateTime DateCreated { get; set; }

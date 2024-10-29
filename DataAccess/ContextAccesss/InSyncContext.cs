@@ -50,9 +50,9 @@ namespace DataAccess.ContextAccesss
                     .HasColumnName("id")
                     .HasDefaultValueSql("(newid())");
 
-                entity.Property(e => e.AssestName)
+                entity.Property(e => e.AssetName)
                     .HasMaxLength(255)
-                    .HasColumnName("assest_name");
+                    .HasColumnName("asset_name");
 
                 entity.Property(e => e.DateCreated)
                     .HasColumnType("datetime")
