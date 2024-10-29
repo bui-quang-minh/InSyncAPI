@@ -282,7 +282,7 @@ namespace InSyncAPI.Controllers
             }
 
             var asset = _mapper.Map<Asset>(newAsset);
-            asset.DateCreated = DateTime.Now;
+            asset.DateCreated = DateTime.UtcNow.ToLocalTime();
 
             try
             {
