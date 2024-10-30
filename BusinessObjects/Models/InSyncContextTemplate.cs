@@ -52,9 +52,9 @@ namespace BusinessObjects.Models
                     .HasColumnType("datetime")
                     .HasColumnName("date_created");
 
-                entity.Property(e => e.DateUdpated)
+                entity.Property(e => e.DateUpdated)
                     .HasColumnType("datetime")
-                    .HasColumnName("date_udpated");
+                    .HasColumnName("date_updated");
 
                 entity.Property(e => e.FilePath)
                     .HasColumnType("text")

@@ -192,7 +192,7 @@ namespace InSyncAPI.Controllers
             }
 
             PrivacyPolicy privacyPolicy = _mapper.Map<PrivacyPolicy>(newPrivacy);
-            privacyPolicy.DateCreated = DateTime.Now;
+            privacyPolicy.DateCreated = DateTime.UtcNow;
 
             try
             {
@@ -254,7 +254,7 @@ namespace InSyncAPI.Controllers
                 return NotFound("Privacy policy not found.");
             }
 
-            existingPrivacy.DateUpdated = DateTime.Now;
+            existingPrivacy.DateUpdated = DateTime.UtcNow;
 
             // Map the updated fields
             _mapper.Map(updatePrivacy, existingPrivacy);

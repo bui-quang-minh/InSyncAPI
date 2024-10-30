@@ -197,7 +197,7 @@ namespace InSyncAPI.Controllers
             try
             {
                 Term term = _mapper.Map<Term>(newTerm);
-                term.DateCreated = DateTime.Now;
+                term.DateCreated = DateTime.UtcNow;
 
                 _logger.LogInformation(TAG + "Attempting to add a new term to the database.");
 
@@ -260,7 +260,7 @@ namespace InSyncAPI.Controllers
                     return NotFound("Term not found.");
                 }
 
-                existingTerm.DateUpdated = DateTime.Now;
+                existingTerm.DateUpdated = DateTime.UtcNow;
 
                 // Map the updated fields
                 _mapper.Map(updateTerm, existingTerm);

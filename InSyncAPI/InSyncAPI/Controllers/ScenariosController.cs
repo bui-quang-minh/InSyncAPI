@@ -587,7 +587,7 @@ namespace InSyncAPI.Controllers
                 return NotFound("Scenario not found.");
             }
 
-            existingScenario.DateUpdated = DateTime.Now;
+            existingScenario.DateUpdated = DateTime.UtcNow;
             _mapper.Map(updateScenario, existingScenario);
 
             try
@@ -636,7 +636,7 @@ namespace InSyncAPI.Controllers
                 return NotFound("Scenario not found.");
             }
 
-            existingScenario.DateUpdated = DateTime.Now;
+            existingScenario.DateUpdated = DateTime.UtcNow;
             existingScenario.IsFavorites = !existingScenario.IsFavorites;
 
             try
@@ -685,7 +685,7 @@ namespace InSyncAPI.Controllers
                 return NotFound("Scenario not found.");
             }
 
-            existingScenario.DateUpdated = DateTime.Now;
+            existingScenario.DateUpdated = DateTime.UtcNow;
             existingScenario.StepsWeb = webjson;
 
             try
@@ -733,7 +733,7 @@ namespace InSyncAPI.Controllers
                 return NotFound("Scenario not found.");
             }
 
-            existingScenario.DateUpdated = DateTime.Now;
+            existingScenario.DateUpdated = DateTime.UtcNow;
             existingScenario.StepsAndroid = androidjson;
 
             try
@@ -786,7 +786,7 @@ namespace InSyncAPI.Controllers
                 return NotFound("Scenario not found.");
             }
 
-            existingScenario.DateUpdated = DateTime.Now;
+            existingScenario.DateUpdated = DateTime.UtcNow;
             existingScenario.ScenarioName = renameScenario.ScenarioName;
 
             try

@@ -11,7 +11,7 @@ namespace BusinessObjects.Models
         public string? Type { get; set; }
         public string FilePath { get; set; } = null!;
         public DateTime DateCreated { get; set; }
-        public DateTime? DateUdpated { get; set; }
+        public DateTime? DateUpdated { get; set; }
 
         public virtual Project Project { get; set; } = null!;
     }

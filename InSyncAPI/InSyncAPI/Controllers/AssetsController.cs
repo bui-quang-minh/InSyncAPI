@@ -282,7 +282,7 @@ namespace InSyncAPI.Controllers
             }
 
             var asset = _mapper.Map<Asset>(newAsset);
-            asset.DateCreated = DateTime.Now;
+            asset.DateCreated = DateTime.UtcNow;
 
 
             try
@@ -348,7 +348,7 @@ namespace InSyncAPI.Controllers
                 return NotFound("Asset not found.");
             }
 
-            existingAsset.DateUdpated = DateTime.Now;
+            existingAsset.DateUpdated = DateTime.UtcNow;
             _mapper.Map(updateAsset, existingAsset);
 
             try

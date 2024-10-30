@@ -181,7 +181,7 @@ namespace InSyncAPI.Controllers
             }
 
             Tutorial tutorial = _mapper.Map<Tutorial>(newTutorial);
-            tutorial.DateCreated = DateTime.Now;
+            tutorial.DateCreated = DateTime.UtcNow;
 
             try
             {
@@ -240,7 +240,7 @@ namespace InSyncAPI.Controllers
                 return NotFound("Tutorial not found.");
             }
 
-            existingTutorial.DateUpdated = DateTime.Now;
+            existingTutorial.DateUpdated = DateTime.UtcNow;
             _mapper.Map(updateTutorial, existingTutorial);
 
             try

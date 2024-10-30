@@ -199,7 +199,7 @@ namespace InSyncAPI.Controllers
             }
 
             SubscriptionPlan subscriptionPlan = _mapper.Map<SubscriptionPlan>(newSubscription);
-            subscriptionPlan.DateCreated = DateTime.Now;
+            subscriptionPlan.DateCreated = DateTime.UtcNow;
 
             try
             {
@@ -252,7 +252,7 @@ namespace InSyncAPI.Controllers
             }
 
             SubscriptionPlan subscriptionPlan = _mapper.Map<SubscriptionPlan>(newSubscription);
-            subscriptionPlan.DateCreated = DateTime.Now;
+            subscriptionPlan.DateCreated = DateTime.UtcNow;
             subscriptionPlan.UserId = checkUserExist.Id;
 
             try
@@ -313,7 +313,7 @@ namespace InSyncAPI.Controllers
                 return NotFound("Subscription plan not found.");
             }
 
-            existSubsciption.DateUpdated = DateTime.Now;
+            existSubsciption.DateUpdated = DateTime.UtcNow;
             _mapper.Map(updateSubsciption, existSubsciption);
 
             try

@@ -46,6 +46,7 @@ namespace InSyncAPI.Controllers
             }
 
             var user = _mapper.Map<User>(userDto);
+            user.DateCreated = DateTime.UtcNow;
 
             try
             {
@@ -106,7 +107,7 @@ namespace InSyncAPI.Controllers
                 existingUser.DisplayName = user.DisplayName;
                 existingUser.ImageUrl = user.ImageUrl;
                 existingUser.PhoneNumber = user.PhoneNumber;
-                existingUser.DateUpdated = DateTime.Now; // Update the DateUpdated to current time
+                existingUser.DateUpdated = DateTime.UtcNow; // Update the DateUpdated to current time
                 existingUser.StatusUser = user.StatusUser;
 
                 await _userRepo.Update(existingUser);

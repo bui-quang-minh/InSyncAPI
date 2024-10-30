@@ -255,7 +255,7 @@ namespace InSyncAPI.Controllers
             }
 
             CustomerReview customerReview = _mapper.Map<CustomerReview>(newReview);
-            customerReview.DateCreated = DateTime.Now;
+            customerReview.DateCreated = DateTime.UtcNow;
             customerReview.IsShow = false;
 
             try
@@ -322,6 +322,7 @@ namespace InSyncAPI.Controllers
 
             // Map the updated fields
             _mapper.Map(updateReview, existingReview);
+            
 
             try
             {

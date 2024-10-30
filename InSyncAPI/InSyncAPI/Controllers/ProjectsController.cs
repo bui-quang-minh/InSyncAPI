@@ -354,7 +354,7 @@ namespace InSyncAPI.Controllers
             }
 
             Project project = _mapper.Map<Project>(newProject);
-            project.DateCreated = DateTime.Now;
+            project.DateCreated = DateTime.UtcNow;
 
             try
             {
@@ -414,7 +414,7 @@ namespace InSyncAPI.Controllers
 
             Project project = _mapper.Map<Project>(newProject);
             project.UserId = checkUserExist.Id;
-            project.DateCreated = DateTime.Now;
+            project.DateCreated = DateTime.UtcNow;
 
             try
             {
@@ -483,6 +483,7 @@ namespace InSyncAPI.Controllers
 
             // Map the updated fields
             _mapper.Map(updateProject, existingProject);
+            existingProject.DateUpdated = DateTime.UtcNow;
 
             try
             {

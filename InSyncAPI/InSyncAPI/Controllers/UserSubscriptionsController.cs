@@ -483,7 +483,7 @@ namespace InSyncAPI.Controllers
                 }
 
                 var userSubscription = _mapper.Map<UserSubscription>(newUserSub);
-                userSubscription.DateCreated = DateTime.Now;
+                userSubscription.DateCreated = DateTime.UtcNow;
 
                 var response = await _userSubRepo.Add(userSubscription);
                 if (response == null)
@@ -543,7 +543,7 @@ namespace InSyncAPI.Controllers
                 }
 
                 var userSubscription = _mapper.Map<UserSubscription>(newUserSub);
-                userSubscription.DateCreated = DateTime.Now;
+                userSubscription.DateCreated = DateTime.UtcNow;
                 userSubscription.UserId = checkUserExist.Id;
 
                 var response = await _userSubRepo.Add(userSubscription);
@@ -604,6 +604,7 @@ namespace InSyncAPI.Controllers
 
             // Map the updated fields
             _mapper.Map(updateUserSub, existingUserSub);
+          
 
             try
             {
