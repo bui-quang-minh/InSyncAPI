@@ -304,7 +304,6 @@ namespace InSyncAPI.Controllers
         }
 
 
-
         [HttpGet("scenarios-user-clerk/{userIdClerk}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewScenarioDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
