@@ -528,6 +528,7 @@ namespace InSyncAPI.Controllers
                     return BadRequest("Don't exist project has id by : " + newScenario.ProjectId);
                 }
 
+
                 Scenario scenario = _mapper.Map<Scenario>(newScenario);
                 scenario.DateCreated = DateTime.UtcNow;
                 scenario.DateUpdated = DateTime.UtcNow;
