@@ -193,6 +193,7 @@ namespace InSyncAPI.Controllers
 
             PrivacyPolicy privacyPolicy = _mapper.Map<PrivacyPolicy>(newPrivacy);
             privacyPolicy.DateCreated = DateTime.UtcNow;
+            privacyPolicy.DateUpdated = DateTime.UtcNow;
 
             try
             {

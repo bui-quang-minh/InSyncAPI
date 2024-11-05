@@ -468,7 +468,8 @@ namespace InSyncAPI.Controllers
                 }
 
                 Scenario scenario = _mapper.Map<Scenario>(newScenario);
-                scenario.DateCreated = DateTime.Now;
+                scenario.DateCreated = DateTime.UtcNow;
+                scenario.DateUpdated = DateTime.UtcNow;
 
                 var response = await _scenarioRepo.Add(scenario);
                 if (response == null)
@@ -528,7 +529,8 @@ namespace InSyncAPI.Controllers
                 }
 
                 Scenario scenario = _mapper.Map<Scenario>(newScenario);
-                scenario.DateCreated = DateTime.Now;
+                scenario.DateCreated = DateTime.UtcNow;
+                scenario.DateUpdated = DateTime.UtcNow;
                 scenario.CreatedBy = checkExistUser.Id;
 
                 var response = await _scenarioRepo.Add(scenario);

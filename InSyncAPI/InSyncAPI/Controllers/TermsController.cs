@@ -198,6 +198,7 @@ namespace InSyncAPI.Controllers
             {
                 Term term = _mapper.Map<Term>(newTerm);
                 term.DateCreated = DateTime.UtcNow;
+                term.DateUpdated = DateTime.UtcNow;
 
                 _logger.LogInformation(TAG + "Attempting to add a new term to the database.");
 

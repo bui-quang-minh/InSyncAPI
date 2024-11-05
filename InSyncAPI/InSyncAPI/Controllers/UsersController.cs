@@ -47,6 +47,7 @@ namespace InSyncAPI.Controllers
 
             var user = _mapper.Map<User>(userDto);
             user.DateCreated = DateTime.UtcNow;
+            user.DateUpdated = DateTime.UtcNow;
 
             try
             {

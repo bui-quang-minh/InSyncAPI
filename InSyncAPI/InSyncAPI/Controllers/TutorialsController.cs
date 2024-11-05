@@ -182,6 +182,7 @@ namespace InSyncAPI.Controllers
 
             Tutorial tutorial = _mapper.Map<Tutorial>(newTutorial);
             tutorial.DateCreated = DateTime.UtcNow;
+            tutorial.DateUpdated = DateTime.UtcNow;
 
             try
             {

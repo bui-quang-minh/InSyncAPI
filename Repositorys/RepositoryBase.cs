@@ -9,7 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace Repositorys
-{
+{                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           0
     public class RepositoryBase<T> : IDisposable, IRepositoryBase<T> where T : class
     {
         protected InSyncContext _context;

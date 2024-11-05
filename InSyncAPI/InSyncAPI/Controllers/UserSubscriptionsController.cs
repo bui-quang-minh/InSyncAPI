@@ -484,6 +484,7 @@ namespace InSyncAPI.Controllers
 
                 var userSubscription = _mapper.Map<UserSubscription>(newUserSub);
                 userSubscription.DateCreated = DateTime.UtcNow;
+              
 
                 var response = await _userSubRepo.Add(userSubscription);
                 if (response == null)

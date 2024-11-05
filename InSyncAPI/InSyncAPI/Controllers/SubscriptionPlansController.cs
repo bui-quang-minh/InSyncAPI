@@ -200,6 +200,7 @@ namespace InSyncAPI.Controllers
 
             SubscriptionPlan subscriptionPlan = _mapper.Map<SubscriptionPlan>(newSubscription);
             subscriptionPlan.DateCreated = DateTime.UtcNow;
+            subscriptionPlan.DateUpdated = DateTime.UtcNow;
 
             try
             {
