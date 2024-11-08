@@ -805,20 +805,66 @@ namespace InSyncAPI.Controllers
 
                 if (invoice != null)
                 {
-                    // Truy xuất thông tin từ hóa đơn
-                    var customerId = invoice.CustomerId;            // ID khách hàng trong Stripe
-                    var invoiceId = invoice.Id;                     // ID của hóa đơn
-                    var amountPaid = invoice.AmountPaid;            // Số tiền đã thanh toán (cents)
-                    var subscriptionId = invoice.SubscriptionId;    // ID đăng ký, nếu là hóa đơn đăng ký
-                    var metadata = invoice.Metadata;
-                    // Metadata tùy chỉnh, nếu có
+                    // Lấy Subscription ID từ phiên Checkout
+                    var stripeSubscriptionId = invoice.SubscriptionId;
 
-                    Console.WriteLine($"Customer ID: {customerId}");
-                    Console.WriteLine($"Invoice ID: {invoiceId}");
-                    Console.WriteLine($"Amount Paid: {amountPaid}");
-                    Console.WriteLine($"Subscription ID: {subscriptionId}");
+                    // 1. Truy vấn Subscription từ Subscription ID
+                    var subscriptionService = new SubscriptionService();
+                    var subscription = subscriptionService.Get(stripeSubscriptionId);
 
-                    // Thực hiện các xử lý khác, ví dụ: cập nhật trạng thái đăng ký, gửi biên lai cho khách hàng, v.v.
+                    // 2. Lấy Product ID từ Price ID trong Subscription Item
+                    var stripPriceId = subscription.Items.Data[0].Price.Id; // Price ID từ Subscription Item
+                    var priceService = new PriceService();
+                    var price = priceService.Get(stripPriceId);
+                    var stripeProductId = price.ProductId; // Lấy Product ID từ Price
+
+                    // 3. Truy vấn Product để lấy Metadata
+                    var productService = new ProductService();
+                    var product = productService.Get(stripeProductId);
+
+                    var metadata = product.Metadata;
+                    var subscriptionPlanId = "";
+                    if (product.Metadata.ContainsKey("subscriptionPlanId"))
+                    {
+                        subscriptionPlanId = product.Metadata["subscriptionPlanId"];
+                    }
+                    else
+                    {
+                        return BadRequest("Stripe service provided insufficient information");
+                    }
+
+                    // Truy xuất thông tin từ session
+                    var customerEmail = invoice.CustomerEmail;
+                    var userExist = await _userRepo.GetSingleByCondition(c => c.Email.ToLower().Equals(customerEmail.ToLower()));
+                    if (userExist == null)
+                    {
+                        return BadRequest($"Customer information is incorrect with InSync system {customerEmail}.");
+                    }
+
+                    // lấy current period end
+                    var stripeCurrentPeriodEnd = subscription.CurrentPeriodEnd;
+                    // ID khách hàng trong Stripe
+                    var stripeCustomerId = invoice.CustomerId;
+                    try
+                    {
+                        var userSubscription = new UserSubscription
+                        {
+                            SubscriptionPlanId = Guid.Parse(subscriptionPlanId),
+                            UserId = userExist.Id,
+                            StripeCurrentPeriodEnd = stripeCurrentPeriodEnd,
+                            StripeCustomerId = stripeCustomerId,
+                            StripePriceId = stripPriceId,
+                            StripeSubscriptionId = stripeSubscriptionId,
+                            DateCreated = DateTime.UtcNow,
+
+                        };
+                        await _userSubRepo.Add(userSubscription);
+
+                    }
+                    catch (Exception ex)
+                    {
+                        return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while updating data to the database.");
+                    }
                 }
             }
 
