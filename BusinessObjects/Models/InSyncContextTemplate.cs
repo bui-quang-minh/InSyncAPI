@@ -18,6 +18,8 @@ namespace BusinessObjects.Models
 
         public virtual DbSet<Asset> Assets { get; set; } = null!;
         public virtual DbSet<CustomerReview> CustomerReviews { get; set; } = null!;
+        public virtual DbSet<Document> Documents { get; set; } = null!;
+        public virtual DbSet<Page> Pages { get; set; } = null!;
         public virtual DbSet<PrivacyPolicy> PrivacyPolicys { get; set; } = null!;
         public virtual DbSet<Project> Projects { get; set; } = null!;
         public virtual DbSet<Scenario> Scenarios { get; set; } = null!;
@@ -102,6 +104,82 @@ namespace BusinessObjects.Models
                 entity.Property(e => e.Review)
                     .HasMaxLength(200)
                     .HasColumnName("review");
+            });
+
+            modelBuilder.Entity<Document>(entity =>
+            {
+                entity.HasIndex(e => e.Slug, "UQ__Document__32DD1E4C120C139E")
+                    .IsUnique();
+
+                entity.Property(e => e.Id)
+                    .HasColumnName("id")
+                    .HasDefaultValueSql("(newid())");
+
+                entity.Property(e => e.Content)
+                    .HasColumnType("text")
+                    .HasColumnName("content");
+
+                entity.Property(e => e.DateCreated)
+                    .HasColumnType("datetime")
+                    .HasColumnName("date_created")
+                    .HasDefaultValueSql("(getdate())");
+
+                entity.Property(e => e.DateUpdated)
+                    .HasColumnType("datetime")
+                    .HasColumnName("date_updated")
+                    .HasDefaultValueSql("(getdate())");
+
+                entity.Property(e => e.Note)
+                    .IsUnicode(false)
+                    .HasColumnName("note");
+
+                entity.Property(e => e.Slug)
+                    .HasMaxLength(600)
+                    .IsUnicode(false)
+                    .HasColumnName("slug");
+
+                entity.Property(e => e.Title)
+                    .HasMaxLength(500)
+                    .IsUnicode(false)
+                    .HasColumnName("title");
+            });
+
+            modelBuilder.Entity<Page>(entity =>
+            {
+                entity.HasIndex(e => e.Slug, "UQ__Pages__32DD1E4C1E6A2C81")
+                    .IsUnique();
+
+                entity.Property(e => e.Id)
+                    .HasColumnName("id")
+                    .HasDefaultValueSql("(newid())");
+
+                entity.Property(e => e.Content)
+                    .HasColumnType("text")
+                    .HasColumnName("content");
+
+                entity.Property(e => e.DateCreated)
+                    .HasColumnType("datetime")
+                    .HasColumnName("date_created")
+                    .HasDefaultValueSql("(getdate())");
+
+                entity.Property(e => e.DateUpdated)
+                    .HasColumnType("datetime")
+                    .HasColumnName("date_updated")
+                    .HasDefaultValueSql("(getdate())");
+
+                entity.Property(e => e.Note)
+                    .IsUnicode(false)
+                    .HasColumnName("note");
+
+                entity.Property(e => e.Slug)
+                    .HasMaxLength(600)
+                    .IsUnicode(false)
+                    .HasColumnName("slug");
+
+                entity.Property(e => e.Title)
+                    .HasMaxLength(500)
+                    .IsUnicode(false)
+                    .HasColumnName("title");
             });
 
             modelBuilder.Entity<PrivacyPolicy>(entity =>

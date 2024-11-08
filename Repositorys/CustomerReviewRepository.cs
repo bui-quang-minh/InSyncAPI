@@ -13,7 +13,7 @@ namespace Repositorys
     }
     public class CustomerReviewRepository : RepositoryBase<CustomerReview>, ICustomerReviewRepository
     {
-        public CustomerReviewRepository(InSyncContext context) : base(context)
+        public CustomerReviewRepository(DataAccess.ContextAccesss.InSyncContext context) : base(context)
         {
         }
     }

@@ -15,7 +15,7 @@ namespace Repositorys
     }
     public class SubscriptionPlanRepository : RepositoryBase<SubscriptionPlan>, ISubscriptionPlanRepository
     {
-        public SubscriptionPlanRepository(InSyncContext context) : base(context)
+        public SubscriptionPlanRepository(DataAccess.ContextAccesss.InSyncContext context) : base(context)
         {
         }
 

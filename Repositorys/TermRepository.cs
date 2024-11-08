@@ -13,7 +13,7 @@ namespace Repositorys
     }
     public class TermRepository : RepositoryBase<Term>, ITermRepository
     {
-        public TermRepository(InSyncContext context) : base(context)
+        public TermRepository(DataAccess.ContextAccesss.InSyncContext context) : base(context)
         {
         }
     }

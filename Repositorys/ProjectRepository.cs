@@ -15,7 +15,7 @@ namespace Repositorys
     }
     public class ProjectRepository : RepositoryBase<Project>, IProjectRepository
     {
-        public ProjectRepository(InSyncContext context) : base(context)
+        public ProjectRepository(DataAccess.ContextAccesss.InSyncContext context) : base(context)
         {
         }
 

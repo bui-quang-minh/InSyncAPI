@@ -8,12 +8,12 @@ using System.Threading.Tasks;
 
 namespace Repositorys
 {
-    public interface IAssetRepository : IRepositoryBase<Asset>
+    public interface IPageRepository : IRepositoryBase<Page>
     {
     }
-    public class AssetRepository : RepositoryBase<Asset>, IAssetRepository
+    public class PageRepository : RepositoryBase<Page>, IPageRepository
     {
-        public AssetRepository(DataAccess.ContextAccesss.InSyncContext context) : base(context)
+        public PageRepository(DataAccess.ContextAccesss.InSyncContext context) : base(context)
         {
         }
     }

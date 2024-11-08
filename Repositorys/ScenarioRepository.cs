@@ -14,7 +14,7 @@ namespace Repositorys
     }
     public class ScenarioRepository : RepositoryBase<Scenario>, IScenarioRepository
     {
-        public ScenarioRepository(InSyncContext context) : base(context)
+        public ScenarioRepository(DataAccess.ContextAccesss.InSyncContext context) : base(context)
         {
         }
     }

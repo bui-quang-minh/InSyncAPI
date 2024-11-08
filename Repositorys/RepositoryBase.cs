@@ -12,8 +12,8 @@ namespace Repositorys
 {                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           
     public class RepositoryBase<T> : IDisposable, IRepositoryBase<T> where T : class
     {
-        protected InSyncContext _context;
-        protected RepositoryBase(InSyncContext context)
+        protected DataAccess.ContextAccesss.InSyncContext _context;
+        protected RepositoryBase(DataAccess.ContextAccesss.InSyncContext context)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
         }

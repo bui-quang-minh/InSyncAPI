@@ -13,7 +13,7 @@ namespace Repositorys
     }
     public class TutorialRepository : RepositoryBase<Tutorial>, ITutorialRepository
     {
-        public TutorialRepository(InSyncContext context) : base(context)
+        public TutorialRepository(DataAccess.ContextAccesss.InSyncContext context) : base(context)
         {
         }
     }

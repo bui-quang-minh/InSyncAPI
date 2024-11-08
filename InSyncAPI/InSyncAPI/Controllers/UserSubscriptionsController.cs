@@ -340,6 +340,43 @@ namespace InSyncAPI.Controllers
             }
         }
 
+        [HttpGet("check-non-expired/{userIdClerk}")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(bool))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
+        public async Task<IActionResult> CheckUserSubsciptionOfUserClerkNonExpired([FromRoute] string userIdClerk)
+        {
+            var stopwatch = Stopwatch.StartNew();
+            _logger.LogInformation("Received request to get non-expired subscriptions for clerk {UserIdClerk} at {RequestTime}", userIdClerk, DateTime.UtcNow);
+
+            if (_userRepo == null || _userSubRepo == null || _subRepo == null || _mapper == null)
+            {
+                _logger.LogError("User repository, user subscription repository, subscription repository, or mapper is not initialized.");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Application service has not been created");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                _logger.LogWarning("Invalid model state for getting non-expired subscriptions.");
+                return BadRequest(new ValidationProblemDetails(ModelState));
+            }
+
+            try
+            {
+                var now = DateTime.Now;
+                var listUserSubsciption = _userSubRepo.GetMulti(c => c.User.UserIdClerk.Equals(userIdClerk) && c.StripeCurrentPeriodEnd >= now);
+                bool isNonExpired = listUserSubsciption.Any();
+                stopwatch.Stop();
+                _logger.LogInformation("Successfully retrieved  non-expired  subscriptions {status} for clerk {UserIdClerk} in {ElapsedMilliseconds}ms.", isNonExpired, userIdClerk, stopwatch.ElapsedMilliseconds);
+
+                return Ok(isNonExpired);
+            }
+            catch (Exception ex)
+            {
+                stopwatch.Stop();
+                _logger.LogError(ex, "Error retrieving non-expired subscriptions for clerk {UserIdClerk} in {ElapsedMilliseconds}ms.", userIdClerk, stopwatch.ElapsedMilliseconds);
+                return StatusCode(StatusCodes.Status500InternalServerError, $"Error retrieving non-expired subscriptions: {ex.Message}");
+            }
+        }
 
 
         [HttpGet("subsciption/{subId}")]
@@ -750,22 +787,41 @@ namespace InSyncAPI.Controllers
                     // lấy current period end
                     var stripeCurrentPeriodEnd = subscription.CurrentPeriodEnd;
                     // ID khách hàng trong Stripe
-                    var stripeCustomerId = session.CustomerId;         
+                    var stripeCustomerId = session.CustomerId;
+
+                    // ngày tạo của check out session 
+                    var createdAt = session.Created;
                     try
                     {
-                        var userSubscription = new UserSubscription
-                        {
-                            SubscriptionPlanId = Guid.Parse(subscriptionPlanId),
-                            UserId = userExist.Id,
-                            StripeCurrentPeriodEnd = stripeCurrentPeriodEnd,
-                            StripeCustomerId = stripeCustomerId,
-                            StripePriceId = stripPriceId,
-                            StripeSubscriptionId = stripeSubscriptionId,
-                            DateCreated = DateTime.UtcNow,
 
-                        };
-                        await _userSubRepo.Add(userSubscription);
-                        
+                        var userSubscriptionExist = await _userSubRepo.GetSingleByCondition
+                       (c => c.SubscriptionPlanId.Equals(Guid.Parse(subscriptionPlanId)) && c.UserId.Equals(userExist.Id));
+                        if (userSubscriptionExist == null)
+                        {
+                            var userSubscription = new UserSubscription
+                            {
+                                SubscriptionPlanId = Guid.Parse(subscriptionPlanId),
+                                UserId = userExist.Id,
+                                StripeCurrentPeriodEnd = stripeCurrentPeriodEnd,
+                                StripeCustomerId = stripeCustomerId,
+                                StripePriceId = stripPriceId,
+                                StripeSubscriptionId = stripeSubscriptionId,
+                                DateCreated = createdAt,
+
+                            };
+                            await _userSubRepo.Add(userSubscription);
+                        }
+                        else
+                        {
+                            // update user subscription 
+                            userSubscriptionExist.StripeCurrentPeriodEnd = stripeCurrentPeriodEnd;
+                            userSubscriptionExist.StripeCustomerId = stripeCustomerId;
+                            userSubscriptionExist.StripePriceId = stripPriceId;
+                            userSubscriptionExist.StripeCurrentPeriodEnd = stripeCurrentPeriodEnd;
+                            userSubscriptionExist.StripeSubscriptionId = stripeSubscriptionId;
+                            userSubscriptionExist.DateCreated = createdAt;
+                            await _userSubRepo.Update(userSubscriptionExist);
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -845,20 +901,39 @@ namespace InSyncAPI.Controllers
                     var stripeCurrentPeriodEnd = subscription.CurrentPeriodEnd;
                     // ID khách hàng trong Stripe
                     var stripeCustomerId = invoice.CustomerId;
+                    var createdAt = invoice.Created;
+                    
+                    
                     try
                     {
-                        var userSubscription = new UserSubscription
+                        var userSubscriptionExist = await _userSubRepo.GetSingleByCondition
+                       (c => c.SubscriptionPlanId.Equals(Guid.Parse(subscriptionPlanId)) && c.UserId.Equals(userExist.Id));
+                        if(userSubscriptionExist == null)
                         {
-                            SubscriptionPlanId = Guid.Parse(subscriptionPlanId),
-                            UserId = userExist.Id,
-                            StripeCurrentPeriodEnd = stripeCurrentPeriodEnd,
-                            StripeCustomerId = stripeCustomerId,
-                            StripePriceId = stripPriceId,
-                            StripeSubscriptionId = stripeSubscriptionId,
-                            DateCreated = DateTime.UtcNow,
+                            var userSubscription = new UserSubscription
+                            {
+                                SubscriptionPlanId = Guid.Parse(subscriptionPlanId),
+                                UserId = userExist.Id,
+                                StripeCurrentPeriodEnd = stripeCurrentPeriodEnd,
+                                StripeCustomerId = stripeCustomerId,
+                                StripePriceId = stripPriceId,
+                                StripeSubscriptionId = stripeSubscriptionId,
+                                DateCreated = createdAt,
 
-                        };
-                        await _userSubRepo.Add(userSubscription);
+                            };
+                            await _userSubRepo.Add(userSubscription);
+                        }
+                        else
+                        {
+                            // update user subscription 
+                            userSubscriptionExist.StripeCurrentPeriodEnd = stripeCurrentPeriodEnd;
+                            userSubscriptionExist.StripeCustomerId = stripeCustomerId;
+                            userSubscriptionExist.StripePriceId = stripPriceId;
+                            userSubscriptionExist.StripeCurrentPeriodEnd = stripeCurrentPeriodEnd;
+                            userSubscriptionExist.StripeSubscriptionId = stripeSubscriptionId;
+                            userSubscriptionExist.DateCreated = createdAt;
+                            await _userSubRepo.Update(userSubscriptionExist);
+                        } 
 
                     }
                     catch (Exception ex)

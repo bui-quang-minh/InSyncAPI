@@ -13,7 +13,7 @@ namespace Repositorys
     }
     public class UserSubscriptionRepository : RepositoryBase<UserSubscription>, IUserSubscriptionRepository
     {
-        public UserSubscriptionRepository(InSyncContext context) : base(context)
+        public UserSubscriptionRepository(DataAccess.ContextAccesss.InSyncContext context) : base(context)
         {
         }
     }

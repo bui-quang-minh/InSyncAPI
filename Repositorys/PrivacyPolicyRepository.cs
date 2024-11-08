@@ -13,7 +13,7 @@ namespace Repositorys
     }
     public class PrivacyPolicyRepository : RepositoryBase<PrivacyPolicy>, IPrivacyPolicyRepository
     {
-        public PrivacyPolicyRepository(InSyncContext context) : base(context)
+        public PrivacyPolicyRepository(DataAccess.ContextAccesss.InSyncContext context) : base(context)
         {
         }
     }
