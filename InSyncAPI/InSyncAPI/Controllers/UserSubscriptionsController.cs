@@ -706,8 +706,12 @@ namespace InSyncAPI.Controllers
             {
                 // Lấy đối tượng Checkout.Session từ event
                 var session = stripeEvent.Data.Object as Stripe.Checkout.Session;
-               
-               
+                var stripeSubscriptionId = session.SubscriptionId;
+
+                var subscriptionService = new SubscriptionService();
+                var subscription = subscriptionService.Get(stripeSubscriptionId);
+                
+
                 if (session != null)
                 {
                     var userSubscription = new UserSubscription
@@ -717,7 +721,7 @@ namespace InSyncAPI.Controllers
                         StripeCurrentPeriodEnd = DateTime.UtcNow,
                         StripeCustomerId =  json,
                         StripePriceId = "falsdfjals",   
-                        StripeSubscriptionId = "",
+                        StripeSubscriptionId = subscription.Metadata["subscriptionPlanId"],
                         DateCreated = DateTime.UtcNow,
 
                     };
