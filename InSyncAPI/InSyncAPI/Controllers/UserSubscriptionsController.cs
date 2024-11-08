@@ -720,7 +720,7 @@ namespace InSyncAPI.Controllers
                         DateCreated = DateTime.UtcNow,
 
                     };
-                    _userSubRepo.Add(userSubscription);
+                    await  _userSubRepo.Add(userSubscription);
                     // Truy xuất thông tin từ session
                     //var customerEmail = session.CustomerEmail;
                     //var customerExist = await _userRepo.GetSingleByCondition(c => c.Email.ToLower().Equals(customerEmail.ToLower()));
