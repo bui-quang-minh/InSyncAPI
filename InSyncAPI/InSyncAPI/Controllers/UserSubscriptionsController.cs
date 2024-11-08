@@ -47,8 +47,8 @@ namespace InSyncAPI.Controllers
             _mapper = mapper;
             _logger = logger;
             _config = config;
-            _webhookSecretCheckoutSessionSucceeded = _config.GetValue<string>("StripConfig:WebhookSecretCheckoutSessionSucceeded");
-            _webhookSecretInvoicePaymentSucceeded = _config.GetValue<string>("StripConfig:WebhookSecretInvoicePaymentSucceeded");
+            _webhookSecretCheckoutSessionSucceeded = "whsec_WylL318deUjIWbr4ZRVj5z7kqfBNi1ZS";
+            _webhookSecretInvoicePaymentSucceeded = "whsec_TVgKGOIzkf8HM9qhQYGQ6JZE093v0H8r";
         }
 
 

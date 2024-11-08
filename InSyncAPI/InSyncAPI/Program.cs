@@ -71,7 +71,7 @@ namespace InSyncAPI
                 .AllowAnyOrigin()
                 .SetIsOriginAllowed((host) => true));
             });
-            StripeConfiguration.ApiKey = builder.Configuration.GetValue<string>("StripConfig:ApiKey");
+            StripeConfiguration.ApiKey = "sk_test_51QFCAdIMZTDPn6rJ6b9TwEnsjZDXKs54CWdmuTF1hlovLoVpbZnRyCZwANFppTQd3hVfHpe1U0EQT9T3QdodSr5R00lgHOs4Tp";
             var app = builder.Build();
            
             // Ghi log các yêu cầu HTTP
