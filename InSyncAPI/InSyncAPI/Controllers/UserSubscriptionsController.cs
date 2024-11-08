@@ -685,7 +685,6 @@ namespace InSyncAPI.Controllers
         {
             // Đọc nội dung của yêu cầu
             var json = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
-
             Event stripeEvent;
 
             try
@@ -706,52 +705,74 @@ namespace InSyncAPI.Controllers
             {
                 // Lấy đối tượng Checkout.Session từ event
                 var session = stripeEvent.Data.Object as Stripe.Checkout.Session;
-                var stripeSubscriptionId = session.SubscriptionId;
 
-                var subscriptionService = new SubscriptionService();
-                var subscription = subscriptionService.Get(stripeSubscriptionId);
-                
+
+                //               
 
                 if (session != null)
                 {
-                    var userSubscription = new UserSubscription
+                    // Lấy Subscription ID từ phiên Checkout
+                    var stripeSubscriptionId = session.SubscriptionId;
+
+                    // 1. Truy vấn Subscription từ Subscription ID
+                    var subscriptionService = new SubscriptionService();
+                    var subscription = subscriptionService.Get(stripeSubscriptionId);
+
+                    // 2. Lấy Product ID từ Price ID trong Subscription Item
+                    var stripPriceId = subscription.Items.Data[0].Price.Id; // Price ID từ Subscription Item
+                    var priceService = new PriceService();
+                    var price = priceService.Get(stripPriceId);
+                    var stripeProductId = price.ProductId; // Lấy Product ID từ Price
+
+                    // 3. Truy vấn Product để lấy Metadata
+                    var productService = new ProductService();
+                    var product = productService.Get(stripeProductId);
+
+                    var metadata = product.Metadata;
+                    var subscriptionPlanId = "";
+                    if (product.Metadata.ContainsKey("subscriptionPlanId"))
                     {
-                        SubscriptionPlanId = Guid.Parse("8DB99EDF-775B-4DCB-A8D4-6344B18C466F"),
-                        UserId = Guid.Parse("64ED4C77-60E0-463C-817C-0B07D7AB1DAD"),
-                        StripeCurrentPeriodEnd = DateTime.UtcNow,
-                        StripeCustomerId =  json,
-                        StripePriceId = "falsdfjals",   
-                        StripeSubscriptionId = subscription.Metadata["subscriptionPlanId"],
-                        DateCreated = DateTime.UtcNow,
+                        subscriptionPlanId = product.Metadata["subscriptionPlanId"];
+                    }
+                    else
+                    {
+                        return BadRequest("Stripe service provided insufficient information");
+                    }
 
-                    };
-                    await  _userSubRepo.Add(userSubscription);
                     // Truy xuất thông tin từ session
-                    //var customerEmail = session.CustomerDetails.Email;
-                    //var customerExist = await _userRepo.GetSingleByCondition(c => c.Email.ToLower().Equals(customerEmail.ToLower()));
-                    //if (customerExist == null)
-                    //{
-                    //    return BadRequest($"Customer information is incorrect with InSync system {customerEmail}.");
-                    //}
-                    //// subscription id stripe
-                    //var stripeSubscriptionId = session.SubscriptionId;
+                    var customerEmail = session.CustomerDetails.Email;
+                    var userExist = await _userRepo.GetSingleByCondition(c => c.Email.ToLower().Equals(customerEmail.ToLower()));
+                    if (userExist == null)
+                    {
+                        return BadRequest($"Customer information is incorrect with InSync system {customerEmail}.");
+                    }
 
-                    //var subscriptionService = new SubscriptionService();
-                    //var subscription = subscriptionService.Get(stripeSubscriptionId);
-                    //// lấy current period end
-                    //var stripeCurrentPeriodEnd = subscription.CurrentPeriodEnd;
-                    //// customer id stripe
-                    //var stripeCustomerId = session.CustomerId;         // ID khách hàng trong Stripe
-                   
-                  
-                    ////price id
-                    //var stripePriceId = session.LineItems.Data.FirstOrDefault()?.Price.Id;
+                    // lấy current period end
+                    var stripeCurrentPeriodEnd = subscription.CurrentPeriodEnd;
+                    // ID khách hàng trong Stripe
+                    var stripeCustomerId = session.CustomerId;         
+                    try
+                    {
+                        var userSubscription = new UserSubscription
+                        {
+                            SubscriptionPlanId = Guid.Parse(subscriptionPlanId),
+                            UserId = userExist.Id,
+                            StripeCurrentPeriodEnd = stripeCurrentPeriodEnd,
+                            StripeCustomerId = stripeCustomerId,
+                            StripePriceId = stripPriceId,
+                            StripeSubscriptionId = stripeSubscriptionId,
+                            DateCreated = DateTime.UtcNow,
 
-
-
+                        };
+                        await _userSubRepo.Add(userSubscription);
+                        
+                    }
+                    catch (Exception ex)
+                    {
+                        return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while updating data to the database.");
+                    }
                 }
             }
-
             return Ok(); // Trả về 200 để Stripe biết rằng webhook đã được xử lý thành công
         }
 
