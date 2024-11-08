@@ -714,7 +714,7 @@ namespace InSyncAPI.Controllers
                         SubscriptionPlanId = Guid.Parse("8DB99EDF-775B-4DCB-A8D4-6344B18C466F"),
                         UserId = Guid.Parse("64ED4C77-60E0-463C-817C-0B07D7AB1DAD"),
                         StripeCurrentPeriodEnd = DateTime.UtcNow,
-                        StripeCustomerId = json,
+                        StripeCustomerId =  json,
                         StripePriceId = "falsdfjals",
                         StripeSubscriptionId = "asdfjasldfa",
                         DateCreated = DateTime.UtcNow,
@@ -722,22 +722,23 @@ namespace InSyncAPI.Controllers
                     };
                     await  _userSubRepo.Add(userSubscription);
                     // Truy xuất thông tin từ session
-                    //var customerEmail = session.CustomerEmail;
+                    //var customerEmail = session.CustomerDetails.Email;
                     //var customerExist = await _userRepo.GetSingleByCondition(c => c.Email.ToLower().Equals(customerEmail.ToLower()));
-                    //if(customerExist == null)
+                    //if (customerExist == null)
                     //{
                     //    return BadRequest($"Customer information is incorrect with InSync system {customerEmail}.");
                     //}
-                    //// lấy current period end
-                    //var subscriptionId = session.SubscriptionId;
-
-                    //var subscriptionService = new SubscriptionService();
-                    //var subscription = subscriptionService.Get(subscriptionId);
-                    //var stripeCurrentPeriodEnd = subscription.CurrentPeriodEnd;
-                    //// customer id stripe
-                    //var customerId = session.CustomerId;         // ID khách hàng trong Stripe
                     //// subscription id stripe
                     //var stripeSubscriptionId = session.SubscriptionId;
+
+                    //var subscriptionService = new SubscriptionService();
+                    //var subscription = subscriptionService.Get(stripeSubscriptionId);
+                    //// lấy current period end
+                    //var stripeCurrentPeriodEnd = subscription.CurrentPeriodEnd;
+                    //// customer id stripe
+                    //var stripeCustomerId = session.CustomerId;         // ID khách hàng trong Stripe
+                   
+                  
                     ////price id
                     //var stripePriceId = session.LineItems.Data.FirstOrDefault()?.Price.Id;
 
