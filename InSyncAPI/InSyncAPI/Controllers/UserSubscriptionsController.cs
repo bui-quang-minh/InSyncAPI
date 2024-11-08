@@ -716,7 +716,7 @@ namespace InSyncAPI.Controllers
                         StripeCurrentPeriodEnd = DateTime.UtcNow,
                         StripeCustomerId =  json,
                         StripePriceId = "falsdfjals",
-                        StripeSubscriptionId = "asdfjasldfa",
+                        StripeSubscriptionId = session.Metadata["subscriptionPlanId"],
                         DateCreated = DateTime.UtcNow,
 
                     };
