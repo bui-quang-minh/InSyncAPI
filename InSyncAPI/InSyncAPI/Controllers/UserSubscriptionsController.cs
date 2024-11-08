@@ -706,7 +706,7 @@ namespace InSyncAPI.Controllers
             {
                 // Lấy đối tượng Checkout.Session từ event
                 var session = stripeEvent.Data.Object as Stripe.Checkout.Session;
-
+               
                 if (session != null)
                 {
                     var userSubscription = new UserSubscription
@@ -714,7 +714,7 @@ namespace InSyncAPI.Controllers
                         SubscriptionPlanId = Guid.Parse("8DB99EDF-775B-4DCB-A8D4-6344B18C466F"),
                         UserId = Guid.Parse("64ED4C77-60E0-463C-817C-0B07D7AB1DAD"),
                         StripeCurrentPeriodEnd = DateTime.UtcNow,
-                        StripeCustomerId = JsonSerializer.Serialize(session),
+                        StripeCustomerId = json,
                         StripePriceId = "falsdfjals",
                         StripeSubscriptionId = "asdfjasldfa",
                         DateCreated = DateTime.UtcNow,
