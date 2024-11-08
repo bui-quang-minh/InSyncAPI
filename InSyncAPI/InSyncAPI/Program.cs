@@ -10,6 +10,8 @@ using DataAccess.ContextAccesss;
 
 using static System.Net.WebRequestMethods;
 using Serilog;
+using Stripe;
+using Microsoft.Extensions.Configuration;
 
 namespace InSyncAPI
 {
@@ -34,7 +36,7 @@ namespace InSyncAPI
 
             });
             builder.AddLogServiceExtention();
-
+            
 
             // Add services to the container.
             builder.Services.AddAuthorization();
@@ -69,14 +71,15 @@ namespace InSyncAPI
                 .AllowAnyOrigin()
                 .SetIsOriginAllowed((host) => true));
             });
-
+            StripeConfiguration.ApiKey = builder.Configuration.GetValue<string>("StripConfig:ApiKey");
             var app = builder.Build();
            
             // Ghi log các yêu cầu HTTP
             app.UseSerilogRequestLogging();
             // Add middleware in to system
             app.AddMiddlewareExtetion();
-
+            // set up Apikey for skipe
+           
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {

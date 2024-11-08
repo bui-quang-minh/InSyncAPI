@@ -1,11 +1,14 @@
-﻿using AutoMapper;
+﻿
+using AutoMapper;
 using BusinessObjects.Models;
 using InSyncAPI.Dtos;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Query;
 using Repositorys;
+using Stripe;
 using System.Diagnostics;
+using System.Text.Json;
 
 namespace InSyncAPI.Controllers
 {
@@ -21,6 +24,9 @@ namespace InSyncAPI.Controllers
         private const int ITEM_PAGES_DEFAULT = 10;
         private const int INDEX_DEFAULT = 0;
         private IMapper _mapper;
+        private IConfiguration _config;
+        private readonly string _webhookSecretCheckoutSessionSucceeded = "";
+        private readonly string _webhookSecretInvoicePaymentSucceeded = "";
         private string[] includes = new string[]
         {
             nameof(UserSubscription.User),
@@ -31,7 +37,8 @@ namespace InSyncAPI.Controllers
             IUserRepository userRepo,
             ISubscriptionPlanRepository subRepo,
             IMapper mapper,
-            ILogger<UserSubscriptionsController> logger
+            ILogger<UserSubscriptionsController> logger,
+            IConfiguration config
             )
         {
             _userSubRepo = userSubRepo;
@@ -39,7 +46,9 @@ namespace InSyncAPI.Controllers
             _subRepo = subRepo;
             _mapper = mapper;
             _logger = logger;
-          
+            _config = config;
+            _webhookSecretCheckoutSessionSucceeded = _config.GetValue<string>("StripConfig:WebhookSecretCheckoutSessionSucceeded");
+            _webhookSecretInvoicePaymentSucceeded = _config.GetValue<string>("StripConfig:WebhookSecretInvoicePaymentSucceeded");
         }
 
 
@@ -77,7 +86,7 @@ namespace InSyncAPI.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     value: $"Error retrieving user subscriptions: {ex.Message}");
             }
-            
+
         }
         [HttpGet("pagination")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewUserSubsciptionDto>>))]
@@ -138,7 +147,7 @@ namespace InSyncAPI.Controllers
         [HttpGet("user/{userId}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewUserSubsciptionDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
-        public async Task<IActionResult> GetAllUserSubsciptionOfUser([FromRoute]Guid userId, int? index , int? size)
+        public async Task<IActionResult> GetAllUserSubsciptionOfUser([FromRoute] Guid userId, int? index, int? size)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received request to get all subscriptions for user {UserId} at {RequestTime}", userId, DateTime.UtcNow);
@@ -195,7 +204,7 @@ namespace InSyncAPI.Controllers
         [HttpGet("user-clerk/{userIdClerk}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewUserSubsciptionDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
-        public async Task<IActionResult> GetAllUserSubsciptionOfUserClerk([FromRoute]string userIdClerk, int? index , int? size )
+        public async Task<IActionResult> GetAllUserSubsciptionOfUserClerk([FromRoute] string userIdClerk, int? index, int? size)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received request to get all subscriptions for clerk {UserIdClerk} at {RequestTime}", userIdClerk, DateTime.UtcNow);
@@ -315,7 +324,7 @@ namespace InSyncAPI.Controllers
                 var now = DateTime.Now;
                 var listUserSubsciption = _userSubRepo.GetMulti(c => c.User.UserIdClerk.Equals(userIdClerk) && c.StripeCurrentPeriodEnd >= now);
 
-                
+
 
                 var response = _mapper.Map<IEnumerable<ViewUserSubsciptionDto>>(listUserSubsciption);
                 stopwatch.Stop();
@@ -449,7 +458,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionUserSubsciptionResponse))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
-        public async Task<IActionResult> AddUserSubsciption([FromBody]AddUserSubsciptionDto newUserSub)
+        public async Task<IActionResult> AddUserSubsciption([FromBody] AddUserSubsciptionDto newUserSub)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received request to add user subscription at {RequestTime}", DateTime.UtcNow);
@@ -484,7 +493,7 @@ namespace InSyncAPI.Controllers
 
                 var userSubscription = _mapper.Map<UserSubscription>(newUserSub);
                 userSubscription.DateCreated = DateTime.UtcNow;
-              
+
 
                 var response = await _userSubRepo.Add(userSubscription);
                 if (response == null)
@@ -510,7 +519,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionUserSubsciptionResponse))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
-        public async Task<IActionResult> AddUserSubsciptionUserClerk([FromBody]AddUserSubsciptionUserClerkDto newUserSub)
+        public async Task<IActionResult> AddUserSubsciptionUserClerk([FromBody] AddUserSubsciptionUserClerkDto newUserSub)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received request to add user subscription for clerk at {RequestTime}", DateTime.UtcNow);
@@ -572,7 +581,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
-        public async Task<IActionResult> UpdateUserSubsciption([FromRoute] Guid id, [FromBody]UpdateUserSubsciptionDto updateUserSub)
+        public async Task<IActionResult> UpdateUserSubsciption([FromRoute] Guid id, [FromBody] UpdateUserSubsciptionDto updateUserSub)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received request to update user subscription with ID {UserSubscriptionId} at {RequestTime}", id, DateTime.UtcNow);
@@ -605,7 +614,7 @@ namespace InSyncAPI.Controllers
 
             // Map the updated fields
             _mapper.Map(updateUserSub, existingUserSub);
-          
+
 
             try
             {
@@ -670,5 +679,125 @@ namespace InSyncAPI.Controllers
             }
         }
 
+
+        [HttpPost("webhook_checkout_session_completed")]
+        public async Task<IActionResult> HandleStripeEventCheckoutCompleted()
+        {
+            // Đọc nội dung của yêu cầu
+            var json = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
+
+            Event stripeEvent;
+
+            try
+            {
+                // Xác minh chữ ký webhook
+                var signatureHeader = Request.Headers["Stripe-Signature"];
+                stripeEvent = EventUtility.ConstructEvent(json, signatureHeader, _webhookSecretCheckoutSessionSucceeded);
+            }
+            catch (Exception ex)
+            {
+                // Nếu xác minh không thành công, trả về mã 400
+                _logger.LogError(ex, $"Webhook signature verification failed. {ex.Message}");
+                return BadRequest();
+            }
+
+            // Kiểm tra loại sự kiện
+            if (stripeEvent.Type == EventTypes.CheckoutSessionCompleted)
+            {
+                // Lấy đối tượng Checkout.Session từ event
+                var session = stripeEvent.Data.Object as Stripe.Checkout.Session;
+
+                if (session != null)
+                {
+                    var userSubscription = new UserSubscription
+                    {
+                        SubscriptionPlanId = Guid.Parse("8DB99EDF-775B-4DCB-A8D4-6344B18C466F"),
+                        UserId = Guid.Parse("64ED4C77-60E0-463C-817C-0B07D7AB1DAD"),
+                        StripeCurrentPeriodEnd = DateTime.UtcNow,
+                        StripeCustomerId = JsonSerializer.Serialize(session),
+                        StripePriceId = "falsdfjals",
+                        StripeSubscriptionId = "asdfjasldfa",
+                        DateCreated = DateTime.UtcNow,
+
+                    };
+                    _userSubRepo.Add(userSubscription);
+                    // Truy xuất thông tin từ session
+                    //var customerEmail = session.CustomerEmail;
+                    //var customerExist = await _userRepo.GetSingleByCondition(c => c.Email.ToLower().Equals(customerEmail.ToLower()));
+                    //if(customerExist == null)
+                    //{
+                    //    return BadRequest($"Customer information is incorrect with InSync system {customerEmail}.");
+                    //}
+                    //// lấy current period end
+                    //var subscriptionId = session.SubscriptionId;
+
+                    //var subscriptionService = new SubscriptionService();
+                    //var subscription = subscriptionService.Get(subscriptionId);
+                    //var stripeCurrentPeriodEnd = subscription.CurrentPeriodEnd;
+                    //// customer id stripe
+                    //var customerId = session.CustomerId;         // ID khách hàng trong Stripe
+                    //// subscription id stripe
+                    //var stripeSubscriptionId = session.SubscriptionId;
+                    ////price id
+                    //var stripePriceId = session.LineItems.Data.FirstOrDefault()?.Price.Id;
+
+
+
+                }
+            }
+
+            return Ok(); // Trả về 200 để Stripe biết rằng webhook đã được xử lý thành công
+        }
+
+        [HttpPost("webhook_invoice_payment_succeeded")]
+        public async Task<IActionResult> HandleStripeEventInvoicePayment()
+        {
+            // Đọc nội dung của yêu cầu
+            var json = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
+
+            Event stripeEvent;
+
+            try
+            {
+                // Xác minh chữ ký webhook
+                var signatureHeader = Request.Headers["Stripe-Signature"];
+                stripeEvent = EventUtility.ConstructEvent(json, signatureHeader, _webhookSecretInvoicePaymentSucceeded);
+            }
+            catch (Exception ex)
+            {
+                // Nếu xác minh không thành công, trả về mã 400
+                Console.WriteLine($"Webhook signature verification failed. {ex.Message}");
+                return BadRequest();
+            }
+
+            // Kiểm tra loại sự kiện
+            if (stripeEvent.Type == EventTypes.InvoicePaymentSucceeded)
+            {
+                // Lấy đối tượng Invoice từ event
+                var invoice = stripeEvent.Data.Object as Stripe.Invoice;
+
+                if (invoice != null)
+                {
+                    // Truy xuất thông tin từ hóa đơn
+                    var customerId = invoice.CustomerId;            // ID khách hàng trong Stripe
+                    var invoiceId = invoice.Id;                     // ID của hóa đơn
+                    var amountPaid = invoice.AmountPaid;            // Số tiền đã thanh toán (cents)
+                    var subscriptionId = invoice.SubscriptionId;    // ID đăng ký, nếu là hóa đơn đăng ký
+                    var metadata = invoice.Metadata;
+                    // Metadata tùy chỉnh, nếu có
+
+                    Console.WriteLine($"Customer ID: {customerId}");
+                    Console.WriteLine($"Invoice ID: {invoiceId}");
+                    Console.WriteLine($"Amount Paid: {amountPaid}");
+                    Console.WriteLine($"Subscription ID: {subscriptionId}");
+
+                    // Thực hiện các xử lý khác, ví dụ: cập nhật trạng thái đăng ký, gửi biên lai cho khách hàng, v.v.
+                }
+            }
+
+            return Ok(); // Trả về mã 200 để Stripe biết rằng webhook đã được xử lý thành công
+        }
     }
+
+
 }
