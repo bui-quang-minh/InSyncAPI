@@ -416,6 +416,7 @@ namespace InSyncAPI.Controllers
             Project project = _mapper.Map<Project>(newProject);
             project.UserId = checkUserExist.Id;
             project.DateCreated = DateTime.UtcNow;
+            project.DateUpdated = DateTime.UtcNow;
 
             try
             {
