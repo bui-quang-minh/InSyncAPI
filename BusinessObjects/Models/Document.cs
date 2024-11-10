@@ -12,5 +12,6 @@ namespace BusinessObjects.Models
         public string? Note { get; set; }
         public DateTime? DateCreated { get; set; }
         public DateTime? DateUpdated { get; set; }
+        public string Category { get; set; } = null!;
     }
 }

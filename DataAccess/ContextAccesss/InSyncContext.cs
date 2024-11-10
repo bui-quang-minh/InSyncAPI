@@ -121,6 +121,11 @@ namespace DataAccess.ContextAccesss
                     .HasColumnName("id")
                     .HasDefaultValueSql("(newid())");
 
+                entity.Property(e => e.Category)
+                    .HasMaxLength(300)
+                    .HasColumnName("category")
+                    .HasDefaultValueSql("('No Category Yet')");
+
                 entity.Property(e => e.Content)
                     .HasColumnType("text")
                     .HasColumnName("content");

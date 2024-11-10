@@ -13,6 +13,7 @@ namespace InSyncAPI.Dtos
             public string? Note { get; set; }
             public DateTime? DateCreated { get; set; }
             public DateTime? DateUpdated { get; set; }
+            public string Category { get; set; } = null!;
         }
         public class UpdateDocumentDto
         {
@@ -25,6 +26,9 @@ namespace InSyncAPI.Dtos
             public string Title { get; set; } = null!;
             public string? Content { get; set; }
             public string? Note { get; set; }
+            [Required]
+            [StringLength(300)]
+            public string Category { get; set; } = null!;
         }
         public class AddDocumentDto
         {
@@ -36,6 +40,9 @@ namespace InSyncAPI.Dtos
             public string Title { get; set; } = null!;
             public string? Content { get; set; }
             public string? Note { get; set; }
+            [Required]
+            [StringLength(300)]
+            public string Category { get; set; } = null!;
         }
         public class ActionDocumentResponse
         {
