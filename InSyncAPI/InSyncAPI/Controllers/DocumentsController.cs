@@ -33,7 +33,7 @@ namespace InSyncAPI.Controllers
         [EnableQuery]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IQueryable<Document>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
-        public async Task<IActionResult> GetPages()
+        public async Task<IActionResult> GetDocuments()
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received request to get documents at {RequestTime}.", DateTime.UtcNow);
@@ -66,7 +66,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponsePaging<IEnumerable<ViewDocumentDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
 
-        public async Task<IActionResult> GetAllPage(int? index, int? size, string? keySearch = "")
+        public async Task<IActionResult> GetAllDocumentWithPaging(int? index, int? size, string? keySearch = "")
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received request to get all documents at {RequestTime}.", DateTime.UtcNow);
@@ -128,7 +128,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
 
-        public async Task<IActionResult> GetPageById([FromRoute] Guid id)
+        public async Task<IActionResult> GetDocumentById([FromRoute] Guid id)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received request to get Document by ID: {Id} at {RequestTime}.", id, DateTime.UtcNow);
@@ -175,7 +175,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
 
-        public async Task<IActionResult> GetPageBySlug([FromRoute] string slug)
+        public async Task<IActionResult> GetDocumentBySlug([FromRoute] string slug)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received request to get Document by Slug: {Slug} at {RequestTime}.", slug, DateTime.UtcNow);
@@ -221,7 +221,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
 
-        public async Task<IActionResult> AddPage([FromBody] AddDocumentDto newPage)
+        public async Task<IActionResult> AddDocument([FromBody] AddDocumentDto newDocument)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received request to add a new Document at {RequestTime}.", DateTime.UtcNow);
@@ -238,7 +238,7 @@ namespace InSyncAPI.Controllers
                 return BadRequest(new ValidationProblemDetails(ModelState));
             }
 
-            Document Document = _mapper.Map<Document>(newPage);
+            Document Document = _mapper.Map<Document>(newDocument);
             Document.DateCreated = DateTime.UtcNow;
             Document.DateUpdated = DateTime.UtcNow;
 
@@ -271,7 +271,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
 
-        public async Task<IActionResult> UpdatePage([FromRoute] Guid id, [FromBody] UpdateDocumentDto updatePage)
+        public async Task<IActionResult> UpdatePage([FromRoute] Guid id, [FromBody] UpdateDocumentDto updateDocument)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received request to update Document with ID: {Id} at {RequestTime}.", id, DateTime.UtcNow);
@@ -288,7 +288,7 @@ namespace InSyncAPI.Controllers
                 return BadRequest(new ValidationProblemDetails(ModelState));
             }
 
-            if (id != updatePage.Id)
+            if (id != updateDocument.Id)
             {
                 return BadRequest("Document ID information does not match");
             }
@@ -305,7 +305,7 @@ namespace InSyncAPI.Controllers
             existingPage.DateUpdated = DateTime.UtcNow;
 
             // Map the updated fields
-            _mapper.Map(updatePage, existingPage);
+            _mapper.Map(updateDocument, existingPage);
 
             try
             {
@@ -329,7 +329,7 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
 
-        public async Task<IActionResult> UpdatePageBySlug([FromRoute] string slug, [FromBody] UpdateDocumentDto updatePage)
+        public async Task<IActionResult> UpdatePageBySlug([FromRoute] string slug, [FromBody] UpdateDocumentDto updateDocument)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received request to update Document with Slug: {Id} at {RequestTime}.", slug, DateTime.UtcNow);
@@ -347,7 +347,7 @@ namespace InSyncAPI.Controllers
             }
 
             // Fetch the existing Document to ensure it exists
-            var existingPage = await _documentRepo.GetSingleByCondition(c => c.Slug.Equals(slug));
+            var existingPage = await _documentRepo.GetSingleByCondition(c => c.Slug.Equals(slug) && c.Id.Equals(updateDocument.Id));
 
             if (existingPage == null)
             {
@@ -358,7 +358,7 @@ namespace InSyncAPI.Controllers
             existingPage.DateUpdated = DateTime.UtcNow;
 
             // Map the updated fields
-            _mapper.Map(updatePage, existingPage);
+            _mapper.Map(updateDocument, existingPage);
 
             try
             {

@@ -345,10 +345,8 @@ namespace InSyncAPI.Controllers
             {
                 return BadRequest(new ValidationProblemDetails(ModelState));
             }
-
-
             // Fetch the existing Page to ensure it exists
-            var existingPage = await _pageRepo.GetSingleByCondition(c => c.Slug.Equals(slug));
+            var existingPage = await _pageRepo.GetSingleByCondition(c => c.Slug.Equals(slug) &&  c.Id.Equals(updatePage.Id));
 
             if (existingPage == null)
             {
