@@ -346,11 +346,6 @@ namespace InSyncAPI.Controllers
                 return BadRequest(new ValidationProblemDetails(ModelState));
             }
 
-            if (slug != updatePage.Slug)
-            {
-                return BadRequest("Document Slug information does not match");
-            }
-
             // Fetch the existing Document to ensure it exists
             var existingPage = await _documentRepo.GetSingleByCondition(c => c.Slug.Equals(slug));
 
