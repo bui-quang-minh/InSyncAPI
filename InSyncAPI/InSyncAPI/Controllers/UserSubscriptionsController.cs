@@ -731,6 +731,7 @@ namespace InSyncAPI.Controllers
                 _logger.LogError("User repository, user subscription repository, subscription repository, or mapper is not initialized.");
                 return StatusCode(StatusCodes.Status500InternalServerError, "Application service has not been created");
             }
+
             // Đọc nội dung của yêu cầu
             var json = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
             Event stripeEvent;
@@ -740,113 +741,123 @@ namespace InSyncAPI.Controllers
                 // Xác minh chữ ký webhook
                 var signatureHeader = Request.Headers["Stripe-Signature"];
                 stripeEvent = EventUtility.ConstructEvent(json, signatureHeader, _webhookSecretCheckoutSessionSucceeded);
+                _logger.LogInformation("Stripe event verified successfully.");
             }
             catch (Exception ex)
             {
-                // Nếu xác minh không thành công, trả về mã 400
                 _logger.LogError(ex, $"Webhook signature verification failed. {ex.Message}");
-                return BadRequest("Webhook signature verification failed. {ex.Message}");
+                return BadRequest($"Webhook signature verification failed. {ex.Message}");
             }
 
             // Kiểm tra loại sự kiện
             if (stripeEvent.Type == EventTypes.CheckoutSessionCompleted)
             {
-                // Lấy đối tượng Checkout.Session từ event
+                _logger.LogInformation("Processing CheckoutSessionCompleted event.");
+
                 var session = stripeEvent.Data.Object as Stripe.Checkout.Session;
                 if (session != null)
                 {
-                    // Lấy Subscription ID từ phiên Checkout
                     var stripeSubscriptionId = session.SubscriptionId;
+                    _logger.LogInformation($"Stripe Subscription ID: {stripeSubscriptionId}");
 
-                    // 1. Truy vấn Subscription từ Subscription ID
-                    var subscriptionService = new SubscriptionService();
-                    var subscription = subscriptionService.Get(stripeSubscriptionId);
-
-                    // 2. Lấy Product ID từ Price ID trong Subscription Item
-                    var stripPriceId = subscription.Items.Data[0].Price.Id; // Price ID từ Subscription Item
-                    var priceService = new PriceService();
-                    var price = priceService.Get(stripPriceId);
-                    var stripeProductId = price.ProductId; // Lấy Product ID từ Price
-
-                    // 3. Truy vấn Product để lấy Metadata
-                    var productService = new ProductService();
-                    var product = productService.Get(stripeProductId);
-
-                    var metadata = product.Metadata;
-                    var subscriptionPlanId = "";
-                    if (product.Metadata.ContainsKey("subscriptionPlanId"))
-                    {
-                        subscriptionPlanId = product.Metadata["subscriptionPlanId"];
-                    }
-                    else
-                    {
-                        return BadRequest("Stripe service provided insufficient information");
-                    }
-
-                    // Truy xuất thông tin từ session
-                    var customerEmail = session.CustomerDetails.Email;
-                    var userExist = await _userRepo.GetSingleByCondition(c => c.Email.ToLower().Equals(customerEmail.ToLower()));
-                    if (userExist == null)
-                    {
-                        return BadRequest($"Customer information is incorrect with InSync system {customerEmail}.");
-                    }
-
-                    // lấy current period end
-                    var stripeCurrentPeriodEnd = subscription.CurrentPeriodEnd;
-                    // ID khách hàng trong Stripe
-                    var stripeCustomerId = session.CustomerId;
-
-                    // ngày tạo của check out session 
-                    var createdAt = session.Created;
                     try
                     {
+                        // Retrieve Subscription information
+                        var subscriptionService = new SubscriptionService();
+                        var subscription = subscriptionService.Get(stripeSubscriptionId);
+                        var stripPriceId = subscription.Items.Data[0].Price.Id;
+                        var priceService = new PriceService();
+                        var price = priceService.Get(stripPriceId);
+                        var stripeProductId = price.ProductId;
 
-                        var userSubscriptionExist = await _userSubRepo.GetSingleByCondition
-                       (c => c.SubscriptionPlanId.Equals(Guid.Parse(subscriptionPlanId)) && c.UserId.Equals(userExist.Id));
-                        if (userSubscriptionExist == null)
+                        // Retrieve Product metadata
+                        var productService = new ProductService();
+                        var product = productService.Get(stripeProductId);
+
+                        if (product.Metadata.ContainsKey("subscriptionPlanId"))
                         {
-                            var userSubscription = new UserSubscription
-                            {
-                                SubscriptionPlanId = Guid.Parse(subscriptionPlanId),
-                                UserId = userExist.Id,
-                                StripeCurrentPeriodEnd = stripeCurrentPeriodEnd,
-                                StripeCustomerId = stripeCustomerId,
-                                StripePriceId = stripPriceId,
-                                StripeSubscriptionId = stripeSubscriptionId,
-                                DateCreated = createdAt,
+                            var subscriptionPlanId = product.Metadata["subscriptionPlanId"];
+                            _logger.LogInformation($"Subscription Plan ID: {subscriptionPlanId}");
 
-                            };
-                            var userSubAdded = await _userSubRepo.Add(userSubscription);
-                            return Ok(new ActionUserSubsciptionResponse { Message = "User Subscription added successfully.", Id = userSubAdded.Id });
+                            var customerEmail = session.CustomerDetails.Email;
+                            _logger.LogInformation($"Customer Email: {customerEmail}");
+
+                            var userExist = await _userRepo.GetSingleByCondition(c => c.Email.ToLower().Equals(customerEmail.ToLower()));
+                            if (userExist == null)
+                            {
+                                _logger.LogWarning($"Customer information not found in system for email: {customerEmail}");
+                                return BadRequest($"Customer information is incorrect with InSync system {customerEmail}.");
+                            }
+
+                            var stripeCurrentPeriodEnd = subscription.CurrentPeriodEnd;
+                            var stripeCustomerId = session.CustomerId;
+                            var createdAt = session.Created;
+
+                            var userSubscriptionExist = await _userSubRepo.GetSingleByCondition(
+                                c => c.SubscriptionPlanId.Equals(Guid.Parse(subscriptionPlanId)) && c.UserId.Equals(userExist.Id));
+
+                            if (userSubscriptionExist == null)
+                            {
+                                var userSubscription = new UserSubscription
+                                {
+                                    SubscriptionPlanId = Guid.Parse(subscriptionPlanId),
+                                    UserId = userExist.Id,
+                                    StripeCurrentPeriodEnd = stripeCurrentPeriodEnd,
+                                    StripeCustomerId = stripeCustomerId,
+                                    StripePriceId = stripPriceId,
+                                    StripeSubscriptionId = stripeSubscriptionId,
+                                    DateCreated = createdAt,
+                                };
+                                var userSubAdded = await _userSubRepo.Add(userSubscription);
+                                _logger.LogInformation("User Subscription added successfully.");
+                                return Ok(new ActionUserSubsciptionResponse { Message = "User Subscription added successfully.", Id = userSubAdded.Id });
+                            }
+                            else
+                            {
+                                userSubscriptionExist.StripeCurrentPeriodEnd = stripeCurrentPeriodEnd;
+                                userSubscriptionExist.StripeCustomerId = stripeCustomerId;
+                                userSubscriptionExist.StripePriceId = stripPriceId;
+                                userSubscriptionExist.StripeSubscriptionId = stripeSubscriptionId;
+                                userSubscriptionExist.DateCreated = createdAt;
+                                await _userSubRepo.Update(userSubscriptionExist);
+                                _logger.LogInformation("User Subscription updated successfully.");
+                                return Ok(new ActionUserSubsciptionResponse { Message = "User Subscription updated successfully.", Id = userSubscriptionExist.Id });
+                            }
                         }
                         else
                         {
-                            // update user subscription 
-                            userSubscriptionExist.StripeCurrentPeriodEnd = stripeCurrentPeriodEnd;
-                            userSubscriptionExist.StripeCustomerId = stripeCustomerId;
-                            userSubscriptionExist.StripePriceId = stripPriceId;
-                            userSubscriptionExist.StripeCurrentPeriodEnd = stripeCurrentPeriodEnd;
-                            userSubscriptionExist.StripeSubscriptionId = stripeSubscriptionId;
-                            userSubscriptionExist.DateCreated = createdAt;
-                            await _userSubRepo.Update(userSubscriptionExist);
-                            return Ok(new ActionUserSubsciptionResponse { Message = "User Subscription updated successfully.", Id = userSubscriptionExist.Id });
+                            _logger.LogWarning("Subscription Plan ID metadata is missing in the product.");
+                            return BadRequest("Stripe service provided insufficient information");
                         }
                     }
                     catch (Exception ex)
                     {
+                        _logger.LogError(ex, "An error occurred while updating data to the database.");
                         return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while updating data to the database.");
                     }
                 }
             }
+
+            _logger.LogInformation("Event processed successfully.");
             return Ok(); // Trả về 200 để Stripe biết rằng webhook đã được xử lý thành công
         }
 
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionUserSubsciptionResponse))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         [HttpPost("webhook_invoice_payment_succeeded")]
         public async Task<IActionResult> HandleStripeEventInvoicePayment()
         {
+            // Log the beginning of the method
+            _logger.LogInformation("Started processing Stripe webhook for invoice payment succeeded.");
+
+            if (_userRepo == null || _userSubRepo == null || _subRepo == null || _mapper == null)
+            {
+                _logger.LogError("User repository, user subscription repository, subscription repository, or mapper is not initialized.");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Application service has not been created");
+            }
             // Đọc nội dung của yêu cầu
             var json = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
-
             Event stripeEvent;
 
             try
@@ -854,69 +865,68 @@ namespace InSyncAPI.Controllers
                 // Xác minh chữ ký webhook
                 var signatureHeader = Request.Headers["Stripe-Signature"];
                 stripeEvent = EventUtility.ConstructEvent(json, signatureHeader, _webhookSecretInvoicePaymentSucceeded);
+                _logger.LogInformation("Stripe webhook signature verified successfully.");
             }
             catch (Exception ex)
             {
                 // Nếu xác minh không thành công, trả về mã 400
-                Console.WriteLine($"Webhook signature verification failed. {ex.Message}");
+                _logger.LogError(ex, $"Webhook signature verification failed: {ex.Message}");
                 return BadRequest();
             }
 
             // Kiểm tra loại sự kiện
             if (stripeEvent.Type == EventTypes.InvoicePaymentSucceeded)
             {
-                // Lấy đối tượng Invoice từ event
+                _logger.LogInformation("Handling InvoicePaymentSucceeded event.");
                 var invoice = stripeEvent.Data.Object as Stripe.Invoice;
 
                 if (invoice != null)
                 {
-                    // Lấy Subscription ID từ phiên Checkout
                     var stripeSubscriptionId = invoice.SubscriptionId;
+                    _logger.LogInformation($"Stripe Subscription ID: {stripeSubscriptionId}");
 
-                    // 1. Truy vấn Subscription từ Subscription ID
                     var subscriptionService = new SubscriptionService();
                     var subscription = subscriptionService.Get(stripeSubscriptionId);
 
-                    // 2. Lấy Product ID từ Price ID trong Subscription Item
-                    var stripPriceId = subscription.Items.Data[0].Price.Id; // Price ID từ Subscription Item
+                    var stripPriceId = subscription.Items.Data[0].Price.Id;
+                    _logger.LogInformation($"Stripe Price ID: {stripPriceId}");
+
                     var priceService = new PriceService();
                     var price = priceService.Get(stripPriceId);
-                    var stripeProductId = price.ProductId; // Lấy Product ID từ Price
+                    var stripeProductId = price.ProductId;
+                    _logger.LogInformation($"Stripe Product ID: {stripeProductId}");
 
-                    // 3. Truy vấn Product để lấy Metadata
                     var productService = new ProductService();
                     var product = productService.Get(stripeProductId);
 
-                    var metadata = product.Metadata;
-                    var subscriptionPlanId = "";
-                    if (product.Metadata.ContainsKey("subscriptionPlanId"))
+                    var subscriptionPlanId = product.Metadata.ContainsKey("subscriptionPlanId")
+                        ? product.Metadata["subscriptionPlanId"]
+                        : null;
+
+                    if (string.IsNullOrEmpty(subscriptionPlanId))
                     {
-                        subscriptionPlanId = product.Metadata["subscriptionPlanId"];
-                    }
-                    else
-                    {
+                        _logger.LogWarning("Subscription plan ID not found in product metadata.");
                         return BadRequest("Stripe service provided insufficient information");
                     }
 
-                    // Truy xuất thông tin từ session
                     var customerEmail = invoice.CustomerEmail;
                     var userExist = await _userRepo.GetSingleByCondition(c => c.Email.ToLower().Equals(customerEmail.ToLower()));
+
                     if (userExist == null)
                     {
+                        _logger.LogWarning($"No user found in system for email: {customerEmail}");
                         return BadRequest($"Customer information is incorrect with InSync system {customerEmail}.");
                     }
 
-                    // lấy current period end
                     var stripeCurrentPeriodEnd = subscription.CurrentPeriodEnd;
-                    // ID khách hàng trong Stripe
                     var stripeCustomerId = invoice.CustomerId;
                     var createdAt = invoice.Created;
-
+                    _logger.LogInformation($"User ID: {userExist.Id}, Stripe Customer ID: {stripeCustomerId}, Current Period End: {stripeCurrentPeriodEnd}");
 
                     try
                     {
-                        var userSubscriptionExist = await _userSubRepo.GetSingleByCondition
-                       (c => c.SubscriptionPlanId.Equals(Guid.Parse(subscriptionPlanId)) && c.UserId.Equals(userExist.Id));
+                        var userSubscriptionExist = await _userSubRepo.GetSingleByCondition(
+                            c => c.SubscriptionPlanId.Equals(Guid.Parse(subscriptionPlanId)) && c.UserId.Equals(userExist.Id));
 
                         if (userSubscriptionExist == null)
                         {
@@ -929,34 +939,35 @@ namespace InSyncAPI.Controllers
                                 StripePriceId = stripPriceId,
                                 StripeSubscriptionId = stripeSubscriptionId,
                                 DateCreated = createdAt,
-
                             };
                             var userSubAdded = await _userSubRepo.Add(userSubscription);
+                            _logger.LogInformation($"New User Subscription added. ID: {userSubAdded.Id}");
                             return Ok(new ActionUserSubsciptionResponse { Message = "User Subscription added successfully.", Id = userSubAdded.Id });
                         }
                         else
                         {
-                            // update user subscription 
                             userSubscriptionExist.StripeCurrentPeriodEnd = stripeCurrentPeriodEnd;
                             userSubscriptionExist.StripeCustomerId = stripeCustomerId;
                             userSubscriptionExist.StripePriceId = stripPriceId;
-                            userSubscriptionExist.StripeCurrentPeriodEnd = stripeCurrentPeriodEnd;
                             userSubscriptionExist.StripeSubscriptionId = stripeSubscriptionId;
                             userSubscriptionExist.DateCreated = createdAt;
                             await _userSubRepo.Update(userSubscriptionExist);
+                            _logger.LogInformation($"User Subscription updated. ID: {userSubscriptionExist.Id}");
                             return Ok(new ActionUserSubsciptionResponse { Message = "User Subscription updated successfully.", Id = userSubscriptionExist.Id });
                         }
-
                     }
                     catch (Exception ex)
                     {
+                        _logger.LogError(ex, "An error occurred while updating the User Subscription in the database.");
                         return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while updating data to the database.");
                     }
                 }
             }
 
+            _logger.LogInformation("Finished processing webhook - returning 200 OK.");
             return Ok(); // Trả về mã 200 để Stripe biết rằng webhook đã được xử lý thành công
         }
+
     }
 
 

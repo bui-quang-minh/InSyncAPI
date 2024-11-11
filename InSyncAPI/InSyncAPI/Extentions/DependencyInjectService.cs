@@ -15,6 +15,7 @@ namespace InSync_Api.DependencyInjectService
             services.AddScoped<IUserSubscriptionRepository, UserSubscriptionRepository>();
             services.AddScoped<IPageRepository, PageRepository>();
             services.AddScoped<IDocumentRepository, DocumentRepository>();
+            services.AddScoped<ICategoryDocumentRepository, CategoryDocumentRepository>();
         }
     }
 }

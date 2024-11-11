@@ -7,6 +7,7 @@ namespace InSyncAPI.Extentions
         public static void AddMiddlewareExtetion(this WebApplication app)
         {
             app.UseMiddleware<LoggingControllerMiddleware>();
+           // app.UseMiddleware<ApiKeyMiddleware>();
         }
     }
 }

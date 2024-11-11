@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using BusinessObjects.Models;
 using InSyncAPI.Dtos;
+using static InSyncAPI.Dtos.CategoryDocumentDto;
 using static InSyncAPI.Dtos.DocumentDto;
 using static InSyncAPI.Dtos.PageDto;
 
@@ -19,10 +20,17 @@ namespace InSync_Api.MapperProfile
             CreateMap<AddPageDto, Page>().ReverseMap();
             CreateMap<UpdatePageDto, Page>().ReverseMap();
             CreateMap<Page, ViewPageDto>().ReverseMap();
-            //PrivacyPolicy
+            //Document
             CreateMap<AddDocumentDto, Document>().ReverseMap();
             CreateMap<UpdateDocumentDto, Document>().ReverseMap();
-            CreateMap<Document, ViewDocumentDto>().ReverseMap();
+            CreateMap<Document, ViewDocumentDto>()
+                 .ForMember(c => c.CategoryName, a => a.MapFrom(r => r.Category.Title))
+                .ReverseMap();
+            //Document
+            CreateMap<AddCategoryDocumentDto, CategoryDocument>().ReverseMap();
+            CreateMap<UpdateCategoryDocumentDto, CategoryDocument>().ReverseMap();
+            CreateMap<CategoryDocument, ViewCategoryDocumentDto>()
+                .ReverseMap();
             // Subscription Plan
             CreateMap<AddSubscriptionPlanDto, SubscriptionPlan>().ReverseMap();
             CreateMap<AddSubscriptionPlanUserClerkDto, SubscriptionPlan>().ReverseMap();

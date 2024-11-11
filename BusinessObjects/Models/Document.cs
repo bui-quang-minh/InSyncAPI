@@ -10,8 +10,10 @@ namespace BusinessObjects.Models
         public string Title { get; set; } = null!;
         public string? Content { get; set; }
         public string? Note { get; set; }
-        public DateTime? DateCreated { get; set; }
+        public DateTime DateCreated { get; set; }
         public DateTime? DateUpdated { get; set; }
-        public string Category { get; set; } = null!;
+        public Guid CategoryId { get; set; }
+
+        public virtual CategoryDocument Category { get; set; } = null!;
     }
 }

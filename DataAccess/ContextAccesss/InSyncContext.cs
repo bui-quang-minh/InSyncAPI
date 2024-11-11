@@ -19,6 +19,7 @@ namespace DataAccess.ContextAccesss
         }
 
         public virtual DbSet<Asset> Assets { get; set; } = null!;
+        public virtual DbSet<CategoryDocument> CategoryDocuments { get; set; } = null!;
         public virtual DbSet<CustomerReview> CustomerReviews { get; set; } = null!;
         public virtual DbSet<Document> Documents { get; set; } = null!;
         public virtual DbSet<Page> Pages { get; set; } = null!;
@@ -78,6 +79,30 @@ namespace DataAccess.ContextAccesss
                     .HasConstraintName("assets_project_id_foreign");
             });
 
+            modelBuilder.Entity<CategoryDocument>(entity =>
+            {
+                entity.ToTable("Category_Documents");
+
+                entity.Property(e => e.Id)
+                    .HasColumnName("id")
+                    .HasDefaultValueSql("(newid())");
+
+                entity.Property(e => e.DateCreated)
+                    .HasColumnType("datetime")
+                    .HasColumnName("date_created")
+                    .HasDefaultValueSql("(getdate())");
+
+                entity.Property(e => e.DateUpdated)
+                    .HasColumnType("datetime")
+                    .HasColumnName("date_updated");
+
+                entity.Property(e => e.Order).HasColumnName("order");
+
+                entity.Property(e => e.Title)
+                    .HasMaxLength(500)
+                    .HasColumnName("title");
+            });
+
             modelBuilder.Entity<CustomerReview>(entity =>
             {
                 entity.ToTable("Customer_Reviews");
@@ -111,17 +136,14 @@ namespace DataAccess.ContextAccesss
 
             modelBuilder.Entity<Document>(entity =>
             {
-                entity.HasIndex(e => e.Slug, "UQ__Document__32DD1E4C120C139E")
+                entity.HasIndex(e => e.Slug, "UQ__Document__32DD1E4C17E8680B")
                     .IsUnique();
 
                 entity.Property(e => e.Id)
                     .HasColumnName("id")
                     .HasDefaultValueSql("(newid())");
 
-                entity.Property(e => e.Category)
-                    .HasMaxLength(300)
-                    .HasColumnName("category")
-                    .HasDefaultValueSql("('No Category Yet')");
+                entity.Property(e => e.CategoryId).HasColumnName("category_id");
 
                 entity.Property(e => e.Content)
                     .HasColumnType("text")
@@ -134,27 +156,28 @@ namespace DataAccess.ContextAccesss
 
                 entity.Property(e => e.DateUpdated)
                     .HasColumnType("datetime")
-                    .HasColumnName("date_updated")
-                    .HasDefaultValueSql("(getdate())");
+                    .HasColumnName("date_updated");
 
-                entity.Property(e => e.Note)
-                    .IsUnicode(false)
-                    .HasColumnName("note");
+                entity.Property(e => e.Note).HasColumnName("note");
 
                 entity.Property(e => e.Slug)
                     .HasMaxLength(600)
-                    .IsUnicode(false)
                     .HasColumnName("slug");
 
                 entity.Property(e => e.Title)
                     .HasMaxLength(500)
-                    .IsUnicode(false)
                     .HasColumnName("title");
+
+                entity.HasOne(d => d.Category)
+                    .WithMany(p => p.Documents)
+                    .HasForeignKey(d => d.CategoryId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK__Documents__categ__7C1A6C5A");
             });
 
             modelBuilder.Entity<Page>(entity =>
             {
-                entity.HasIndex(e => e.Slug, "UQ__Pages__32DD1E4C1E6A2C81")
+                entity.HasIndex(e => e.Slug, "UQ__Pages__32DD1E4C27937435")
                     .IsUnique();
 
                 entity.Property(e => e.Id)
@@ -172,21 +195,16 @@ namespace DataAccess.ContextAccesss
 
                 entity.Property(e => e.DateUpdated)
                     .HasColumnType("datetime")
-                    .HasColumnName("date_updated")
-                    .HasDefaultValueSql("(getdate())");
+                    .HasColumnName("date_updated");
 
-                entity.Property(e => e.Note)
-                    .IsUnicode(false)
-                    .HasColumnName("note");
+                entity.Property(e => e.Note).HasColumnName("note");
 
                 entity.Property(e => e.Slug)
                     .HasMaxLength(600)
-                    .IsUnicode(false)
                     .HasColumnName("slug");
 
                 entity.Property(e => e.Title)
                     .HasMaxLength(500)
-                    .IsUnicode(false)
                     .HasColumnName("title");
             });
 
