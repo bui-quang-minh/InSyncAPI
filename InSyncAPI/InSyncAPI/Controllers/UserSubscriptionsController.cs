@@ -720,10 +720,17 @@ namespace InSyncAPI.Controllers
             }
         }
 
-
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionUserSubsciptionResponse))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         [HttpPost("webhook_checkout_session_completed")]
         public async Task<IActionResult> HandleStripeEventCheckoutCompleted()
         {
+            if (_userRepo == null || _userSubRepo == null || _subRepo == null || _mapper == null)
+            {
+                _logger.LogError("User repository, user subscription repository, subscription repository, or mapper is not initialized.");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Application service has not been created");
+            }
             // Đọc nội dung của yêu cầu
             var json = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
             Event stripeEvent;
@@ -738,7 +745,7 @@ namespace InSyncAPI.Controllers
             {
                 // Nếu xác minh không thành công, trả về mã 400
                 _logger.LogError(ex, $"Webhook signature verification failed. {ex.Message}");
-                return BadRequest();
+                return BadRequest("Webhook signature verification failed. {ex.Message}");
             }
 
             // Kiểm tra loại sự kiện
@@ -746,10 +753,6 @@ namespace InSyncAPI.Controllers
             {
                 // Lấy đối tượng Checkout.Session từ event
                 var session = stripeEvent.Data.Object as Stripe.Checkout.Session;
-
-
-                //               
-
                 if (session != null)
                 {
                     // Lấy Subscription ID từ phiên Checkout
@@ -813,7 +816,8 @@ namespace InSyncAPI.Controllers
                                 DateCreated = createdAt,
 
                             };
-                            await _userSubRepo.Add(userSubscription);
+                            var userSubAdded = await _userSubRepo.Add(userSubscription);
+                            return Ok(new ActionUserSubsciptionResponse { Message = "User Subscription added successfully.", Id = userSubAdded.Id });
                         }
                         else
                         {
@@ -825,6 +829,7 @@ namespace InSyncAPI.Controllers
                             userSubscriptionExist.StripeSubscriptionId = stripeSubscriptionId;
                             userSubscriptionExist.DateCreated = createdAt;
                             await _userSubRepo.Update(userSubscriptionExist);
+                            return Ok(new ActionUserSubsciptionResponse { Message = "User Subscription updated successfully.", Id = userSubscriptionExist.Id });
                         }
                     }
                     catch (Exception ex)
@@ -906,13 +911,14 @@ namespace InSyncAPI.Controllers
                     // ID khách hàng trong Stripe
                     var stripeCustomerId = invoice.CustomerId;
                     var createdAt = invoice.Created;
-                    
-                    
+
+
                     try
                     {
                         var userSubscriptionExist = await _userSubRepo.GetSingleByCondition
                        (c => c.SubscriptionPlanId.Equals(Guid.Parse(subscriptionPlanId)) && c.UserId.Equals(userExist.Id));
-                        if(userSubscriptionExist == null)
+
+                        if (userSubscriptionExist == null)
                         {
                             var userSubscription = new UserSubscription
                             {
@@ -925,7 +931,8 @@ namespace InSyncAPI.Controllers
                                 DateCreated = createdAt,
 
                             };
-                            await _userSubRepo.Add(userSubscription);
+                            var userSubAdded = await _userSubRepo.Add(userSubscription);
+                            return Ok(new ActionUserSubsciptionResponse { Message = "User Subscription added successfully.", Id = userSubAdded.Id });
                         }
                         else
                         {
@@ -937,7 +944,8 @@ namespace InSyncAPI.Controllers
                             userSubscriptionExist.StripeSubscriptionId = stripeSubscriptionId;
                             userSubscriptionExist.DateCreated = createdAt;
                             await _userSubRepo.Update(userSubscriptionExist);
-                        } 
+                            return Ok(new ActionUserSubsciptionResponse { Message = "User Subscription updated successfully.", Id = userSubscriptionExist.Id });
+                        }
 
                     }
                     catch (Exception ex)
