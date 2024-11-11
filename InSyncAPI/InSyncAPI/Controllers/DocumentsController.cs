@@ -254,7 +254,7 @@ namespace InSyncAPI.Controllers
 
                 stopwatch.Stop();
                 _logger.LogInformation("Successfully added Document with ID: {Id} in {ElapsedMilliseconds}ms.", response.Id, stopwatch.ElapsedMilliseconds);
-                return Ok(new ActionPrivacyPolicyResponse { Message = "Document added successfully.", Id = response.Id });
+                return Ok(new ActionDocumentResponse { Message = "Document added successfully.", Id = response.Id });
             }
             catch (Exception ex)
             {
@@ -312,7 +312,7 @@ namespace InSyncAPI.Controllers
                 await _documentRepo.Update(existingPage);
                 stopwatch.Stop();
                 _logger.LogInformation("Successfully updated Document with ID: {Id} in {ElapsedMilliseconds}ms.", existingPage.Id, stopwatch.ElapsedMilliseconds);
-                return Ok(new ActionPrivacyPolicyResponse { Message = "Document updated successfully.", Id = existingPage.Id });
+                return Ok(new ActionDocumentResponse { Message = "Document updated successfully.", Id = existingPage.Id });
             }
             catch (Exception ex)
             {
@@ -365,7 +365,7 @@ namespace InSyncAPI.Controllers
                 await _documentRepo.Update(existingPage);
                 stopwatch.Stop();
                 _logger.LogInformation("Successfully updated Document with ID: {Id} in {ElapsedMilliseconds}ms.", existingPage.Id, stopwatch.ElapsedMilliseconds);
-                return Ok(new ActionPrivacyPolicyResponse { Message = "Document updated successfully.", Id = existingPage.Id });
+                return Ok(new ActionDocumentResponse { Message = "Document updated successfully.", Id = existingPage.Id });
             }
             catch (Exception ex)
             {
@@ -412,7 +412,7 @@ namespace InSyncAPI.Controllers
                 await _documentRepo.DeleteMulti(c => c.Id.Equals(id));
                 stopwatch.Stop();
                 _logger.LogInformation("Successfully deleted Document with ID: {Id} in {ElapsedMilliseconds}ms.", id, stopwatch.ElapsedMilliseconds);
-                return Ok(new ActionPrivacyPolicyResponse { Message = "Document deleted successfully.", Id = id });
+                return Ok(new ActionDocumentResponse { Message = "Document deleted successfully.", Id = id });
             }
             catch (Exception ex)
             {

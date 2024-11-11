@@ -15,10 +15,6 @@ namespace InSync_Api.MapperProfile
             CreateMap<AddCustomerReviewDto, CustomerReview>().ReverseMap();
             CreateMap<UpdateCustomerReviewDto, CustomerReview>().ReverseMap();
             CreateMap<CustomerReview, ViewCustomerReviewDto>().ReverseMap();
-            //PrivacyPolicy
-            CreateMap<AddPrivacyPolicyDto, PrivacyPolicy>().ReverseMap();
-            CreateMap<UpdatePrivacyPolicyDto, PrivacyPolicy>().ReverseMap();
-            CreateMap<PrivacyPolicy, ViewPrivacyPolicyDto>().ReverseMap();
             //Page
             CreateMap<AddPageDto, Page>().ReverseMap();
             CreateMap<UpdatePageDto, Page>().ReverseMap();
@@ -27,14 +23,6 @@ namespace InSync_Api.MapperProfile
             CreateMap<AddDocumentDto, Document>().ReverseMap();
             CreateMap<UpdateDocumentDto, Document>().ReverseMap();
             CreateMap<Document, ViewDocumentDto>().ReverseMap();
-            //Term Dto 
-            CreateMap<AddTermsDto, Term>().ReverseMap();
-            CreateMap<UpdateTermsDto, Term>().ReverseMap();
-            CreateMap<Term, ViewTermDto>().ReverseMap();
-            //Tutorial Dto 
-            CreateMap<AddTutorialDto, Tutorial>().ReverseMap();
-            CreateMap<UpdateTutorialDto, Tutorial>().ReverseMap();
-            CreateMap<Tutorial, ViewTutorialDto>().ReverseMap();
             // Subscription Plan
             CreateMap<AddSubscriptionPlanDto, SubscriptionPlan>().ReverseMap();
             CreateMap<AddSubscriptionPlanUserClerkDto, SubscriptionPlan>().ReverseMap();

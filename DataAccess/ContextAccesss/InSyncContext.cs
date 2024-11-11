@@ -22,12 +22,9 @@ namespace DataAccess.ContextAccesss
         public virtual DbSet<CustomerReview> CustomerReviews { get; set; } = null!;
         public virtual DbSet<Document> Documents { get; set; } = null!;
         public virtual DbSet<Page> Pages { get; set; } = null!;
-        public virtual DbSet<PrivacyPolicy> PrivacyPolicys { get; set; } = null!;
         public virtual DbSet<Project> Projects { get; set; } = null!;
         public virtual DbSet<Scenario> Scenarios { get; set; } = null!;
         public virtual DbSet<SubscriptionPlan> SubscriptionPlans { get; set; } = null!;
-        public virtual DbSet<Term> Terms { get; set; } = null!;
-        public virtual DbSet<Tutorial> Tutorials { get; set; } = null!;
         public virtual DbSet<User> Users { get; set; } = null!;
         public virtual DbSet<UserSubscription> UserSubscriptions { get; set; } = null!;
 
@@ -193,31 +190,6 @@ namespace DataAccess.ContextAccesss
                     .HasColumnName("title");
             });
 
-            modelBuilder.Entity<PrivacyPolicy>(entity =>
-            {
-                entity.ToTable("Privacy_Policys");
-
-                entity.Property(e => e.Id)
-                    .HasColumnName("id")
-                    .HasDefaultValueSql("(newid())");
-
-                entity.Property(e => e.DateCreated)
-                    .HasColumnType("datetime")
-                    .HasColumnName("date_created");
-
-                entity.Property(e => e.DateUpdated)
-                    .HasColumnType("datetime")
-                    .HasColumnName("date_updated");
-
-                entity.Property(e => e.Description)
-                    .HasColumnType("text")
-                    .HasColumnName("description");
-
-                entity.Property(e => e.Title)
-                    .HasMaxLength(300)
-                    .HasColumnName("title");
-            });
-
             modelBuilder.Entity<Project>(entity =>
             {
                 entity.Property(e => e.Id)
@@ -366,56 +338,6 @@ namespace DataAccess.ContextAccesss
                     .HasForeignKey(d => d.UserId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("subscription_plans_user_id_foreign");
-            });
-
-            modelBuilder.Entity<Term>(entity =>
-            {
-                entity.Property(e => e.Id)
-                    .HasColumnName("id")
-                    .HasDefaultValueSql("(newid())");
-
-                entity.Property(e => e.Answer)
-                    .HasColumnType("text")
-                    .HasColumnName("answer");
-
-                entity.Property(e => e.DateCreated)
-                    .HasColumnType("datetime")
-                    .HasColumnName("date_created");
-
-                entity.Property(e => e.DateUpdated)
-                    .HasColumnType("datetime")
-                    .HasColumnName("date_updated");
-
-                entity.Property(e => e.Question)
-                    .HasColumnType("text")
-                    .HasColumnName("question");
-            });
-
-            modelBuilder.Entity<Tutorial>(entity =>
-            {
-                entity.Property(e => e.Id)
-                    .HasColumnName("id")
-                    .HasDefaultValueSql("(newid())");
-
-                entity.Property(e => e.Content)
-                    .HasColumnType("text")
-                    .HasColumnName("content");
-
-                entity.Property(e => e.DateCreated)
-                    .HasColumnType("datetime")
-                    .HasColumnName("date_created");
-
-                entity.Property(e => e.DateUpdated)
-                    .HasColumnType("datetime")
-                    .HasColumnName("date_updated");
-
-                entity.Property(e => e.IsShow).HasColumnName("is_show");
-
-                entity.Property(e => e.Order).HasColumnName("order");
-
-                entity.Property(e => e.Title)
-                    .HasMaxLength(255)
-                    .HasColumnName("title");
             });
 
             modelBuilder.Entity<User>(entity =>

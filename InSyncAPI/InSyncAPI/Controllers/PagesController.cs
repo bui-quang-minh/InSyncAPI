@@ -254,7 +254,7 @@ namespace InSyncAPI.Controllers
 
                 stopwatch.Stop();
                 _logger.LogInformation("Successfully added Page with ID: {Id} in {ElapsedMilliseconds}ms.", response.Id, stopwatch.ElapsedMilliseconds);
-                return Ok(new ActionPrivacyPolicyResponse { Message = "Page added successfully.", Id = response.Id });
+                return Ok(new ActionPageResponse { Message = "Page added successfully.", Id = response.Id });
             }
             catch (Exception ex)
             {
@@ -312,7 +312,7 @@ namespace InSyncAPI.Controllers
                 await _pageRepo.Update(existingPage);
                 stopwatch.Stop();
                 _logger.LogInformation("Successfully updated Page with ID: {Id} in {ElapsedMilliseconds}ms.", existingPage.Id, stopwatch.ElapsedMilliseconds);
-                return Ok(new ActionPrivacyPolicyResponse { Message = "Page updated successfully.", Id = existingPage.Id });
+                return Ok(new ActionPageResponse { Message = "Page updated successfully.", Id = existingPage.Id });
             }
             catch (Exception ex)
             {
@@ -364,7 +364,7 @@ namespace InSyncAPI.Controllers
                 await _pageRepo.Update(existingPage);
                 stopwatch.Stop();
                 _logger.LogInformation("Successfully updated Page with ID: {Id} in {ElapsedMilliseconds}ms.", existingPage.Id, stopwatch.ElapsedMilliseconds);
-                return Ok(new ActionPrivacyPolicyResponse { Message = "Page updated successfully.", Id = existingPage.Id });
+                return Ok(new ActionPageResponse { Message = "Page updated successfully.", Id = existingPage.Id });
             }
             catch (Exception ex)
             {
@@ -411,7 +411,7 @@ namespace InSyncAPI.Controllers
                 await _pageRepo.DeleteMulti(c => c.Id.Equals(id));
                 stopwatch.Stop();
                 _logger.LogInformation("Successfully deleted Page with ID: {Id} in {ElapsedMilliseconds}ms.", id, stopwatch.ElapsedMilliseconds);
-                return Ok(new ActionPrivacyPolicyResponse { Message = "Page deleted successfully.", Id = id });
+                return Ok(new ActionPageResponse { Message = "Page deleted successfully.", Id = id });
             }
             catch (Exception ex)
             {

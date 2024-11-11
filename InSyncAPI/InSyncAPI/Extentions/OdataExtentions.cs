@@ -21,13 +21,10 @@ namespace WebNewsAPIs.Extentions
         {
             ODataConventionModelBuilder conventionModelBuilder = new ODataConventionModelBuilder();
             conventionModelBuilder.EntitySet<Asset>("Assets");    
-            conventionModelBuilder.EntitySet<CustomerReview>("CustomerReviews");
-            conventionModelBuilder.EntitySet<PrivacyPolicy>("PrivacyPolicys");    
+            conventionModelBuilder.EntitySet<CustomerReview>("CustomerReviews");   
             conventionModelBuilder.EntitySet<Project>("Projects");
             conventionModelBuilder.EntitySet<Scenario>("Scenarios");
             conventionModelBuilder.EntitySet<SubscriptionPlan>("SubscriptionPlans");
-            conventionModelBuilder.EntitySet<Term>("Terms");
-            conventionModelBuilder.EntitySet<Tutorial>("Tutorials");
             conventionModelBuilder.EntitySet<User>("Users");
             conventionModelBuilder.EntitySet<UserSubscription>("UserSubscriptions");
 
