@@ -341,7 +341,7 @@ namespace InSyncAPI.Controllers
         }
 
         [HttpGet("check-non-expired/{userIdClerk}")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(bool))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(object))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         public async Task<IActionResult> CheckUserSubsciptionOfUserClerkNonExpired([FromRoute] string userIdClerk)
         {
@@ -365,10 +365,14 @@ namespace InSyncAPI.Controllers
                 var now = DateTime.Now;
                 var listUserSubsciption = _userSubRepo.GetMulti(c => c.User.UserIdClerk.Equals(userIdClerk) && c.StripeCurrentPeriodEnd >= now);
                 bool isNonExpired = listUserSubsciption.Any();
+                var response = new
+                {
+                    isSubscribed = isNonExpired
+                };
                 stopwatch.Stop();
                 _logger.LogInformation("Successfully retrieved  non-expired  subscriptions {status} for clerk {UserIdClerk} in {ElapsedMilliseconds}ms.", isNonExpired, userIdClerk, stopwatch.ElapsedMilliseconds);
 
-                return Ok(isNonExpired);
+                return Ok(response);
             }
             catch (Exception ex)
             {
