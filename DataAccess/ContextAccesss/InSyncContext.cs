@@ -96,6 +96,10 @@ namespace DataAccess.ContextAccesss
                     .HasColumnType("datetime")
                     .HasColumnName("date_updated");
 
+                entity.Property(e => e.Description)
+                    .HasColumnType("text")
+                    .HasColumnName("description");
+
                 entity.Property(e => e.Order).HasColumnName("order");
 
                 entity.Property(e => e.Title)
@@ -159,6 +163,8 @@ namespace DataAccess.ContextAccesss
                     .HasColumnName("date_updated");
 
                 entity.Property(e => e.Note).HasColumnName("note");
+
+                entity.Property(e => e.Order).HasColumnName("order");
 
                 entity.Property(e => e.Slug)
                     .HasMaxLength(600)

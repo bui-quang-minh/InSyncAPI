@@ -14,7 +14,7 @@ namespace InSyncAPI.Dtos
             public DateTime DateCreated { get; set; }
             public DateTime? DateUpdated { get; set; }
 
-            public virtual ICollection<ViewDocumentDto> Documents { get; set; }
+            public virtual IEnumerable<ViewDocumentDto> Documents { get; set; }
         }
         public class UpdateCategoryDocumentDto
         {
@@ -22,6 +22,8 @@ namespace InSyncAPI.Dtos
             [Required]
             [StringLength(500)]
             public string Title { get; set; } = null!;
+            [Required]
+            [Range(0, int.MaxValue)]
             public int Order { get; set; }
             public string? Description { get; set; }
         }
@@ -31,6 +33,8 @@ namespace InSyncAPI.Dtos
             [Required]
             [StringLength(500)]
             public string Title { get; set; } = null!;
+            [Required]
+            [Range(0, int.MaxValue)]
             public int Order { get; set; }
             public string? Description { get; set; }
         }

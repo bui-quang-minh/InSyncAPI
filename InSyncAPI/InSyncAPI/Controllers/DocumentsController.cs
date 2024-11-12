@@ -49,7 +49,8 @@ namespace InSyncAPI.Controllers
 
             try
             {
-                var response = _documentRepo.GetAll(includes).AsQueryable();
+                var response = _documentRepo.GetAll().OrderBy(c => c.Order).ThenBy(c=> c.Title)
+                    .AsQueryable();
                 stopwatch.Stop();
                 _logger.LogInformation("Successfully retrieved documents in {ElapsedMilliseconds}ms.", stopwatch.ElapsedMilliseconds);
 
@@ -89,6 +90,7 @@ namespace InSyncAPI.Controllers
                 if (index == null || size == null)
                 {
                     listPage = _documentRepo.GetMulti(c => c.Title.ToLower().Contains(keySearch), includes);
+                       
                     total = listPage.Count();
                 }
                 else
@@ -100,7 +102,7 @@ namespace InSyncAPI.Controllers
                         out total, index.Value, size.Value, includes
                     );
                 }
-
+                listPage = listPage.OrderBy(c => c.Order).ThenBy(c => c.Title);
                 var response = _mapper.Map<IEnumerable<ViewDocumentDto>>(listPage);
                 var responsePaging = new ResponsePaging<IEnumerable<ViewDocumentDto>>
                 {
@@ -158,7 +160,7 @@ namespace InSyncAPI.Controllers
                         out total, index.Value, size.Value, includes
                     );
                 }
-
+                listPage = listPage.OrderBy(c => c.Order).ThenBy(c => c.Title);
                 var response = _mapper.Map<IEnumerable<ViewDocumentDto>>(listPage);
                 var responsePaging = new ResponsePaging<IEnumerable<ViewDocumentDto>>
                 {

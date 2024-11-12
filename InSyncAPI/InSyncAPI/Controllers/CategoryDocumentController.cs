@@ -49,7 +49,10 @@ namespace InSyncAPI.Controllers
 
             try
             {
-                var response = _cateRepo.GetAll(includes).AsQueryable();
+                var listCate = _cateRepo.GetAll();
+                var response = OrderCategoryAndDocument(listCate).AsQueryable();
+               
+
                 stopwatch.Stop();
                 _logger.LogInformation("Successfully retrieved category documents in {ElapsedMilliseconds}ms.", stopwatch.ElapsedMilliseconds);
 
@@ -100,8 +103,9 @@ namespace InSyncAPI.Controllers
                         out total, index.Value, size.Value, includes
                     );
                 }
-
+                listPage = OrderCategoryAndDocument(listPage);
                 var response = _mapper.Map<IEnumerable<ViewCategoryDocumentDto>>(listPage);
+                
                 var responsePaging = new ResponsePaging<IEnumerable<ViewCategoryDocumentDto>>
                 {
                     data = response,
@@ -157,6 +161,8 @@ namespace InSyncAPI.Controllers
                 }
 
                 var response = _mapper.Map<ViewCategoryDocumentDto>(CategoryDocument);
+                response.Documents = response.Documents.OrderBy(c => c.Order).ThenBy(c => c.Title);
+
                 stopwatch.Stop();
                 _logger.LogInformation("Successfully retrieved Category Document with ID: {Id} in {ElapsedMilliseconds}ms.", id, stopwatch.ElapsedMilliseconds);
 
@@ -172,7 +178,7 @@ namespace InSyncAPI.Controllers
         }
 
 
-        
+
 
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionCategoryDocumentResponse))]
@@ -326,6 +332,17 @@ namespace InSyncAPI.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     $"Error deleting Category Document: {ex.Message}");
             }
+        }
+
+        [HttpGet("function_order")]
+        public IEnumerable<CategoryDocument> OrderCategoryAndDocument(IEnumerable<CategoryDocument> categories)
+        {
+            foreach (var category in categories)
+            {
+                category.Documents = category.Documents.OrderBy(c => c.Order).ThenBy(c => c.Title).ToList();
+            }
+            categories = categories.OrderBy(c => c.Order).ThenBy(c => c.Title);
+            return categories;
         }
     }
 }

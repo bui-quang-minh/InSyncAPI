@@ -13,6 +13,7 @@ namespace BusinessObjects.Models
         public DateTime DateCreated { get; set; }
         public DateTime? DateUpdated { get; set; }
         public Guid CategoryId { get; set; }
+        public int Order { get; set; }
 
         public virtual CategoryDocument Category { get; set; } = null!;
     }

@@ -158,6 +158,8 @@ namespace BusinessObjects.Models
 
                 entity.Property(e => e.Note).HasColumnName("note");
 
+                entity.Property(e => e.Order).HasColumnName("order");
+
                 entity.Property(e => e.Slug)
                     .HasMaxLength(600)
                     .HasColumnName("slug");
