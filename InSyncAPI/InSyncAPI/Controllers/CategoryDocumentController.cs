@@ -334,6 +334,7 @@ namespace InSyncAPI.Controllers
             }
         }
 
+        [ApiExplorerSettings(IgnoreApi = true)]
         [HttpGet("function_order")]
         public IEnumerable<CategoryDocument> OrderCategoryAndDocument(IEnumerable<CategoryDocument> categories)
         {
