@@ -48,6 +48,7 @@ namespace InSyncAPI.Controllers
 
             _webhookSecretCheckoutSessionSucceeded = "whsec_WylL318deUjIWbr4ZRVj5z7kqfBNi1ZS";
             _webhookSecretInvoicePaymentSucceeded = "whsec_TVgKGOIzkf8HM9qhQYGQ6JZE093v0H8r";
+            _webhookSecretCustomerSubsciptionDeleted = "whsec_p9GJyGd3LP6ORpQL3s0nfDJR5cgTrnoC";
         }
 
 
