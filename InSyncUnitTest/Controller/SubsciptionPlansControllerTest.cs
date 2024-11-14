@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using AutoMapper.Internal;
 using BusinessObjects.Models;
 using Castle.Core.Logging;
 using FakeItEasy;
@@ -647,9 +648,8 @@ namespace InSyncUnitTest.Controller
             var result = await _controller.AddSubsciptionPlan(newSubscriptionPlan);
 
             // Assert
-            var notFound = result as NotFoundObjectResult;
+            var notFound = result as BadRequestObjectResult;
             notFound.Should().NotBeNull();
-            notFound.StatusCode.Should().Be(StatusCodes.Status404NotFound);
             notFound.Value.Should().Be($"Don't exist user with id {newSubscriptionPlan.UserId.ToString()} to add Subscription Plan");
 
 

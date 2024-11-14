@@ -154,7 +154,7 @@ namespace InSyncUnitTest.Controller
             // Assert
             result.Should().NotBeNull();
             result.StatusCode.Should().Be(StatusCodes.Status200OK);
-            result.Value.Should().BeEquivalentTo(new { message = "User updated successfully.", Id = existingUser.DisplayName });
+            result.Value.Should().BeEquivalentTo(new ActionUserResponse{ Message = "User updated successfully.", Id = existingUser.Id });
         }
 
         [Fact]

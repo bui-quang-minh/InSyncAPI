@@ -16,7 +16,7 @@ namespace InSyncAPI.Controllers
     public class CategoryDocumentController : ControllerBase
     {
         private ICategoryDocumentRepository _cateRepo;
-        private ILogger<PagesController> _logger;
+        private ILogger<CategoryDocumentController> _logger;
         private readonly string TAG = nameof(PagesController) + " - ";
         private const int ITEM_PAGES_DEFAULT = 10;
         private const int INDEX_DEFAULT = 0;
@@ -24,7 +24,7 @@ namespace InSyncAPI.Controllers
         private readonly string[] includes = new string[] { nameof(CategoryDocument.Documents) };
 
         public CategoryDocumentController(ICategoryDocumentRepository CateRepo, IMapper mapper
-            , ILogger<PagesController> logger)
+            , ILogger<CategoryDocumentController> logger)
         {
             _cateRepo = CateRepo;
             _mapper = mapper;
@@ -178,8 +178,6 @@ namespace InSyncAPI.Controllers
         }
 
 
-
-
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionCategoryDocumentResponse))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
@@ -218,14 +216,14 @@ namespace InSyncAPI.Controllers
 
                 stopwatch.Stop();
                 _logger.LogInformation("Successfully added Category Document with ID: {Id} in {ElapsedMilliseconds}ms.", response.Id, stopwatch.ElapsedMilliseconds);
-                return Ok(new ActionPageResponse { Message = "Category Document added successfully.", Id = response.Id });
+                return Ok(new ActionCategoryDocumentResponse { Message = "Category Document added successfully.", Id = response.Id });
             }
             catch (Exception ex)
             {
                 stopwatch.Stop();
                 _logger.LogError(ex, "Error occurred while adding Category Document into Database. Total time taken: {ElapsedMilliseconds}ms.", stopwatch.ElapsedMilliseconds);
                 return StatusCode(StatusCodes.Status500InternalServerError,
-                    $"An error occurred while adding Category Document into Database: {ex.Message}");
+                    $"An error occurred while adding category document into Database: {ex.Message}");
             }
         }
 
@@ -276,7 +274,7 @@ namespace InSyncAPI.Controllers
                 await _cateRepo.Update(existingCate);
                 stopwatch.Stop();
                 _logger.LogInformation("Successfully updated Category Document with ID: {Id} in {ElapsedMilliseconds}ms.", existingCate.Id, stopwatch.ElapsedMilliseconds);
-                return Ok(new ActionPageResponse { Message = "Category Document updated successfully.", Id = existingCate.Id });
+                return Ok(new ActionCategoryDocumentResponse { Message = "Category Document updated successfully.", Id = existingCate.Id });
             }
             catch (Exception ex)
             {
@@ -289,7 +287,7 @@ namespace InSyncAPI.Controllers
 
 
         [HttpDelete("{id}")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionPageResponse))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionCategoryDocumentResponse))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
@@ -323,7 +321,7 @@ namespace InSyncAPI.Controllers
                 await _cateRepo.DeleteCategoryDocument(id);
                 stopwatch.Stop();
                 _logger.LogInformation("Successfully deleted Category Document with ID: {Id} in {ElapsedMilliseconds}ms.", id, stopwatch.ElapsedMilliseconds);
-                return Ok(new ActionPageResponse { Message = "Category Document deleted successfully.", Id = id });
+                return Ok(new ActionCategoryDocumentResponse { Message = "Category Document deleted successfully.", Id = id });
             }
             catch (Exception ex)
             {
