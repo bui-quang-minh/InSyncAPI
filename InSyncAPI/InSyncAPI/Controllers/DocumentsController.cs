@@ -40,7 +40,7 @@ namespace InSyncAPI.Controllers
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received request to get documents at {RequestTime}.", DateTime.UtcNow);
 
-            if (_documentRepo == null || _mapper == null)
+            if (_documentRepo == null || _cateRepo == null || _mapper == null)
             {
                 _logger.LogError("Document repository or mapper is not initialized.");
                 return StatusCode(StatusCodes.Status500InternalServerError,
@@ -74,7 +74,7 @@ namespace InSyncAPI.Controllers
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received request to get all documents at {RequestTime}.", DateTime.UtcNow);
 
-            if (_documentRepo == null || _mapper == null)
+            if (_documentRepo == null || _cateRepo == null || _mapper == null)
             {
                 _logger.LogError("Document repository or mapper is not initialized.");
                 return StatusCode(StatusCodes.Status500InternalServerError,
@@ -133,7 +133,7 @@ namespace InSyncAPI.Controllers
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received request to get all documents at {RequestTime}.", DateTime.UtcNow);
 
-            if (_documentRepo == null || _mapper == null)
+            if (_documentRepo == null || _cateRepo == null || _mapper == null)
             {
                 _logger.LogError("Document repository or mapper is not initialized.");
                 return StatusCode(StatusCodes.Status500InternalServerError,
@@ -193,7 +193,7 @@ namespace InSyncAPI.Controllers
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received request to get Document by ID: {Id} at {RequestTime}.", id, DateTime.UtcNow);
 
-            if (_documentRepo == null || _mapper == null)
+            if (_documentRepo == null || _cateRepo == null || _mapper == null)
             {
                 _logger.LogError("Document repository or mapper is not initialized.");
                 return StatusCode(StatusCodes.Status500InternalServerError,
@@ -242,7 +242,7 @@ namespace InSyncAPI.Controllers
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received request to get Document by Slug: {Slug} at {RequestTime}.", slug, DateTime.UtcNow);
 
-            if (_documentRepo == null || _mapper == null)
+            if (_documentRepo == null || _cateRepo == null || _mapper == null)
             {
                 _logger.LogError("Document repository or mapper is not initialized.");
                 return StatusCode(StatusCodes.Status500InternalServerError,
@@ -288,7 +288,7 @@ namespace InSyncAPI.Controllers
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received request to add a new Document at {RequestTime}.", DateTime.UtcNow);
 
-            if (_documentRepo == null || _mapper == null)
+            if (_documentRepo == null || _cateRepo == null || _mapper == null)
             {
                 _logger.LogError("Document repository or mapper is not initialized.");
                 return StatusCode(StatusCodes.Status500InternalServerError,
@@ -338,13 +338,13 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
-
-        public async Task<IActionResult> UpdatePage([FromRoute] Guid id, [FromBody] UpdateDocumentDto updateDocument)
+    
+        public async Task<IActionResult> UpdateDocument([FromRoute] Guid id, [FromBody] UpdateDocumentDto updateDocument)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received request to update Document with ID: {Id} at {RequestTime}.", id, DateTime.UtcNow);
 
-            if (_documentRepo == null || _mapper == null)
+            if (_documentRepo == null || _cateRepo == null || _mapper == null)
             {
                 _logger.LogError("Document repository or mapper is not initialized.");
                 return StatusCode(StatusCodes.Status500InternalServerError,
@@ -403,12 +403,12 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
 
-        public async Task<IActionResult> UpdatePageBySlug([FromRoute] string slug, [FromBody] UpdateDocumentDto updateDocument)
+        public async Task<IActionResult> UpdateDocumentBySlug([FromRoute] string slug, [FromBody] UpdateDocumentDto updateDocument)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received request to update Document with Slug: {Id} at {RequestTime}.", slug, DateTime.UtcNow);
 
-            if (_documentRepo == null || _mapper == null)
+            if (_documentRepo == null || _cateRepo == null || _mapper == null)
             {
                 _logger.LogError("Document repository or mapper is not initialized.");
                 return StatusCode(StatusCodes.Status500InternalServerError,
@@ -463,12 +463,12 @@ namespace InSyncAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ValidationProblemDetails))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
 
-        public async Task<IActionResult> DeletePage([FromRoute] Guid id)
+        public async Task<IActionResult> DeleteDocument([FromRoute] Guid id)
         {
             var stopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Received request to delete Document with ID: {Id} at {RequestTime}.", id, DateTime.UtcNow);
 
-            if (_documentRepo == null || _mapper == null)
+            if (_documentRepo == null || _cateRepo == null || _mapper == null)
             {
                 _logger.LogError("Document repository or mapper is not initialized.");
                 return StatusCode(StatusCodes.Status500InternalServerError,
