@@ -112,7 +112,7 @@ namespace InSyncAPI.Controllers
                 existingUser.StatusUser = user.StatusUser;
                 if (userDto.Data.Public_Metadata.ContainsKey("role"))
                 {
-                    existingUser.Role = (string?)userDto.Data.Public_Metadata["role"];
+                    existingUser.Role = userDto.Data.Public_Metadata["role"].ToString();
                 }
                
 
