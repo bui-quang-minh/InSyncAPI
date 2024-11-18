@@ -6,7 +6,7 @@ using Microsoft.Extensions.Configuration;
 namespace InSyncAPI.Authentications
 {
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class)]
-    public class ApiKeyAuthenticationAttribute : Attribute, IAsyncAuthorizationFilter
+    public class ApiKeyAttribute : Attribute, IAsyncAuthorizationFilter
     {
         public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
         {

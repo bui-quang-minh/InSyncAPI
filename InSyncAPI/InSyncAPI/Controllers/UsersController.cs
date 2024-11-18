@@ -110,6 +110,11 @@ namespace InSyncAPI.Controllers
                 existingUser.PhoneNumber = user.PhoneNumber;
                 existingUser.DateUpdated = DateTime.UtcNow; // Update the DateUpdated to current time
                 existingUser.StatusUser = user.StatusUser;
+                if (userDto.Data.Public_Metadata.ContainsKey("role"))
+                {
+                    existingUser.Role = (string?)userDto.Data.Public_Metadata["role"];
+                }
+               
 
                 await _userRepo.Update(existingUser);
 
@@ -124,6 +129,7 @@ namespace InSyncAPI.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, $"Error updating user: {ex.Message}");
             }
         }
+
 
     }
 }

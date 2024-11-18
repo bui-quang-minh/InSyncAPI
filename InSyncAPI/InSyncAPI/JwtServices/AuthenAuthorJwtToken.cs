@@ -6,7 +6,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-namespace InSyncAPI.Services
+namespace InSyncAPI.JwtServices
 {
     public static class AuthenAuthorJwtToken
     {
