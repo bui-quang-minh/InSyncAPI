@@ -1,18 +1,15 @@
 ﻿using InSync_Api.DependencyInjectService;
 using InSync_Api.MapperProfile;
-using InSyncAPI.Authentications;
 using InSyncAPI.Extentions;
 using Microsoft.EntityFrameworkCore;
 using WebNewsAPIs.Extentions;
-using Microsoft.OpenApi;
-using Microsoft.OpenApi.Models;
 using DataAccess.ContextAccesss;
-
 using static System.Net.WebRequestMethods;
 using Serilog;
 using Stripe;
-using Microsoft.Extensions.Configuration;
 using InSyncAPI.Middlewaves;
+
+
 
 namespace InSyncAPI
 {
@@ -21,13 +18,6 @@ namespace InSyncAPI
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-            string[] urlOrigins = new string[]
-            {
-                "https://insync-theta.vercel.app/",
-                "http://localhost:3000/",
-                "https://www.insync.com.vn/" ,
-                "https://insync-git-master-djao-duy-thais-projects.vercel.app/"
-            };
 
             // config url api InSensitive Route
             builder.Services.AddRouting(options =>
@@ -66,12 +56,11 @@ namespace InSyncAPI
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("CORSPolicy", builder =>
-                builder
+                 builder
                 .AllowAnyHeader()
                 .AllowAnyMethod()
                 .AllowAnyOrigin()
                );
-
             });
             StripeConfiguration.ApiKey = "sk_test_51QFCAdIMZTDPn6rJ6b9TwEnsjZDXKs54CWdmuTF1hlovLoVpbZnRyCZwANFppTQd3hVfHpe1U0EQT9T3QdodSr5R00lgHOs4Tp";
             var app = builder.Build();
@@ -79,7 +68,7 @@ namespace InSyncAPI
             // Ghi log các yêu cầu HTTP
             app.UseSerilogRequestLogging();
             // Add middleware in to system
-            app.AddMiddlewareExtetion();
+            //app.AddMiddlewareExtetion();
             // set up Apikey for skipe
 
             // Configure the HTTP request pipeline.
@@ -88,10 +77,11 @@ namespace InSyncAPI
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
+            app.UseCors("CORSPolicy");
             app.UseMiddleware<ApiKeyMiddleware>();
             app.UseAuthorization();
             app.UseAuthentication();
-            app.UseCors("CORSPolicy");
+           
             app.MapControllers();
 
             try
