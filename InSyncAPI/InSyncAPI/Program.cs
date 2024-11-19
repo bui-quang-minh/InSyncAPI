@@ -69,8 +69,8 @@ namespace InSyncAPI
                 builder
                 .AllowAnyHeader()
                 .AllowAnyMethod()
-              .AllowAnyOrigin()
-                .SetIsOriginAllowed((host) => true));
+                .AllowAnyOrigin()
+               );
 
             });
             StripeConfiguration.ApiKey = "sk_test_51QFCAdIMZTDPn6rJ6b9TwEnsjZDXKs54CWdmuTF1hlovLoVpbZnRyCZwANFppTQd3hVfHpe1U0EQT9T3QdodSr5R00lgHOs4Tp";
