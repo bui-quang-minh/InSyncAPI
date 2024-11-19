@@ -69,7 +69,7 @@ namespace InSyncAPI
                 builder
                 .AllowAnyHeader()
                 .AllowAnyMethod()
-               .WithOrigins(urlOrigins)
+              .AllowAnyOrigin()
                 .SetIsOriginAllowed((host) => true));
 
             });
