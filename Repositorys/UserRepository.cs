@@ -1,5 +1,6 @@
 ﻿using BusinessObjects.Models;
 using DataAccess.ContextAccesss;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,5 +18,6 @@ namespace Repositorys
         public UserRepository(DataAccess.ContextAccesss.InSyncContext context) : base(context)
         {
         }
+
     }
 }

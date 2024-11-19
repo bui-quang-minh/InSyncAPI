@@ -12,6 +12,7 @@ using static System.Net.WebRequestMethods;
 using Serilog;
 using Stripe;
 using Microsoft.Extensions.Configuration;
+using InSyncAPI.Middlewaves;
 
 namespace InSyncAPI
 {
@@ -36,13 +37,13 @@ namespace InSyncAPI
 
             });
             builder.AddLogServiceExtention();
-            
+
 
             // Add services to the container.
             builder.Services.AddAuthorization();
             builder.ConfigAuthenAuthor();
             // Add services Log tot he container
-          
+
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
@@ -68,25 +69,26 @@ namespace InSyncAPI
                 builder
                 .AllowAnyHeader()
                 .AllowAnyMethod()
-                .AllowAnyOrigin()
+               .WithOrigins(urlOrigins)
                 .SetIsOriginAllowed((host) => true));
+
             });
             StripeConfiguration.ApiKey = "sk_test_51QFCAdIMZTDPn6rJ6b9TwEnsjZDXKs54CWdmuTF1hlovLoVpbZnRyCZwANFppTQd3hVfHpe1U0EQT9T3QdodSr5R00lgHOs4Tp";
             var app = builder.Build();
-           
+
             // Ghi log các yêu cầu HTTP
             app.UseSerilogRequestLogging();
             // Add middleware in to system
             app.AddMiddlewareExtetion();
             // set up Apikey for skipe
-           
+
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
-            // app.UseMiddleware<ApiKeyMiddleware>();
+            app.UseMiddleware<ApiKeyMiddleware>();
             app.UseAuthorization();
             app.UseAuthentication();
             app.UseCors("CORSPolicy");

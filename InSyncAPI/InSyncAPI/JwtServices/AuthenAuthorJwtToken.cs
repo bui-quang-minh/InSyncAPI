@@ -72,33 +72,66 @@ namespace InSyncAPI.JwtServices
                 return Enumerable.Empty<Claim>();
             }
         }
-        public static Dictionary<string, string> GetPropertyInTokenJwt(string token)
+        //public static Dictionary<string, string> GetPropertyInTokenJwt(string token)
+        //{
+        //    var handler = new JwtSecurityTokenHandler();
+
+
+        //    // validate the token and extract the claims
+        //    try
+        //    {
+        //        var claims = GetClaimsFromToken(token);
+
+        //        Dictionary<string, string> claimInToken = new Dictionary<string, string>();
+
+        //        foreach (var claim in claims)
+        //        {
+        //            claimInToken.Add(claim.Type, claim.Value);
+        //        }
+        //        return claimInToken;
+        //    }
+        //    catch (SecurityTokenException ex)
+        //    {
+        //        Console.WriteLine("Invalid token: " + ex.Message);
+        //    }
+        //    return null;
+        //}
+        public static Dictionary<string, string> GetClaimInTokenJwt(string token, TokenValidationParameters validationParameters)
         {
             var handler = new JwtSecurityTokenHandler();
 
-
-            // validate the token and extract the claims
             try
             {
-                var claims = GetClaimsFromToken(token);
                 
-                Dictionary<string, string> claimInToken = new Dictionary<string, string>();
+                var principal = handler.ValidateToken(token, validationParameters, out var validatedToken);
 
-                foreach (var claim in claims)
+                
+                if (!(validatedToken is JwtSecurityToken jwtToken) ||
+                    !jwtToken.Header.Alg.Equals(SecurityAlgorithms.RsaSha256, StringComparison.InvariantCultureIgnoreCase))
                 {
-                    claimInToken.Add(claim.Type, claim.Value);
+                    throw new SecurityTokenException("Invalid token signature algorithm.");
                 }
+
+                // Lấy danh sách claims từ token
+                Dictionary<string, string> claimInToken = principal.Claims
+                    .ToDictionary(claim => claim.Type, claim => claim.Value);
+
                 return claimInToken;
             }
             catch (SecurityTokenException ex)
             {
-                Console.WriteLine("Invalid token: " + ex.Message);
+                Console.WriteLine($"Invalid token: {ex.Message}");
             }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Unexpected error: {ex.Message}");
+            }
+
             return null;
         }
 
 
-        
+
 
         public static string GenerateTokenJWTEndCode(User user)
         {

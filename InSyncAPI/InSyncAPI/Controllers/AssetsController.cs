@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
 using BusinessObjects.Models;
 using InSyncAPI.Dtos;
+using InSyncAPI.JwtServices;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Query;
@@ -35,8 +37,7 @@ namespace InSyncAPI.Controllers
             _mapper = mapper;
             _logger = logger;
         }
-
-
+        
         [HttpGet()]
         [EnableQuery]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IQueryable<Asset>))]

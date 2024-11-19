@@ -7,6 +7,7 @@ using static InSyncAPI.Dtos.PageDto;
 using System.Diagnostics;
 using BusinessObjects.Models;
 using static InSyncAPI.Dtos.DocumentDto;
+using InSyncAPI.JwtServices;
 
 namespace InSyncAPI.Controllers
 {
@@ -278,6 +279,7 @@ namespace InSyncAPI.Controllers
             }
         }
 
+        [AdminAuthorization]
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionPageResponse))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
@@ -333,6 +335,7 @@ namespace InSyncAPI.Controllers
             }
         }
 
+        [AdminAuthorization]
         [HttpPut("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionPageResponse))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
@@ -397,6 +400,7 @@ namespace InSyncAPI.Controllers
             }
         }
 
+        [AdminAuthorization]
         [HttpPut("slug/{slug}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionPageResponse))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
@@ -457,6 +461,7 @@ namespace InSyncAPI.Controllers
         }
 
 
+        [AdminAuthorization]
         [HttpDelete("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionPageResponse))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]

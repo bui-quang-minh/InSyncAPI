@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using BusinessObjects.Models;
 using InSyncAPI.Dtos;
+using InSyncAPI.JwtServices;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Query;
@@ -216,6 +217,7 @@ namespace InSyncAPI.Controllers
             }
         }
 
+        [AdminAuthorization]
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionPageResponse))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
@@ -265,6 +267,7 @@ namespace InSyncAPI.Controllers
             }
         }
 
+        [AdminAuthorization]
         [HttpPut("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionPageResponse))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
@@ -323,6 +326,7 @@ namespace InSyncAPI.Controllers
             }
         }
 
+        [AdminAuthorization]
         [HttpPut("slug/{slug}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionPageResponse))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
@@ -375,7 +379,7 @@ namespace InSyncAPI.Controllers
             }
         }
 
-
+        [AdminAuthorization]
         [HttpDelete("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionPageResponse))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]

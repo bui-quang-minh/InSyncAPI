@@ -1,8 +1,10 @@
 ﻿using AutoMapper;
 using BusinessObjects.Models;
+using DataAccess.ContextAccesss;
 using InSyncAPI.Dtos;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Repositorys;
 using System.Diagnostics;
 
@@ -114,7 +116,7 @@ namespace InSyncAPI.Controllers
                 {
                     existingUser.Role = userDto.Data.Public_Metadata["role"].ToString();
                 }
-               
+
 
                 await _userRepo.Update(existingUser);
 
@@ -130,6 +132,7 @@ namespace InSyncAPI.Controllers
             }
         }
 
+        
 
     }
 }

@@ -2,6 +2,7 @@
 using BusinessObjects.Models;
 using DataAccess.ContextAccesss;
 using InSyncAPI.Dtos;
+using InSyncAPI.JwtServices;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Query;
 using Repositorys;
@@ -168,7 +169,7 @@ namespace InSyncAPI.Controllers
             }
         }
 
-
+        [AdminAuthorization]
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionSubsciptionPlanResponse))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
@@ -223,6 +224,7 @@ namespace InSyncAPI.Controllers
             }
         }
 
+        [AdminAuthorization]
         [HttpPost("ByUserClerk")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionSubsciptionPlanResponse))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
@@ -277,7 +279,7 @@ namespace InSyncAPI.Controllers
             }
         }
 
-
+        [AdminAuthorization]
         [HttpPut("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionSubsciptionPlanResponse))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
@@ -333,7 +335,7 @@ namespace InSyncAPI.Controllers
         }
 
 
-
+        [AdminAuthorization]
         [HttpDelete("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ActionSubsciptionPlanResponse))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
