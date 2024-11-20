@@ -24,7 +24,7 @@ jobs:
 
     - name: Build Docker Image
       run: |
-        docker build -f InSyncAPI/InSyncAPI/Dockerfile -t gcr.io/your-project-id/insync-api InSyncAPI/InSyncAPI .
+        docker build -f InSyncAPI/InSyncAPI/Dockerfile -t gcr.io/your-project-id/insync-api .
 
     - name: Push Docker Image to Container Registry
       run: |
