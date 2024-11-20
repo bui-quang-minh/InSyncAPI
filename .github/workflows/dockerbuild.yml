@@ -24,14 +24,14 @@ jobs:
 
     - name: Build Docker Image
       run: |
-        docker build -f InSyncAPI/InSyncAPI/Dockerfile -t asia-southeast1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/insyncapi .
+        docker build -f InSyncAPI/InSyncAPI/Dockerfile -t asia-southeast1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/insyncapi/insyncapi .
 
     - name: Check local Docker
       run: docker images
 
     - name: Push Docker Image to Container Registry
       run: |
-        docker push asia-southeast1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/insyncapi
+        docker push asia-southeast1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/insyncapi/insyncapi
 
     - name: Deploy to Cloud Run
       run: |
