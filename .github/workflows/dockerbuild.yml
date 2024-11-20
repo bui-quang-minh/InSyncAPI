@@ -22,22 +22,26 @@ jobs:
     - name: Configure Google Cloud SDK
       run: gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
 
+    - name: Configure Docker for Google Cloud (Asia Southeast 1)
+      run: gcloud auth configure-docker asia-southeast1-docker.pkg.dev
+
     - name: Build Docker Image
       run: |
-        docker build -f InSyncAPI/InSyncAPI/Dockerfile -t gcr.io/${{ secrets.GCP_PROJECT_ID }}/insync-api .
+        docker build -f InSyncAPI/InSyncAPI/Dockerfile -t asia-southeast1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/insyncapi/insyncapi .
 
     - name: Check local Docker
       run: docker images
 
     - name: Push Docker Image to Container Registry
       run: |
-        docker push gcr.io/${{ secrets.GCP_PROJECT_ID }}/insync-api
+        docker push asia-southeast1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/insyncapi/insyncapi
 
     - name: Deploy to Cloud Run
       run: |
-        gcloud run deploy insync-api \
-          --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/insync-api \
+        gcloud run deploy insyncapi \
+          --image asia-southeast1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/insyncapi/insyncapi \
           --platform managed \
           --region ${{ secrets.GCP_REGION }} \
           --allow-unauthenticated \
-          --memory 512Mi
+          --memory 512Mi \
+          --port 8080
