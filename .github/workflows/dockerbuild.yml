@@ -1,22 +1,40 @@
+name: Deploy to Google Cloud Run
 
-FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS base
-WORKDIR /app
-EXPOSE 80
+on:
+  push:
+    branches:
+      - main # Change this to your deployment branch if necessary
 
-FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
-ARG BUILD_CONFIGURATION=Release
-WORKDIR /src
-COPY ["InSyncAPI/InSyncAPI/InSyncAPI.csproj", "InSyncAPI/"]
-RUN dotnet restore "./InSyncAPI/./InSyncAPI.csproj"
-COPY . .
-WORKDIR "/src/InSyncAPI/InSyncAPI"
-RUN dotnet build "./InSyncAPI.csproj" -c $BUILD_CONFIGURATION -o /app/build
+jobs:
+  deploy:
+    name: Deploy to Cloud Run
+    runs-on: ubuntu-latest
 
-FROM build AS publish
-ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./InSyncAPI.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
 
-FROM base AS final
-WORKDIR /app
-COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "InSyncAPI.dll"]
+    - name: Authenticate with Google Cloud
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+
+    - name: Configure Google Cloud SDK
+      run: gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
+
+    - name: Build Docker Image
+      run: |
+        docker build -t gcr.io/${{ secrets.GCP_PROJECT_ID }}/insync-api .
+
+    - name: Push Docker Image to Container Registry
+      run: |
+        docker push gcr.io/${{ secrets.GCP_PROJECT_ID }}/insync-api
+
+    - name: Deploy to Cloud Run
+      run: |
+        gcloud run deploy insync-api \
+          --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/insync-api \
+          --platform managed \
+          --region ${{ secrets.GCP_REGION }} \
+          --allow-unauthenticated \
+          --memory 512Mi
