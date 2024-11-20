@@ -21,11 +21,10 @@ jobs:
 
     - name: Configure Google Cloud SDK
       run: gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
-    - name : CD
-      run: cd InSyncAPI/InSyncAPI
+
     - name: Build Docker Image
       run: |
-        docker build -t gcr.io/${{ secrets.GCP_PROJECT_ID }}/insync-api .
+        docker build -f InSyncAPI/InSyncAPI/Dockerfile -t gcr.io/your-project-id/insync-api InSyncAPI/InSyncAPI
 
     - name: Push Docker Image to Container Registry
       run: |
