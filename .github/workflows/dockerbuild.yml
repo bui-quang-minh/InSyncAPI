@@ -26,6 +26,9 @@ jobs:
       run: |
         docker build -f InSyncAPI/InSyncAPI/Dockerfile -t gcr.io/your-project-id/insync-api .
 
+    - name: Check local Docker
+      run: docker images
+
     - name: Push Docker Image to Container Registry
       run: |
         docker push gcr.io/${{ secrets.GCP_PROJECT_ID }}/insync-api
