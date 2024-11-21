@@ -62,6 +62,11 @@ namespace InSyncAPI
                 .AllowAnyOrigin()
                );
             });
+            builder.WebHost.ConfigureKestrel(options =>
+            {
+                var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+                options.ListenAnyIP(int.Parse(port));
+            });
             StripeConfiguration.ApiKey = "sk_test_51QFCAdIMZTDPn6rJ6b9TwEnsjZDXKs54CWdmuTF1hlovLoVpbZnRyCZwANFppTQd3hVfHpe1U0EQT9T3QdodSr5R00lgHOs4Tp";
             var app = builder.Build();
 
