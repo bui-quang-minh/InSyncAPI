@@ -138,7 +138,11 @@ namespace InSyncUnitTest.Controller
             // Arrange
             var userDto = new UpdateUserDto
             {
-                Data = new Data(),
+                Data = new Data
+                {
+                    Public_Metadata = new Dictionary<string, object>()
+                    
+                },
                 Object = "TestObject",
                 Type = "TestType"
             };
