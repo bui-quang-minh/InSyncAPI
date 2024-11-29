@@ -3,7 +3,7 @@ using InSyncAPI.Dtos;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Query;
-using Repositorys;
+using Repositories;
 using static InSyncAPI.Dtos.PageDto;
 using System.Diagnostics;
 using BusinessObjects.Models;

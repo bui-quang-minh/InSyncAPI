@@ -4,7 +4,7 @@ using InSyncAPI.Dtos;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Query;
-using Repositorys;
+using Repositories;
 using System.Diagnostics;
 
 namespace InSyncAPI.Controllers

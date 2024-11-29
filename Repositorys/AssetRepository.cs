@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Repositorys
+namespace Repositories
 {
     public interface IAssetRepository : IRepositoryBase<Asset>
     {

@@ -5,7 +5,7 @@ using InSyncAPI.Dtos;
 using InSyncAPI.JwtServices;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Query;
-using Repositorys;
+using Repositories;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Linq.Expressions;

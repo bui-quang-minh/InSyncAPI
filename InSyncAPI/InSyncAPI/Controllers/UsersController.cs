@@ -5,7 +5,7 @@ using InSyncAPI.Dtos;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Repositorys;
+using Repositories;
 using System.Diagnostics;
 
 namespace InSyncAPI.Controllers

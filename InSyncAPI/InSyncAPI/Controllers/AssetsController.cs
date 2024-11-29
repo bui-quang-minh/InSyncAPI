@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Query;
 using Microsoft.VisualBasic;
-using Repositorys;
+using Repositories;
 using System.Diagnostics;
 using System.Linq;
 

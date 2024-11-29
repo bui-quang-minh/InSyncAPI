@@ -60,7 +60,7 @@ namespace InSyncAPI
                 .AllowAnyHeader()
                 .AllowAnyMethod()
                 .AllowAnyOrigin()
-               );
+               );   
             });
             builder.WebHost.ConfigureKestrel(options =>
             {

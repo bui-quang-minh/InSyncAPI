@@ -5,7 +5,7 @@ using InSyncAPI.JwtServices;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Query;
-using Repositorys;
+using Repositories;
 using System.Diagnostics;
 using static InSyncAPI.Dtos.PageDto;
 

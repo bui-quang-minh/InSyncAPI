@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using InSyncAPI.Controllers;
-using Repositorys;
+using Repositories;
 using FakeItEasy;
 using System;
 using System.Collections.Generic;

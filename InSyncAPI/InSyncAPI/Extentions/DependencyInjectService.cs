@@ -1,4 +1,4 @@
-﻿using Repositorys;
+﻿using Repositories;
 
 namespace InSync_Api.DependencyInjectService
 {

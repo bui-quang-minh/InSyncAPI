@@ -11,9 +11,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BusinessObjects", "..\Busin
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataAccess", "..\DataAccess\DataAccess.csproj", "{CD25B3E9-9E2D-4414-A25C-11710AD5080F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Repositorys", "..\Repositorys\Repositorys.csproj", "{693BC431-F6CF-4E6F-BA12-B578EC4C72E2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Repositories", "..\Repositorys\Repositories.csproj", "{693BC431-F6CF-4E6F-BA12-B578EC4C72E2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InSyncUnitTest", "..\InSyncUnitTest\InSyncUnitTest.csproj", "{BB00ED48-59B1-46D8-886E-1D9B6EE47024}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "InSyncUnitTest", "..\InSyncUnitTest\InSyncUnitTest.csproj", "{BB00ED48-59B1-46D8-886E-1D9B6EE47024}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

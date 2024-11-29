@@ -9,7 +9,7 @@ using InSyncAPI.Dtos;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Repositorys;
+using Repositories;
 using System;
 using System.Collections;
 using System.Collections.Generic;
