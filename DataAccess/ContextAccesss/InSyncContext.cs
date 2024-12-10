@@ -97,7 +97,7 @@ namespace DataAccess.ContextAccesss
                     .HasColumnName("date_updated");
 
                 entity.Property(e => e.Description)
-                    .HasColumnType("text")
+                    .HasColumnType("ntext")
                     .HasColumnName("description");
 
                 entity.Property(e => e.Order).HasColumnName("order");
@@ -150,7 +150,7 @@ namespace DataAccess.ContextAccesss
                 entity.Property(e => e.CategoryId).HasColumnName("category_id");
 
                 entity.Property(e => e.Content)
-                    .HasColumnType("text")
+                    .HasColumnType("ntext")
                     .HasColumnName("content");
 
                 entity.Property(e => e.DateCreated)
@@ -191,7 +191,7 @@ namespace DataAccess.ContextAccesss
                     .HasDefaultValueSql("(newid())");
 
                 entity.Property(e => e.Content)
-                    .HasColumnType("text")
+                    .HasColumnType("ntext")
                     .HasColumnName("content");
 
                 entity.Property(e => e.DateCreated)
@@ -229,7 +229,7 @@ namespace DataAccess.ContextAccesss
                     .HasColumnName("date_updated");
 
                 entity.Property(e => e.Description)
-                    .HasColumnType("text")
+                    .HasColumnType("ntext")
                     .HasColumnName("description");
 
                 entity.Property(e => e.IsPublish).HasColumnName("is_publish");
@@ -264,7 +264,7 @@ namespace DataAccess.ContextAccesss
                     .HasColumnName("date_updated");
 
                 entity.Property(e => e.Description)
-                    .HasColumnType("text")
+                    .HasColumnType("ntext")
                     .HasColumnName("description");
 
                 entity.Property(e => e.ImageUrl)
@@ -310,7 +310,7 @@ namespace DataAccess.ContextAccesss
                     .HasDefaultValueSql("(newid())");
 
                 entity.Property(e => e.Content)
-                    .HasColumnType("text")
+                    .HasColumnType("ntext")
                     .HasColumnName("content");
 
                 entity.Property(e => e.CustomFeaturesDescription)
