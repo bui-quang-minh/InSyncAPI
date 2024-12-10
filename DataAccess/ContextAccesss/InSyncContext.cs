@@ -282,11 +282,11 @@ namespace DataAccess.ContextAccesss
                     .HasColumnName("scenario_name");
 
                 entity.Property(e => e.StepsAndroid)
-                    .HasColumnType("text")
+                    .HasColumnType("ntext")
                     .HasColumnName("steps_android");
 
                 entity.Property(e => e.StepsWeb)
-                    .HasColumnType("text")
+                    .HasColumnType("ntext")
                     .HasColumnName("steps_web");
 
                 entity.HasOne(d => d.CreatedByNavigation)
