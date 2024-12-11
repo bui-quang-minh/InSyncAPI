@@ -17,6 +17,13 @@ namespace InSyncAPI.Dtos
             public Guid CategoryId { get; set; }
             public string CategoryName { get; set; }
         }
+        public class ViewDocumentOfCategoryDto
+        {
+            public Guid Id { get; set; }
+            public string Slug { get; set; } = null!;
+            public string Title { get; set; } = null!;
+            public int Order { get; set; }
+        }
         public class UpdateDocumentDto
         {
             public Guid Id { get; set; }

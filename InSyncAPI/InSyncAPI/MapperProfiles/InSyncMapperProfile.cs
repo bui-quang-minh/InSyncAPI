@@ -26,6 +26,8 @@ namespace InSync_Api.MapperProfile
             CreateMap<Document, ViewDocumentDto>()
                  .ForMember(c => c.CategoryName, a => a.MapFrom(r => r.Category.Title))
                 .ReverseMap();
+            CreateMap<Document, ViewDocumentOfCategoryDto>();
+            
             //Document
             CreateMap<AddCategoryDocumentDto, CategoryDocument>().ReverseMap();
             CreateMap<UpdateCategoryDocumentDto, CategoryDocument>().ReverseMap();

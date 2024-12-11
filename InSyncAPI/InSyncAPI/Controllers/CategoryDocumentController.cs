@@ -92,21 +92,19 @@ namespace InSyncAPI.Controllers
             {
                 if (index == null || size == null)
                 {
-                    listPage = _cateRepo.GetMulti(c => c.Title.ToLower().Contains(keySearch), includes);
+                    //listPage = _cateRepo.GetMulti(c => c.Title.ToLower().Contains(keySearch), includes);
+                    listPage = await _cateRepo.GetMultiUpdate(keySearch);
                     total = listPage.Count();
                 }
                 else
                 {
                     index = index.Value < 0 ? INDEX_DEFAULT : index;
                     size = size.Value < 0 ? ITEM_PAGES_DEFAULT : size;
-                    listPage = _cateRepo.GetMultiPaging(
-                        c => c.Title.ToLower().Contains(keySearch),
-                        out total, index.Value, size.Value, includes
-                    );
+                    listPage = _cateRepo.GetMultiPagingUpdate(keySearch,
+                        out total, index.Value, size.Value);
                 }
                 listPage = OrderCategoryAndDocument(listPage);
-                var response = _mapper.Map<IEnumerable<ViewCategoryDocumentDto>>(listPage);
-                
+                var response = _mapper.Map<IEnumerable<ViewCategoryDocumentDto>>(listPage);               
                 var responsePaging = new ResponsePaging<IEnumerable<ViewCategoryDocumentDto>>
                 {
                     data = response,
